@@ -1,9 +1,25 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Sun, Moon, Sparkles } from 'lucide-react';
+import { Menu, X, Sun, Moon, Sparkles, ShoppingCart, User, LogOut } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/hooks/useAuth';
+import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Plus, Minus, Trash2 } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
 
 const navLinks = [
   { name: 'Home', path: '/' },
@@ -14,10 +30,137 @@ const navLinks = [
   { name: 'Contact', path: '/contact' },
 ];
 
+interface Product {
+  id: string;
+  title: string;
+  price: number;
+  image_url: string | null;
+}
+
+interface CartItem {
+  id: string;
+  product_id: string;
+  quantity: number;
+  product?: Product;
+}
+
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const { user, signOut, isAdmin } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  // Fetch products for cart
+  const { data: products = [] } = useQuery({
+    queryKey: ['products'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, title, price, image_url')
+        .eq('is_active', true);
+      if (error) throw error;
+      return data as Product[];
+    },
+  });
+
+  // Fetch cart items
+  const { data: cartItems = [] } = useQuery({
+    queryKey: ['cart', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from('cart_items')
+        .select('*')
+        .eq('user_id', user.id);
+      if (error) throw error;
+      return data.map((item) => ({
+        ...item,
+        product: products.find((p) => p.id === item.product_id),
+      })) as CartItem[];
+    },
+    enabled: !!user && products.length > 0,
+  });
+
+  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const cartTotal = cartItems.reduce(
+    (sum, item) => sum + (item.product?.price || 0) * item.quantity,
+    0
+  );
+
+  // Update quantity mutation
+  const updateQuantityMutation = useMutation({
+    mutationFn: async ({ itemId, quantity }: { itemId: string; quantity: number }) => {
+      if (quantity <= 0) {
+        const { error } = await supabase.from('cart_items').delete().eq('id', itemId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('cart_items').update({ quantity }).eq('id', itemId);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cart'] }),
+  });
+
+  // Remove from cart
+  const removeFromCartMutation = useMutation({
+    mutationFn: async (itemId: string) => {
+      const { error } = await supabase.from('cart_items').delete().eq('id', itemId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      toast({ title: 'Removed from cart' });
+    },
+  });
+
+  // Checkout mutation
+  const checkoutMutation = useMutation({
+    mutationFn: async () => {
+      if (!user || cartItems.length === 0) throw new Error('Cart is empty');
+      const totalAmount = cartItems.reduce(
+        (sum, item) => sum + (item.product?.price || 0) * item.quantity,
+        0
+      );
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({ user_id: user.id, total_amount: totalAmount, status: 'pending' })
+        .select()
+        .single();
+      if (orderError) throw orderError;
+      const orderItems = cartItems.map((item) => ({
+        order_id: order.id,
+        product_id: item.product_id,
+        product_title: item.product?.title || 'Unknown',
+        product_price: item.product?.price || 0,
+        quantity: item.quantity,
+      }));
+      const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
+      if (itemsError) throw itemsError;
+      const { error: clearError } = await supabase.from('cart_items').delete().eq('user_id', user.id);
+      if (clearError) throw clearError;
+      return order;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      toast({ title: 'Order placed!', description: 'Thank you for your purchase.' });
+      setIsCartOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Checkout failed', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast({ title: 'Signed out successfully' });
+    navigate('/');
+  };
+
+  const userInitials = user?.email?.slice(0, 2).toUpperCase() || 'U';
 
   return (
     <motion.nav
@@ -42,11 +185,7 @@ export const Navbar = () => {
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-8">
             {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className="relative group"
-              >
+              <Link key={link.path} to={link.path} className="relative group">
                 <span className={`text-sm font-medium transition-colors ${
                   location.pathname === link.path 
                     ? 'text-primary' 
@@ -65,43 +204,136 @@ export const Navbar = () => {
           </div>
 
           {/* Desktop Actions */}
-          <div className="hidden lg:flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="rounded-full"
-            >
-              {theme === 'light' ? (
-                <Moon className="w-5 h-5" />
-              ) : (
-                <Sun className="w-5 h-5" />
-              )}
+          <div className="hidden lg:flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full">
+              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
             </Button>
-            <Button asChild>
-              <Link to="/store">Shop Now</Link>
-            </Button>
+
+            {/* Cart */}
+            <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative rounded-full">
+                  <ShoppingCart className="w-5 h-5" />
+                  {cartCount > 0 && (
+                    <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
+                      {cartCount}
+                    </Badge>
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent className="w-full sm:max-w-lg flex flex-col">
+                <SheetHeader>
+                  <SheetTitle>Shopping Cart ({cartCount} items)</SheetTitle>
+                </SheetHeader>
+                <div className="flex-1 flex flex-col mt-6 overflow-hidden">
+                  {!user ? (
+                    <div className="flex-1 flex flex-col items-center justify-center gap-4">
+                      <p className="text-muted-foreground">Please login to view your cart</p>
+                      <Button onClick={() => { setIsCartOpen(false); navigate('/auth'); }}>Login</Button>
+                    </div>
+                  ) : cartItems.length === 0 ? (
+                    <div className="flex-1 flex items-center justify-center">
+                      <p className="text-muted-foreground">Your cart is empty</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex-1 overflow-auto space-y-4 pr-2">
+                        {cartItems.map((item) => (
+                          <div key={item.id} className="flex gap-4 p-4 border border-border rounded-lg bg-card">
+                            {item.product?.image_url && (
+                              <img src={item.product.image_url} alt={item.product.title} className="w-16 h-16 object-cover rounded-md" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-foreground truncate">{item.product?.title}</h4>
+                              <p className="text-sm text-muted-foreground">${item.product?.price?.toFixed(2)}</p>
+                              <div className="flex items-center gap-2 mt-2">
+                                <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantityMutation.mutate({ itemId: item.id, quantity: item.quantity - 1 })}>
+                                  <Minus className="h-3 w-3" />
+                                </Button>
+                                <span className="w-6 text-center text-sm text-foreground">{item.quantity}</span>
+                                <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantityMutation.mutate({ itemId: item.id, quantity: item.quantity + 1 })}>
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto text-destructive hover:text-destructive" onClick={() => removeFromCartMutation.mutate(item.id)}>
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="border-t border-border pt-4 mt-4">
+                        <div className="flex justify-between text-lg font-semibold mb-4 text-foreground">
+                          <span>Total:</span>
+                          <span>${cartTotal.toFixed(2)}</span>
+                        </div>
+                        <Button className="w-full" size="lg" onClick={() => checkoutMutation.mutate()} disabled={checkoutMutation.isPending}>
+                          {checkoutMutation.isPending ? 'Processing...' : 'Complete Purchase'}
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            {/* User Account */}
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                        {userInitials}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    <User className="w-4 h-4 mr-2" />
+                    Profile
+                  </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem onClick={() => navigate('/admin')}>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Admin Dashboard
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button asChild size="sm">
+                <Link to="/auth">Login</Link>
+              </Button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
           <div className="flex lg:hidden items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="rounded-full"
-            >
-              {theme === 'light' ? (
-                <Moon className="w-5 h-5" />
-              ) : (
-                <Sun className="w-5 h-5" />
-              )}
+            {/* Mobile Cart */}
+            <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative rounded-full">
+                  <ShoppingCart className="w-5 h-5" />
+                  {cartCount > 0 && (
+                    <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
+                      {cartCount}
+                    </Badge>
+                  )}
+                </Button>
+              </SheetTrigger>
+            </Sheet>
+            
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full">
+              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsOpen(!isOpen)}
-            >
+            <Button variant="ghost" size="icon" onClick={() => setIsOpen(!isOpen)}>
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </Button>
           </div>
@@ -144,9 +376,32 @@ export const Navbar = () => {
                 transition={{ delay: navLinks.length * 0.05 }}
                 className="pt-2"
               >
-                <Button asChild className="w-full">
-                  <Link to="/store" onClick={() => setIsOpen(false)}>Shop Now</Link>
-                </Button>
+                {user ? (
+                  <div className="space-y-2">
+                    <Button asChild variant="outline" className="w-full">
+                      <Link to="/profile" onClick={() => setIsOpen(false)}>
+                        <User className="w-4 h-4 mr-2" />
+                        Profile
+                      </Link>
+                    </Button>
+                    {isAdmin && (
+                      <Button asChild variant="outline" className="w-full">
+                        <Link to="/admin" onClick={() => setIsOpen(false)}>
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          Admin Dashboard
+                        </Link>
+                      </Button>
+                    )}
+                    <Button variant="secondary" className="w-full" onClick={() => { handleSignOut(); setIsOpen(false); }}>
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </Button>
+                  </div>
+                ) : (
+                  <Button asChild className="w-full">
+                    <Link to="/auth" onClick={() => setIsOpen(false)}>Login / Sign Up</Link>
+                  </Button>
+                )}
               </motion.div>
             </div>
           </motion.div>
