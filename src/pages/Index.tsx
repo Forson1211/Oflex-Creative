@@ -1,10 +1,15 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles, Palette, Code, Zap, Star, ShoppingBag } from 'lucide-react';
+import { ArrowRight, Sparkles, Palette, Code, Zap, Star, ShoppingBag, ShoppingCart } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout/Layout';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { Badge } from '@/components/ui/badge';
 import heroBg from '@/assets/hero-bg.jpg';
 
 const featuredWorks = [
@@ -13,13 +18,6 @@ const featuredWorks = [
   { id: 3, title: 'Mobile App Design', category: 'UI/UX', image: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&h=400&fit=crop' },
   { id: 4, title: 'Creative Poster Series', category: 'Posters', image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&h=400&fit=crop' },
 ];
-
-const featuredProducts = [
-  { id: 1, title: 'AI Art Prompt Pack', price: 29, category: 'Prompts', image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=300&fit=crop' },
-  { id: 2, title: 'Social Media Templates', price: 49, category: 'Templates', image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&h=300&fit=crop' },
-  { id: 3, title: 'Brand Guidelines Kit', price: 79, category: 'Branding', image: 'https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?w=400&h=300&fit=crop' },
-];
-
 const testimonials = [
   { name: 'Sarah Chen', role: 'Startup Founder', content: 'Oflex Creative transformed our brand identity. The attention to detail is incredible!', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop' },
   { name: 'Marcus Johnson', role: 'Creative Director', content: 'The prompt packs saved us countless hours. Highly recommend for any creative team.', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop' },
@@ -34,6 +32,64 @@ const services = [
 ];
 
 const Index = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch featured products from database
+  const { data: featuredProducts = [] } = useQuery({
+    queryKey: ['featured-products'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(4);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Add to cart mutation
+  const addToCartMutation = useMutation({
+    mutationFn: async (productId: string) => {
+      if (!user) throw new Error('Please login to add items to cart');
+      const { data: existing } = await supabase
+        .from('cart_items')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('product_id', productId)
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase
+          .from('cart_items')
+          .update({ quantity: existing.quantity + 1 })
+          .eq('id', existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('cart_items').insert({
+          user_id: user.id,
+          product_id: productId,
+          quantity: 1,
+        });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      toast({ title: 'Added to cart!' });
+    },
+    onError: () => {
+      toast({ 
+        title: 'Please login', 
+        description: 'You need to login to add items to cart',
+        variant: 'destructive'
+      });
+    },
+  });
+
   return (
     <Layout>
       {/* Hero Section */}
@@ -213,7 +269,7 @@ const Index = () => {
             description="Premium digital assets for your creative projects"
           />
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {featuredProducts.map((product, index) => (
               <motion.div
                 key={product.id}
@@ -221,36 +277,59 @@ const Index = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
+                className="group"
               >
-                <Link to="/store">
-                  <GlassCard className="overflow-hidden p-0">
-                    <div className="relative aspect-[4/3] overflow-hidden">
-                      <img
-                        src={product.image}
-                        alt={product.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <span className="absolute top-4 right-4 px-3 py-1 rounded-full bg-background/90 text-foreground text-sm font-medium backdrop-blur-sm">
-                        ${product.price}
-                      </span>
-                    </div>
-                    <div className="p-5">
-                      <span className="text-xs text-primary font-medium uppercase tracking-wide">
-                        {product.category}
-                      </span>
-                      <h3 className="font-semibold text-foreground mt-1">{product.title}</h3>
-                    </div>
-                  </GlassCard>
-                </Link>
+                <GlassCard className="overflow-hidden p-0 h-full">
+                  <div className="relative aspect-square overflow-hidden">
+                    <img
+                      src={product.image_url || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=400&fit=crop'}
+                      alt={product.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
+                    
+                    {/* Quick Add Button */}
+                    <motion.button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        addToCartMutation.mutate(product.id);
+                      }}
+                      className="absolute bottom-3 right-3 p-2.5 rounded-full bg-primary text-primary-foreground opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 shadow-lg"
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                    </motion.button>
+                    
+                    {/* Price Badge */}
+                    <Badge className="absolute top-3 right-3 bg-background/90 text-foreground backdrop-blur-sm border-0 font-bold">
+                      ${product.price}
+                    </Badge>
+                  </div>
+                  
+                  <div className="p-4">
+                    <Badge variant="secondary" className="text-[10px] uppercase tracking-wider mb-2">
+                      {product.category}
+                    </Badge>
+                    <h3 className="font-semibold text-foreground text-sm leading-tight line-clamp-2">
+                      {product.title}
+                    </h3>
+                  </div>
+                </GlassCard>
               </motion.div>
             ))}
           </div>
+
+          {featuredProducts.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No products available yet. Check back soon!</p>
+            </div>
+          )}
 
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="text-center mt-12"
+            className="text-center mt-10"
           >
             <Button size="lg" asChild>
               <Link to="/store">
@@ -261,7 +340,6 @@ const Index = () => {
           </motion.div>
         </div>
       </section>
-
       {/* Testimonials */}
       <section className="py-20">
         <div className="container mx-auto px-4">
