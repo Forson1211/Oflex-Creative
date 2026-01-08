@@ -261,7 +261,7 @@ const Index = () => {
       </section>
 
       {/* Featured Products */}
-      <section className="py-20 bg-card">
+      <section className="py-16 bg-card/50">
         <div className="container mx-auto px-4">
           <SectionHeading
             badge="Digital Store"
@@ -269,59 +269,60 @@ const Index = () => {
             description="Premium digital assets for your creative projects"
           />
           
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
             {featuredProducts.map((product, index) => (
               <motion.div
                 key={product.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.05 }}
                 className="group"
               >
-                <GlassCard className="overflow-hidden p-0 h-full">
-                  <div className="relative aspect-square overflow-hidden">
+                <div className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all duration-300">
+                  <div className="relative aspect-[4/3] overflow-hidden">
                     <img
-                      src={product.image_url || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=400&fit=crop'}
+                      src={product.image_url || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=300&h=225&fit=crop'}
                       alt={product.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
-                    
-                    {/* Quick Add Button */}
-                    <motion.button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        addToCartMutation.mutate(product.id);
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=300&h=225&fit=crop';
                       }}
-                      className="absolute bottom-3 right-3 p-2.5 rounded-full bg-primary text-primary-foreground opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 shadow-lg"
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <ShoppingCart className="w-4 h-4" />
-                    </motion.button>
+                    />
                     
-                    {/* Price Badge */}
-                    <Badge className="absolute top-3 right-3 bg-background/90 text-foreground backdrop-blur-sm border-0 font-bold">
-                      ${product.price}
-                    </Badge>
+                    {/* Overlay on hover */}
+                    <div className="absolute inset-0 bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                      <motion.button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          addToCartMutation.mutate(product.id);
+                        }}
+                        className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors"
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <ShoppingCart className="w-3.5 h-3.5" />
+                        Add
+                      </motion.button>
+                    </div>
                   </div>
                   
-                  <div className="p-4">
-                    <Badge variant="secondary" className="text-[10px] uppercase tracking-wider mb-2">
+                  <div className="p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
                       {product.category}
-                    </Badge>
-                    <h3 className="font-semibold text-foreground text-sm leading-tight line-clamp-2">
+                    </p>
+                    <h3 className="font-medium text-foreground text-sm leading-snug line-clamp-1 mb-2">
                       {product.title}
                     </h3>
+                    <p className="text-primary font-bold text-sm">${product.price}</p>
                   </div>
-                </GlassCard>
+                </div>
               </motion.div>
             ))}
           </div>
 
           {featuredProducts.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No products available yet. Check back soon!</p>
+            <div className="text-center py-8">
+              <p className="text-muted-foreground text-sm">No products available yet.</p>
             </div>
           )}
 
@@ -329,12 +330,12 @@ const Index = () => {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="text-center mt-10"
+            className="text-center mt-8"
           >
-            <Button size="lg" asChild>
+            <Button variant="outline" asChild>
               <Link to="/store">
                 <ShoppingBag className="mr-2 w-4 h-4" />
-                Browse All Products
+                View All Products
               </Link>
             </Button>
           </motion.div>
