@@ -267,8 +267,8 @@ export const Navbar = () => {
                           <span>Total:</span>
                           <span>${cartTotal.toFixed(2)}</span>
                         </div>
-                        <Button className="w-full" size="lg" onClick={() => checkoutMutation.mutate()} disabled={checkoutMutation.isPending}>
-                          {checkoutMutation.isPending ? 'Processing...' : 'Complete Purchase'}
+                        <Button className="w-full" size="lg" onClick={() => { setIsCartOpen(false); navigate('/checkout'); }}>
+                          Proceed to Checkout
                         </Button>
                       </div>
                     </>
