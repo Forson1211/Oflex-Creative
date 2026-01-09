@@ -1,51 +1,36 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Sparkles, Palette, Code, Zap, Layers, Wand2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout/Layout';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { GlassCard } from '@/components/ui/GlassCard';
 
-const services = [
-  {
-    icon: Sparkles,
-    title: 'Creative Prompt Engineering',
-    description: 'Custom AI prompts crafted for stunning image generation. Perfect for artists, marketers, and content creators looking to elevate their visual output.',
-    features: ['Custom prompt templates', 'Style-specific prompts', 'Negative prompt optimization', 'Multi-platform compatibility'],
-  },
-  {
-    icon: Palette,
-    title: 'Digital Product Design',
-    description: 'Premium digital products including templates, mockups, and design assets. Ready-to-use resources that save time and enhance your projects.',
-    features: ['Social media templates', 'Presentation decks', 'Marketing materials', 'Print-ready designs'],
-  },
-  {
-    icon: Layers,
-    title: 'Branding & Visual Design',
-    description: 'Complete brand identity packages including logos, color systems, and brand guidelines. Build a cohesive visual presence that stands out.',
-    features: ['Logo design', 'Brand guidelines', 'Color palettes', 'Typography systems'],
-  },
-  {
-    icon: Code,
-    title: 'UI/UX Design',
-    description: 'User-centered interface design for web and mobile applications. Beautiful, functional designs that convert visitors into customers.',
-    features: ['Web app interfaces', 'Mobile app design', 'Design systems', 'Prototyping'],
-  },
-  {
-    icon: Zap,
-    title: 'AI Automation Consulting',
-    description: 'Optimize your creative workflow with AI-powered solutions. From content generation to design automation, we help you work smarter.',
-    features: ['Workflow analysis', 'Tool integration', 'Process automation', 'Training & support'],
-  },
-  {
-    icon: Wand2,
-    title: 'Custom Design Solutions',
-    description: 'Bespoke design services tailored to your unique needs. Whether it\'s a one-off project or ongoing support, we\'ve got you covered.',
-    features: ['Custom illustrations', 'Motion graphics', 'Print design', 'Packaging design'],
-  },
-];
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Sparkles,
+  Palette,
+  Code,
+  Zap,
+  Layers,
+  Wand2,
+};
 
 const Services = () => {
+  const { data: services = [], isLoading } = useQuery({
+    queryKey: ['services'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('services')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+
   return (
     <Layout>
       {/* Hero Section */}
@@ -73,33 +58,40 @@ const Services = () => {
       {/* Services Grid */}
       <section className="py-12 pb-20">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((service, index) => (
-              <motion.div
-                key={service.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <GlassCard className="h-full">
-                  <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6">
-                    <service.icon className="w-7 h-7 text-primary" />
-                  </div>
-                  <h3 className="font-semibold text-xl text-foreground mb-3">{service.title}</h3>
-                  <p className="text-muted-foreground mb-6 leading-relaxed">{service.description}</p>
-                  <ul className="space-y-2">
-                    {service.features.map((feature) => (
-                      <li key={feature} className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </GlassCard>
-              </motion.div>
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="text-center py-12 text-muted-foreground">Loading services...</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {services.map((service, index) => {
+                const IconComponent = iconMap[service.icon] || Sparkles;
+                return (
+                  <motion.div
+                    key={service.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <GlassCard className="h-full">
+                      <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6">
+                        <IconComponent className="w-7 h-7 text-primary" />
+                      </div>
+                      <h3 className="font-semibold text-xl text-foreground mb-3">{service.title}</h3>
+                      <p className="text-muted-foreground mb-6 leading-relaxed">{service.description}</p>
+                      <ul className="space-y-2">
+                        {(service.features || []).map((feature: string, i: number) => (
+                          <li key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </GlassCard>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 

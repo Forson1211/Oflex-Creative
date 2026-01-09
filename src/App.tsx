@@ -17,6 +17,7 @@ import Checkout from "./pages/Checkout";
 import Dashboard from "./pages/admin/Dashboard";
 import Products from "./pages/admin/Products";
 import FeaturedProjects from "./pages/admin/FeaturedProjects";
+import AdminServices from "./pages/admin/Services";
 import SiteCustomization from "./pages/admin/SiteCustomization";
 import Orders from "./pages/admin/Orders";
 import Users from "./pages/admin/Users";
@@ -45,6 +46,7 @@ const App = () => (
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/admin" element={<Dashboard />} />
               <Route path="/admin/featured-projects" element={<FeaturedProjects />} />
+              <Route path="/admin/services" element={<AdminServices />} />
               <Route path="/admin/products" element={<Products />} />
               <Route path="/admin/customization" element={<SiteCustomization />} />
               <Route path="/admin/orders" element={<Orders />} />

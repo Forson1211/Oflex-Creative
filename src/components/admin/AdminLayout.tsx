@@ -12,6 +12,8 @@ import {
   X,
   Home,
   Image,
+  Briefcase,
+  Palette,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -25,10 +27,11 @@ interface AdminLayoutProps {
 const navItems = [
   { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/admin/featured-projects', label: 'Featured Projects', icon: Image },
+  { path: '/admin/services', label: 'Services', icon: Briefcase },
   { path: '/admin/products', label: 'Products', icon: Package },
   { path: '/admin/orders', label: 'Orders', icon: ShoppingCart },
   { path: '/admin/users', label: 'Users', icon: Users },
-  { path: '/admin/customization', label: 'Customization', icon: Settings },
+  { path: '/admin/customization', label: 'Customization', icon: Palette },
   { path: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
