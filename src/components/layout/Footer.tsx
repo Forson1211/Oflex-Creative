@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Sparkles, Instagram, Twitter, Linkedin, Github, Mail } from 'lucide-react';
+import { Instagram, Twitter, Linkedin, Github, Mail } from 'lucide-react';
+import oflexLogo from '@/assets/oflex-logo.png';
 
 const quickLinks = [
   { name: 'Home', path: '/' },
@@ -36,10 +37,7 @@ export const Footer = () => {
             className="lg:col-span-1"
           >
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="font-serif text-xl font-bold text-foreground">Oflex Creative</span>
+              <img src={oflexLogo} alt="Oflex Creative" className="h-10 w-auto" />
             </Link>
             <p className="text-muted-foreground text-sm leading-relaxed mb-6">
               Crafting digital experiences that inspire. From AI prompts to stunning designs, 

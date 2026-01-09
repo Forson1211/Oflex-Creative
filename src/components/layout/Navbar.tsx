@@ -20,6 +20,7 @@ import {
 import { Plus, Minus, Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import oflexLogo from '@/assets/oflex-logo.png';
 
 const navLinks = [
   { name: 'Home', path: '/' },
@@ -172,14 +173,13 @@ export const Navbar = () => {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <motion.div
-              whileHover={{ rotate: 180 }}
-              transition={{ duration: 0.5 }}
-              className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center"
-            >
-              <Sparkles className="w-5 h-5 text-primary-foreground" />
-            </motion.div>
-            <span className="font-serif text-xl font-bold text-foreground">Oflex Creative</span>
+            <motion.img
+              src={oflexLogo}
+              alt="Oflex Creative"
+              className="h-10 w-auto"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
+            />
           </Link>
 
           {/* Desktop Navigation */}
