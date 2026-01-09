@@ -1,7 +1,14 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Instagram, Twitter, Linkedin, Github, Mail } from 'lucide-react';
+import { Instagram, Twitter, Linkedin, Facebook, Mail } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import oflexLogo from '@/assets/oflex-logo.png';
+
+interface SiteSetting {
+  setting_key: string;
+  setting_value: string | null;
+}
 
 const quickLinks = [
   { name: 'Home', path: '/' },
@@ -17,14 +24,30 @@ const serviceLinks = [
   { name: 'UI/UX Design', path: '/services' },
 ];
 
-const socialLinks = [
-  { icon: Instagram, href: '#', label: 'Instagram' },
-  { icon: Twitter, href: '#', label: 'Twitter' },
-  { icon: Linkedin, href: '#', label: 'LinkedIn' },
-  { icon: Github, href: '#', label: 'GitHub' },
-];
-
 export const Footer = () => {
+  const { data: siteSettings = [] } = useQuery({
+    queryKey: ['site-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('site_settings').select('setting_key, setting_value');
+      if (error) throw error;
+      return data as SiteSetting[];
+    },
+  });
+
+  const getSetting = (key: string, defaultValue: string = '') => {
+    const setting = siteSettings.find((s) => s.setting_key === key);
+    return setting?.setting_value || defaultValue;
+  };
+
+  const socialLinks = [
+    { icon: Instagram, href: getSetting('social_instagram', '#'), label: 'Instagram' },
+    { icon: Twitter, href: getSetting('social_twitter', '#'), label: 'Twitter' },
+    { icon: Linkedin, href: getSetting('social_linkedin', '#'), label: 'LinkedIn' },
+    { icon: Facebook, href: getSetting('social_facebook', '#'), label: 'Facebook' },
+  ].filter(link => link.href && link.href !== '#');
+
+  const logoUrl = getSetting('logo_url', '');
+
   return (
     <footer className="bg-card border-t border-border">
       <div className="container mx-auto px-4 py-12 md:py-16">
@@ -37,26 +60,33 @@ export const Footer = () => {
             className="lg:col-span-1"
           >
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <img src={oflexLogo} alt="Oflex Creative" className="h-10 w-auto" />
+              <img 
+                src={logoUrl || oflexLogo} 
+                alt={getSetting('site_name', 'Oflex Creative')} 
+                className="h-10 w-auto" 
+              />
             </Link>
             <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-              Crafting digital experiences that inspire. From AI prompts to stunning designs, 
-              we bring your creative visions to life.
+              {getSetting('about_description', 'Crafting digital experiences that inspire. From AI prompts to stunning designs, we bring your creative visions to life.')}
             </p>
-            <div className="flex items-center gap-3">
-              {socialLinks.map((social) => (
-                <motion.a
-                  key={social.label}
-                  href={social.href}
-                  whileHover={{ scale: 1.1, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
-                  aria-label={social.label}
-                >
-                  <social.icon className="w-4 h-4" />
-                </motion.a>
-              ))}
-            </div>
+            {socialLinks.length > 0 && (
+              <div className="flex items-center gap-3">
+                {socialLinks.map((social) => (
+                  <motion.a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ scale: 1.1, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
+                    aria-label={social.label}
+                  >
+                    <social.icon className="w-4 h-4" />
+                  </motion.a>
+                ))}
+              </div>
+            )}
           </motion.div>
 
           {/* Quick Links */}
@@ -103,27 +133,30 @@ export const Footer = () => {
             </ul>
           </motion.div>
 
-          {/* Newsletter */}
+          {/* Contact Info */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3 }}
           >
-            <h4 className="font-semibold text-foreground mb-4">Stay Updated</h4>
-            <p className="text-muted-foreground text-sm mb-4">
-              Subscribe to get the latest products and updates.
-            </p>
-            <div className="flex gap-2">
-              <div className="flex-1 relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-            </div>
+            <h4 className="font-semibold text-foreground mb-4">Contact</h4>
+            <ul className="space-y-3 text-sm text-muted-foreground">
+              {getSetting('contact_email') && (
+                <li className="flex items-center gap-2">
+                  <Mail className="w-4 h-4" />
+                  <a href={`mailto:${getSetting('contact_email')}`} className="hover:text-primary transition-colors">
+                    {getSetting('contact_email')}
+                  </a>
+                </li>
+              )}
+              {getSetting('phone_number') && (
+                <li>{getSetting('phone_number')}</li>
+              )}
+              {getSetting('address') && (
+                <li>{getSetting('address')}</li>
+              )}
+            </ul>
           </motion.div>
         </div>
 
@@ -136,7 +169,7 @@ export const Footer = () => {
           className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4"
         >
           <p className="text-muted-foreground text-sm">
-            © {new Date().getFullYear()} Oflex Creative. All rights reserved.
+            {getSetting('footer_text', `© ${new Date().getFullYear()} Oflex Creative. All rights reserved.`)}
           </p>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <Link to="#" className="hover:text-primary transition-colors">Privacy Policy</Link>
