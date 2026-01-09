@@ -46,6 +46,11 @@ const SiteCustomization = () => {
     onSuccess: (url) => updateSetting('logo_url', url),
   });
 
+  const { uploadImage: uploadHeroBg, isUploading: isUploadingHeroBg } = useImageUpload({
+    bucket: 'site-assets',
+    onSuccess: (url) => updateSetting('hero_background_url', url),
+  });
+
   const { data: siteSettings = [], isLoading } = useQuery({
     queryKey: ['site-settings-admin'],
     queryFn: async () => {
@@ -297,6 +302,55 @@ const SiteCustomization = () => {
                       rows={3}
                       placeholder="From AI prompts to stunning designs..."
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* Hero Background Image */}
+              <div className="bg-card border border-border rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Image className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground">Hero Background</h2>
+                    <p className="text-sm text-muted-foreground">Upload a background image for the hero section</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label>Background Image</Label>
+                    <ImageUpload
+                      value={settings.hero_background_url || ''}
+                      onChange={(url) => updateSetting('hero_background_url', url)}
+                      onUpload={uploadHeroBg}
+                      isUploading={isUploadingHeroBg}
+                      aspectRatio="video"
+                      className="mt-2"
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="hero_background_url">Or enter image URL</Label>
+                      <Input
+                        id="hero_background_url"
+                        value={settings.hero_background_url || ''}
+                        onChange={(e) => updateSetting('hero_background_url', e.target.value)}
+                        placeholder="https://..."
+                      />
+                    </div>
+                    {settings.hero_background_url && (
+                      <div className="p-4 bg-muted/50 rounded-lg">
+                        <p className="text-xs text-muted-foreground mb-2">Preview:</p>
+                        <img 
+                          src={settings.hero_background_url} 
+                          alt="Hero background preview" 
+                          className="w-full h-24 object-cover rounded-lg"
+                          onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { ImageUpload } from '@/components/ui/ImageUpload';
+import { useImageUpload } from '@/hooks/useImageUpload';
 import {
   Dialog,
   DialogContent,
@@ -24,7 +26,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Image, GripVertical } from 'lucide-react';
+import { Plus, Pencil, Trash2, Image as ImageIcon, GripVertical } from 'lucide-react';
 
 interface FeaturedProject {
   id: string;
@@ -48,6 +50,11 @@ const FeaturedProjects = () => {
     description: '',
     is_featured: true,
     display_order: 0,
+  });
+
+  const { uploadImage, isUploading } = useImageUpload({
+    bucket: 'site-assets',
+    onSuccess: (url) => setFormData((prev) => ({ ...prev, image_url: url })),
   });
 
   const { data: projects = [], isLoading } = useQuery({
@@ -178,7 +185,7 @@ const FeaturedProjects = () => {
               </div>
             ) : projects.length === 0 ? (
               <div className="p-12 text-center">
-                <Image className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <ImageIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">No projects yet. Add your first project!</p>
               </div>
             ) : (
@@ -272,24 +279,21 @@ const FeaturedProjects = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="image_url">Image URL</Label>
+                <Label>Project Image</Label>
+                <ImageUpload
+                  value={formData.image_url}
+                  onChange={(url) => setFormData({ ...formData, image_url: url })}
+                  onUpload={uploadImage}
+                  isUploading={isUploading}
+                  aspectRatio="video"
+                />
+                <p className="text-xs text-muted-foreground">Or enter URL directly:</p>
                 <Input
                   id="image_url"
                   value={formData.image_url}
                   onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
                   placeholder="https://..."
-                  required
                 />
-                {formData.image_url && (
-                  <img
-                    src={formData.image_url}
-                    alt="Preview"
-                    className="w-full h-32 object-cover rounded-lg mt-2"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
-                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>

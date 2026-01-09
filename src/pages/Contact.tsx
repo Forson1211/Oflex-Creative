@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Send, CheckCircle } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -10,15 +12,34 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
-const contactInfo = [
-  { icon: Mail, label: 'Email', value: 'hello@oflexcreative.com' },
-  { icon: Phone, label: 'Phone', value: '+1 (555) 123-4567' },
-  { icon: MapPin, label: 'Location', value: 'San Francisco, CA' },
-];
+interface SiteSetting {
+  setting_key: string;
+  setting_value: string | null;
+}
 
 const Contact = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const { data: siteSettings = [] } = useQuery({
+    queryKey: ['site-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('site_settings').select('setting_key, setting_value');
+      if (error) throw error;
+      return data as SiteSetting[];
+    },
+  });
+
+  const getSetting = (key: string, defaultValue: string = '') => {
+    const setting = siteSettings.find((s) => s.setting_key === key);
+    return setting?.setting_value || defaultValue;
+  };
+
+  const contactInfo = [
+    { icon: Mail, label: 'Email', value: getSetting('contact_email', 'hello@oflexcreative.com') },
+    { icon: Phone, label: 'Phone', value: getSetting('phone_number', '+1 (555) 123-4567') },
+    { icon: MapPin, label: 'Location', value: getSetting('address', 'San Francisco, CA') },
+  ];
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -107,13 +128,19 @@ const Contact = () => {
               >
                 <h3 className="font-semibold text-foreground mb-4">Follow Us</h3>
                 <div className="flex gap-3">
-                  {['Instagram', 'Twitter', 'LinkedIn'].map((social) => (
+                  {[
+                    { name: 'Instagram', url: getSetting('social_instagram', '#') },
+                    { name: 'Twitter', url: getSetting('social_twitter', '#') },
+                    { name: 'LinkedIn', url: getSetting('social_linkedin', '#') },
+                  ].filter(s => s.url && s.url !== '#').map((social) => (
                     <a
-                      key={social}
-                      href="#"
+                      key={social.name}
+                      href={social.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="px-4 py-2 rounded-lg bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors text-sm font-medium"
                     >
-                      {social}
+                      {social.name}
                     </a>
                   ))}
                 </div>

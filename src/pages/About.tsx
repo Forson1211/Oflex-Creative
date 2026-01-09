@@ -1,10 +1,17 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Target, Eye, Heart, Lightbulb } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout/Layout';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { GlassCard } from '@/components/ui/GlassCard';
+
+interface SiteSetting {
+  setting_key: string;
+  setting_value: string | null;
+}
 
 const values = [
   { icon: Target, title: 'Mission', description: 'To empower creators and businesses with premium digital tools and stunning designs that elevate their brand presence.' },
@@ -14,6 +21,20 @@ const values = [
 ];
 
 const About = () => {
+  const { data: siteSettings = [] } = useQuery({
+    queryKey: ['site-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('site_settings').select('setting_key, setting_value');
+      if (error) throw error;
+      return data as SiteSetting[];
+    },
+  });
+
+  const getSetting = (key: string, defaultValue: string = '') => {
+    const setting = siteSettings.find((s) => s.setting_key === key);
+    return setting?.setting_value || defaultValue;
+  };
+
   return (
     <Layout>
       {/* Hero Section */}
@@ -29,12 +50,10 @@ const About = () => {
                 About Us
               </span>
               <h1 className="font-sans text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight tracking-tight">
-                Crafting Digital Excellence
+                {getSetting('about_title', 'Crafting Digital Excellence')}
               </h1>
               <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                Oflex Creative is a digital design studio specializing in creating premium 
-                visual experiences. From AI-powered prompts to complete brand identities, 
-                we bring creative visions to life with precision and artistry.
+                {getSetting('about_description', 'Oflex Creative is a digital design studio specializing in creating premium visual experiences. From AI-powered prompts to complete brand identities, we bring creative visions to life with precision and artistry.')}
               </p>
               <Button size="lg" asChild>
                 <Link to="/contact">
