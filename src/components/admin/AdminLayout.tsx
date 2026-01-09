@@ -11,10 +11,12 @@ import {
   Menu,
   X,
   Home,
+  Image,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
+import oflexLogo from '@/assets/oflex-logo.png';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -22,8 +24,8 @@ interface AdminLayoutProps {
 
 const navItems = [
   { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/admin/featured-projects', label: 'Featured Projects', icon: Package },
-  { path: '/admin/products', label: 'Products', icon: ShoppingCart },
+  { path: '/admin/featured-projects', label: 'Featured Projects', icon: Image },
+  { path: '/admin/products', label: 'Products', icon: Package },
   { path: '/admin/orders', label: 'Orders', icon: ShoppingCart },
   { path: '/admin/users', label: 'Users', icon: Users },
   { path: '/admin/customization', label: 'Customization', icon: Settings },
@@ -60,8 +62,8 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-6 border-b border-border flex items-center justify-between">
-            <Link to="/admin" className="font-serif text-xl font-bold text-foreground">
-              Cre<span className="text-primary">8</span>ive Admin
+            <Link to="/admin" className="flex items-center">
+              <img src={oflexLogo} alt="Oflex Admin" className="h-8 w-auto" />
             </Link>
             <Button
               variant="ghost"

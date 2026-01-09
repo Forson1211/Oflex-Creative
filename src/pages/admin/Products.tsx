@@ -23,6 +23,8 @@ import {
 } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useImageUpload } from '@/hooks/useImageUpload';
+import { ImageUpload } from '@/components/ui/ImageUpload';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Product = Tables<'products'>;
@@ -45,6 +47,11 @@ const Products = () => {
     is_active: true,
   });
   const { toast } = useToast();
+  
+  const { uploadImage, isUploading } = useImageUpload({
+    bucket: 'product-images',
+    onSuccess: (url) => setFormData((prev) => ({ ...prev, image_url: url })),
+  });
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -254,9 +261,16 @@ const Products = () => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="image_url">Image URL</Label>
+                    <Label>Product Image</Label>
+                    <ImageUpload
+                      value={formData.image_url}
+                      onChange={(url) => setFormData({ ...formData, image_url: url })}
+                      onUpload={uploadImage}
+                      isUploading={isUploading}
+                      aspectRatio="video"
+                    />
+                    <p className="text-xs text-muted-foreground">Or enter URL manually:</p>
                     <Input
-                      id="image_url"
                       type="url"
                       value={formData.image_url}
                       onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
