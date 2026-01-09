@@ -1,17 +1,11 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Target, Eye, Heart, Lightbulb } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout/Layout';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { GlassCard } from '@/components/ui/GlassCard';
-
-interface SiteSetting {
-  setting_key: string;
-  setting_value: string | null;
-}
 
 const values = [
   { icon: Target, title: 'Mission', description: 'To empower creators and businesses with premium digital tools and stunning designs that elevate their brand presence.' },
@@ -21,19 +15,7 @@ const values = [
 ];
 
 const About = () => {
-  const { data: siteSettings = [] } = useQuery({
-    queryKey: ['site-settings'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('site_settings').select('setting_key, setting_value');
-      if (error) throw error;
-      return data as SiteSetting[];
-    },
-  });
-
-  const getSetting = (key: string, defaultValue: string = '') => {
-    const setting = siteSettings.find((s) => s.setting_key === key);
-    return setting?.setting_value || defaultValue;
-  };
+  const { getSetting } = useSiteSettings();
 
   return (
     <Layout>

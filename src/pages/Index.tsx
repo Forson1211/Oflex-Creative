@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout/Layout';
 import { SectionHeading } from '@/components/ui/SectionHeading';
@@ -22,10 +23,6 @@ interface FeaturedProject {
   display_order: number;
 }
 
-interface SiteSetting {
-  setting_key: string;
-  setting_value: string | null;
-}
 const testimonials = [
   { name: 'Sarah Chen', role: 'Startup Founder', content: 'Oflex Creative transformed our brand identity. The attention to detail is incredible!', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop' },
   { name: 'Marcus Johnson', role: 'Creative Director', content: 'The prompt packs saved us countless hours. Highly recommend for any creative team.', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop' },
@@ -43,21 +40,7 @@ const Index = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  // Fetch site settings
-  const { data: siteSettings = [] } = useQuery({
-    queryKey: ['site-settings'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('site_settings').select('setting_key, setting_value');
-      if (error) throw error;
-      return data as SiteSetting[];
-    },
-  });
-
-  const getSetting = (key: string, defaultValue: string = '') => {
-    const setting = siteSettings.find((s) => s.setting_key === key);
-    return setting?.setting_value || defaultValue;
-  };
+  const { getSetting } = useSiteSettings();
 
   // Fetch featured projects from database
   const { data: featuredProjects = [] } = useQuery({

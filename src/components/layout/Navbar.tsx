@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -50,10 +51,13 @@ export const Navbar = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const { user, signOut, isAdmin } = useAuth();
+  const { getSetting } = useSiteSettings();
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  const logoUrl = getSetting('logo_url', '');
 
   // Fetch products for cart
   const { data: products = [] } = useQuery({
@@ -174,8 +178,8 @@ export const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <motion.img
-              src={oflexLogo}
-              alt="Oflex Creative"
+              src={logoUrl || oflexLogo}
+              alt={getSetting('site_name', 'Oflex Creative')}
               className="h-10 w-auto"
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.2 }}
