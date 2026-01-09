@@ -22,9 +22,11 @@ interface AdminLayoutProps {
 
 const navItems = [
   { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/admin/products', label: 'Products', icon: Package },
+  { path: '/admin/featured-projects', label: 'Featured Projects', icon: Package },
+  { path: '/admin/products', label: 'Products', icon: ShoppingCart },
   { path: '/admin/orders', label: 'Orders', icon: ShoppingCart },
   { path: '/admin/users', label: 'Users', icon: Users },
+  { path: '/admin/customization', label: 'Customization', icon: Settings },
   { path: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 

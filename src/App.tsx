@@ -16,6 +16,8 @@ import Profile from "./pages/Profile";
 import Checkout from "./pages/Checkout";
 import Dashboard from "./pages/admin/Dashboard";
 import Products from "./pages/admin/Products";
+import FeaturedProjects from "./pages/admin/FeaturedProjects";
+import SiteCustomization from "./pages/admin/SiteCustomization";
 import Orders from "./pages/admin/Orders";
 import Users from "./pages/admin/Users";
 import Settings from "./pages/admin/Settings";
@@ -42,7 +44,9 @@ const App = () => (
               <Route path="/profile" element={<Profile />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/admin" element={<Dashboard />} />
+              <Route path="/admin/featured-projects" element={<FeaturedProjects />} />
               <Route path="/admin/products" element={<Products />} />
+              <Route path="/admin/customization" element={<SiteCustomization />} />
               <Route path="/admin/orders" element={<Orders />} />
               <Route path="/admin/users" element={<Users />} />
               <Route path="/admin/settings" element={<Settings />} />
