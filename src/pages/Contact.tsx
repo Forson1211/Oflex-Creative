@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Send, CheckCircle } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { Layout } from '@/components/layout/Layout';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -12,28 +11,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
-interface SiteSetting {
-  setting_key: string;
-  setting_value: string | null;
-}
-
 const Contact = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-
-  const { data: siteSettings = [] } = useQuery({
-    queryKey: ['site-settings'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('site_settings').select('setting_key, setting_value');
-      if (error) throw error;
-      return data as SiteSetting[];
-    },
-  });
-
-  const getSetting = (key: string, defaultValue: string = '') => {
-    const setting = siteSettings.find((s) => s.setting_key === key);
-    return setting?.setting_value || defaultValue;
-  };
+  const { getSetting } = useSiteSettings();
 
   const contactInfo = [
     { icon: Mail, label: 'Email', value: getSetting('contact_email', 'hello@oflexcreative.com') },

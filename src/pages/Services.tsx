@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Sparkles, Palette, Code, Zap, Layers, Wand2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout/Layout';
 import { SectionHeading } from '@/components/ui/SectionHeading';
@@ -18,6 +19,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 const Services = () => {
+  const { getSetting } = useSiteSettings();
+  
   const { data: services = [], isLoading } = useQuery({
     queryKey: ['services'],
     queryFn: async () => {
@@ -45,11 +48,10 @@ const Services = () => {
               Our Services
             </span>
             <h1 className="font-sans text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight tracking-tight">
-              Creative Solutions for Every Need
+              {getSetting('services_title', 'Creative Solutions for Every Need')}
             </h1>
             <p className="text-lg text-muted-foreground mb-8">
-              From AI-powered prompts to complete brand identities, we offer comprehensive 
-              creative services to elevate your brand and streamline your workflow.
+              {getSetting('services_description', 'From AI-powered prompts to complete brand identities, we offer comprehensive creative services to elevate your brand and streamline your workflow.')}
             </p>
           </motion.div>
         </div>

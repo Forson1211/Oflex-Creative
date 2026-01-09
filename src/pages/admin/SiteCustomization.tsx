@@ -136,9 +136,10 @@ const SiteCustomization = () => {
           </div>
 
           <Tabs defaultValue="general" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="general">General</TabsTrigger>
               <TabsTrigger value="hero">Hero Section</TabsTrigger>
+              <TabsTrigger value="pages">Pages</TabsTrigger>
               <TabsTrigger value="contact">Contact</TabsTrigger>
               <TabsTrigger value="social">Social & Footer</TabsTrigger>
             </TabsList>
@@ -354,35 +355,75 @@ const SiteCustomization = () => {
                   </div>
                 </div>
               </div>
+            </TabsContent>
 
-              {/* About Section */}
+            {/* Pages Tab */}
+            <TabsContent value="pages" className="space-y-6">
+              {/* Services Page */}
               <div className="bg-card border border-border rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                     <FileText className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold text-foreground">About Section</h2>
-                    <p className="text-sm text-muted-foreground">Content for the about page</p>
+                    <h2 className="text-lg font-semibold text-foreground">Services Page</h2>
+                    <p className="text-sm text-muted-foreground">Customize the services page header</p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="about_title">About Title</Label>
+                    <Label htmlFor="services_title">Services Page Title</Label>
                     <Input
-                      id="about_title"
-                      value={settings.about_title || ''}
-                      onChange={(e) => updateSetting('about_title', e.target.value)}
+                      id="services_title"
+                      value={settings.services_title || ''}
+                      onChange={(e) => updateSetting('services_title', e.target.value)}
+                      placeholder="Creative Solutions for Every Need"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="about_description">About Description</Label>
+                    <Label htmlFor="services_description">Services Page Description</Label>
                     <Textarea
-                      id="about_description"
+                      id="services_description"
+                      value={settings.services_description || ''}
+                      onChange={(e) => updateSetting('services_description', e.target.value)}
+                      rows={3}
+                      placeholder="From AI-powered prompts to complete brand identities..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* About Page */}
+              <div className="bg-card border border-border rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-accent-foreground" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground">About Page</h2>
+                    <p className="text-sm text-muted-foreground">Customize the about page content</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="about_title_page">About Page Title</Label>
+                    <Input
+                      id="about_title_page"
+                      value={settings.about_title || ''}
+                      onChange={(e) => updateSetting('about_title', e.target.value)}
+                      placeholder="Crafting Digital Excellence"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="about_description_page">About Page Description</Label>
+                    <Textarea
+                      id="about_description_page"
                       value={settings.about_description || ''}
                       onChange={(e) => updateSetting('about_description', e.target.value)}
                       rows={4}
+                      placeholder="Oflex Creative is a digital design studio..."
                     />
                   </div>
                 </div>
