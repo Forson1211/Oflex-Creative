@@ -12,12 +12,20 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/badge';
 import heroBg from '@/assets/hero-bg.jpg';
 
-const featuredWorks = [
-  { id: 1, title: 'Brand Identity System', category: 'Branding', image: 'https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=600&h=400&fit=crop' },
-  { id: 2, title: 'E-commerce Dashboard', category: 'UI/UX', image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop' },
-  { id: 3, title: 'Mobile App Design', category: 'UI/UX', image: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&h=400&fit=crop' },
-  { id: 4, title: 'Creative Poster Series', category: 'Posters', image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&h=400&fit=crop' },
-];
+interface FeaturedProject {
+  id: string;
+  title: string;
+  category: string;
+  image_url: string;
+  description: string | null;
+  is_featured: boolean;
+  display_order: number;
+}
+
+interface SiteSetting {
+  setting_key: string;
+  setting_value: string | null;
+}
 const testimonials = [
   { name: 'Sarah Chen', role: 'Startup Founder', content: 'Oflex Creative transformed our brand identity. The attention to detail is incredible!', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop' },
   { name: 'Marcus Johnson', role: 'Creative Director', content: 'The prompt packs saved us countless hours. Highly recommend for any creative team.', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop' },
@@ -35,6 +43,36 @@ const Index = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Fetch site settings
+  const { data: siteSettings = [] } = useQuery({
+    queryKey: ['site-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('site_settings').select('setting_key, setting_value');
+      if (error) throw error;
+      return data as SiteSetting[];
+    },
+  });
+
+  const getSetting = (key: string, defaultValue: string = '') => {
+    const setting = siteSettings.find((s) => s.setting_key === key);
+    return setting?.setting_value || defaultValue;
+  };
+
+  // Fetch featured projects from database
+  const { data: featuredProjects = [] } = useQuery({
+    queryKey: ['featured-projects'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('featured_projects')
+        .select('*')
+        .eq('is_featured', true)
+        .order('display_order', { ascending: true })
+        .limit(4);
+      if (error) throw error;
+      return data as FeaturedProject[];
+    },
+  });
 
   // Fetch featured products from database
   const { data: featuredProducts = [] } = useQuery({
@@ -116,10 +154,10 @@ const Index = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="font-serif text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight"
+              className="font-sans text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight tracking-tight"
             >
-              Crafting Digital
-              <span className="block text-primary">Experiences</span>
+              {getSetting('hero_title', 'Crafting Digital')}
+              <span className="block text-primary">{getSetting('hero_subtitle', 'Experiences')}</span>
             </motion.h1>
             
             <motion.p
@@ -128,8 +166,7 @@ const Index = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto"
             >
-              From AI prompts to stunning designs, we bring your creative visions to life. 
-              Explore our portfolio and discover premium digital products.
+              {getSetting('hero_description', 'From AI prompts to stunning designs, we bring your creative visions to life. Explore our portfolio and discover premium digital products.')}
             </motion.p>
             
             <motion.div
@@ -214,9 +251,9 @@ const Index = () => {
           />
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {featuredWorks.map((work, index) => (
+            {featuredProjects.map((project, index) => (
               <motion.div
-                key={work.id}
+                key={project.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -226,16 +263,19 @@ const Index = () => {
                   <GlassCard className="overflow-hidden p-0 group">
                     <div className="relative aspect-[4/3] overflow-hidden">
                       <img
-                        src={work.image}
-                        alt={work.title}
+                        src={project.image_url}
+                        alt={project.title}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600&h=400&fit=crop';
+                        }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <span className="inline-block px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-medium mb-2">
-                          {work.category}
+                          {project.category}
                         </span>
-                        <h3 className="text-lg font-semibold text-foreground">{work.title}</h3>
+                        <h3 className="text-lg font-semibold text-foreground">{project.title}</h3>
                       </div>
                     </div>
                   </GlassCard>

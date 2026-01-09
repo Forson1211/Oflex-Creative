@@ -51,7 +51,7 @@ const Contact = () => {
             <span className="inline-block px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-sm font-medium mb-6">
               Contact Us
             </span>
-            <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight">
+            <h1 className="font-sans text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight tracking-tight">
               Let's Work Together
             </h1>
             <p className="text-lg text-muted-foreground">
@@ -74,7 +74,7 @@ const Contact = () => {
               className="space-y-6"
             >
               <div>
-                <h2 className="font-serif text-2xl font-bold text-foreground mb-4">Get In Touch</h2>
+                <h2 className="font-sans text-2xl font-bold text-foreground mb-4">Get In Touch</h2>
                 <p className="text-muted-foreground">
                   Ready to start your project? Contact us through any of these channels.
                 </p>
