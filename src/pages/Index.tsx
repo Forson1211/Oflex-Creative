@@ -11,6 +11,7 @@ import { Layout } from '@/components/layout/Layout';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/badge';
+import { HeroBannerSlider } from '@/components/HeroBannerSlider';
 import heroBg from '@/assets/hero-bg.jpg';
 
 interface FeaturedProject {
@@ -115,11 +116,15 @@ const Index = () => {
     <Layout>
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center overflow-hidden">
+        {/* Hero Banner Slider */}
+        <HeroBannerSlider />
+        
+        {/* Fallback background */}
         <div 
-          className="absolute inset-0 bg-cover bg-center opacity-20"
+          className="absolute inset-0 bg-cover bg-center opacity-20 -z-10"
           style={{ backgroundImage: `url(${getSetting('hero_background_url', '') || heroBg})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/80 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/80 to-background z-10" />
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
