@@ -51,27 +51,43 @@ export const Footer = () => {
 
   return (
     <footer className="bg-card border-t border-border">
-      {/* Mobile Newsletter Section */}
-      <div className="md:hidden border-b border-border">
-        <div className="container mx-auto px-4 py-8">
+      {/* Newsletter Section - Shows on ALL devices */}
+      <div className="border-b border-border bg-gradient-to-r from-primary/5 via-transparent to-primary/5">
+        <div className="container mx-auto px-4 py-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            className="max-w-2xl mx-auto text-center"
           >
-            <h4 className="font-semibold text-foreground mb-2 text-center">Subscribe to Newsletter</h4>
-            <p className="text-sm text-muted-foreground mb-4 text-center">Stay updated with our latest projects and offers</p>
-            <form onSubmit={handleSubscribe} className="flex gap-2">
+            <h4 className="text-xl md:text-2xl font-bold text-foreground mb-2">Subscribe to Our Newsletter</h4>
+            <p className="text-sm md:text-base text-muted-foreground mb-6">Stay updated with our latest projects, creative insights, and exclusive offers</p>
+            <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
               <Input
                 type="email"
-                placeholder="Enter your email"
+                placeholder="Enter your email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="flex-1"
+                className="flex-1 h-12"
                 required
               />
-              <Button type="submit" size="icon" disabled={isSubscribing}>
-                <Send className="w-4 h-4" />
+              <Button type="submit" size="lg" disabled={isSubscribing} className="h-12 px-6">
+                {isSubscribing ? (
+                  <span className="flex items-center gap-2">
+                    <motion.span
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    >
+                      <Send className="w-4 h-4" />
+                    </motion.span>
+                    Subscribing...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Send className="w-4 h-4" />
+                    Subscribe
+                  </span>
+                )}
               </Button>
             </form>
           </motion.div>
