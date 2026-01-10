@@ -12,6 +12,7 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 interface Product {
   id: string;
@@ -38,6 +39,7 @@ const Store = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { getSetting } = useSiteSettings();
 
   // Fetch products from database
   const { data: products = [], isLoading: productsLoading } = useQuery({
@@ -239,11 +241,10 @@ const Store = () => {
               Digital Store
             </span>
             <h1 className="font-sans text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight tracking-tight">
-              Premium Digital Products
+              {getSetting('store_title', 'Premium Digital Products')}
             </h1>
             <p className="text-lg text-muted-foreground mb-8">
-              Discover our collection of premium digital assets, templates, and AI prompts 
-              to supercharge your creative workflow.
+              {getSetting('store_description', 'Discover our collection of premium digital assets, templates, and AI prompts to supercharge your creative workflow.')}
             </p>
             
             {/* Cart Button */}

@@ -95,13 +95,13 @@ export const Footer = () => {
       </div>
 
       <div className="container mx-auto px-4 py-12 md:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-12">
           {/* Brand */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="lg:col-span-1"
+            className="col-span-2 lg:col-span-1"
           >
             <Link to="/" className="flex items-center gap-2 mb-4">
               <img 
@@ -139,6 +139,7 @@ export const Footer = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
+            className="text-left"
           >
             <h4 className="font-semibold text-foreground mb-4">Quick Links</h4>
             <ul className="space-y-3">
@@ -161,6 +162,7 @@ export const Footer = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
+            className="text-left"
           >
             <h4 className="font-semibold text-foreground mb-4">Services</h4>
             <ul className="space-y-3">
@@ -183,6 +185,7 @@ export const Footer = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3 }}
+            className="text-left"
           >
             <h4 className="font-semibold text-foreground mb-4">Contact</h4>
             <ul className="space-y-3 text-sm text-muted-foreground">
