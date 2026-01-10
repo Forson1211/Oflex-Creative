@@ -14,6 +14,7 @@ import {
   Image,
   Briefcase,
   Palette,
+  MessageSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -31,6 +32,7 @@ const navItems = [
   { path: '/admin/portfolio', label: 'Portfolio', icon: Briefcase },
   { path: '/admin/services', label: 'Services', icon: Briefcase },
   { path: '/admin/products', label: 'Products', icon: Package },
+  { path: '/admin/testimonials', label: 'Testimonials', icon: MessageSquare },
   { path: '/admin/orders', label: 'Orders', icon: ShoppingCart },
   { path: '/admin/users', label: 'Users', icon: Users },
   { path: '/admin/customization', label: 'Customization', icon: Palette },

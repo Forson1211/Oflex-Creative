@@ -1,0 +1,337 @@
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { AdminLayout } from '@/components/admin/AdminLayout';
+import { ProtectedRoute } from '@/components/admin/ProtectedRoute';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { Plus, Edit, Trash2, Loader2, Star, GripVertical } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+
+interface Testimonial {
+  id: string;
+  name: string;
+  role: string;
+  content: string;
+  avatar_url: string | null;
+  rating: number;
+  is_active: boolean;
+  display_order: number;
+}
+
+const Testimonials = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    role: '',
+    content: '',
+    avatar_url: '',
+    rating: 5,
+    is_active: true,
+    display_order: 0,
+  });
+
+  const { data: testimonials = [], isLoading } = useQuery({
+    queryKey: ['admin-testimonials'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('testimonials')
+        .select('*')
+        .order('display_order', { ascending: true });
+      if (error) throw error;
+      return data as Testimonial[];
+    },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      const { error } = await supabase.from('testimonials').insert(data);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-testimonials'] });
+      toast({ title: 'Testimonial created!' });
+      resetForm();
+    },
+    onError: () => toast({ title: 'Error creating testimonial', variant: 'destructive' }),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, ...data }: Testimonial) => {
+      const { error } = await supabase.from('testimonials').update(data).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-testimonials'] });
+      toast({ title: 'Testimonial updated!' });
+      resetForm();
+    },
+    onError: () => toast({ title: 'Error updating testimonial', variant: 'destructive' }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('testimonials').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-testimonials'] });
+      toast({ title: 'Testimonial deleted!' });
+    },
+    onError: () => toast({ title: 'Error deleting testimonial', variant: 'destructive' }),
+  });
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      role: '',
+      content: '',
+      avatar_url: '',
+      rating: 5,
+      is_active: true,
+      display_order: testimonials.length,
+    });
+    setEditingTestimonial(null);
+    setIsDialogOpen(false);
+  };
+
+  const handleEdit = (testimonial: Testimonial) => {
+    setEditingTestimonial(testimonial);
+    setFormData({
+      name: testimonial.name,
+      role: testimonial.role,
+      content: testimonial.content,
+      avatar_url: testimonial.avatar_url || '',
+      rating: testimonial.rating,
+      is_active: testimonial.is_active,
+      display_order: testimonial.display_order,
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingTestimonial) {
+      updateMutation.mutate({ id: editingTestimonial.id, ...formData } as Testimonial);
+    } else {
+      createMutation.mutate(formData);
+    }
+  };
+
+  return (
+    <ProtectedRoute requireAdmin>
+      <AdminLayout>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Testimonials</h1>
+              <p className="text-muted-foreground">Manage customer testimonials</p>
+            </div>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => resetForm()}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Testimonial
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingTestimonial ? 'Edit Testimonial' : 'Add Testimonial'}
+                  </DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Name</Label>
+                      <Input
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Role / Title</Label>
+                      <Input
+                        value={formData.role}
+                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Testimonial Content</Label>
+                    <Textarea
+                      value={formData.content}
+                      onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                      rows={4}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Avatar URL</Label>
+                    <Input
+                      value={formData.avatar_url}
+                      onChange={(e) => setFormData({ ...formData, avatar_url: e.target.value })}
+                      placeholder="https://..."
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Rating (1-5)</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={5}
+                        value={formData.rating}
+                        onChange={(e) => setFormData({ ...formData, rating: parseInt(e.target.value) })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Display Order</Label>
+                      <Input
+                        type="number"
+                        value={formData.display_order}
+                        onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) })}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={formData.is_active}
+                      onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                    />
+                    <Label>Active</Label>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button type="button" variant="outline" onClick={resetForm}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                      {(createMutation.isPending || updateMutation.isPending) && (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      )}
+                      {editingTestimonial ? 'Update' : 'Create'}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {isLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {testimonials.map((testimonial) => (
+                <div
+                  key={testimonial.id}
+                  className={`bg-card border border-border rounded-xl p-6 transition-opacity ${
+                    !testimonial.is_active ? 'opacity-50' : ''
+                  }`}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0">
+                      {testimonial.avatar_url ? (
+                        <img
+                          src={testimonial.avatar_url}
+                          alt={testimonial.name}
+                          className="w-14 h-14 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center">
+                          <span className="text-lg font-medium text-muted-foreground">
+                            {testimonial.name.charAt(0)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-foreground">{testimonial.name}</h3>
+                        <span className="text-sm text-muted-foreground">•</span>
+                        <span className="text-sm text-muted-foreground">{testimonial.role}</span>
+                      </div>
+                      <div className="flex items-center gap-1 mb-2">
+                        {[...Array(testimonial.rating)].map((_, i) => (
+                          <Star key={i} className="w-4 h-4 fill-primary text-primary" />
+                        ))}
+                      </div>
+                      <p className="text-muted-foreground">"{testimonial.content}"</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground px-2 py-1 bg-muted rounded">
+                        Order: {testimonial.display_order}
+                      </span>
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(testimonial)}>
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Testimonial?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteMutation.mutate(testimonial.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {testimonials.length === 0 && (
+                <div className="text-center py-12 text-muted-foreground">
+                  No testimonials yet. Add your first testimonial!
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </AdminLayout>
+    </ProtectedRoute>
+  );
+};
+
+export default Testimonials;

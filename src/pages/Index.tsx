@@ -24,11 +24,14 @@ interface FeaturedProject {
   display_order: number;
 }
 
-const testimonials = [
-  { name: 'Sarah Chen', role: 'Startup Founder', content: 'Oflex Creative transformed our brand identity. The attention to detail is incredible!', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop' },
-  { name: 'Marcus Johnson', role: 'Creative Director', content: 'The prompt packs saved us countless hours. Highly recommend for any creative team.', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop' },
-  { name: 'Emily Rodriguez', role: 'Marketing Manager', content: 'Professional, creative, and incredibly responsive. A true partner in design.', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop' },
-];
+interface Testimonial {
+  id: string;
+  name: string;
+  role: string;
+  content: string;
+  avatar_url: string | null;
+  rating: number;
+}
 
 const services = [
   { icon: Sparkles, title: 'Prompt Engineering', description: 'AI-powered creative prompts' },
@@ -70,6 +73,20 @@ const Index = () => {
         .limit(4);
       if (error) throw error;
       return data;
+    },
+  });
+
+  // Fetch testimonials from database
+  const { data: testimonials = [] } = useQuery({
+    queryKey: ['testimonials'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('testimonials')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+      if (error) throw error;
+      return data as Testimonial[];
     },
   });
 
@@ -289,7 +306,7 @@ const Index = () => {
       </section>
 
       {/* Featured Products */}
-      <section className="py-16 bg-card/50">
+      <section className="py-20 bg-card/50">
         <div className="container mx-auto px-4">
           <SectionHeading
             badge="Digital Store"
@@ -297,51 +314,55 @@ const Index = () => {
             description="Premium digital assets for your creative projects"
           />
           
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {featuredProducts.map((product, index) => (
               <motion.div
                 key={product.id}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.05 }}
+                transition={{ delay: index * 0.1 }}
                 className="group"
               >
-                <div className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all duration-300">
-                  <div className="relative aspect-[4/3] overflow-hidden">
+                <div className="bg-card rounded-2xl border border-border overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300">
+                  <div className="relative aspect-square overflow-hidden">
                     <img
-                      src={product.image_url || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=300&h=225&fit=crop'}
+                      src={product.image_url || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=400&fit=crop'}
                       alt={product.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=300&h=225&fit=crop';
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=400&fit=crop';
                       }}
                     />
                     
                     {/* Overlay on hover */}
-                    <div className="absolute inset-0 bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end justify-center pb-6">
                       <motion.button
                         onClick={(e) => {
                           e.preventDefault();
                           addToCartMutation.mutate(product.id);
                         }}
-                        className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors"
+                        className="px-6 py-3 rounded-full bg-primary text-primary-foreground font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors shadow-lg"
+                        whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        <ShoppingCart className="w-3.5 h-3.5" />
-                        Add
+                        <ShoppingCart className="w-4 h-4" />
+                        Add to Cart
                       </motion.button>
                     </div>
                   </div>
                   
-                  <div className="p-3">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+                  <div className="p-5">
+                    <p className="text-xs uppercase tracking-wider text-primary font-medium mb-2">
                       {product.category}
                     </p>
-                    <h3 className="font-medium text-foreground text-sm leading-snug line-clamp-1 mb-2">
+                    <h3 className="font-semibold text-foreground text-lg leading-snug line-clamp-2 mb-3 min-h-[3.5rem]">
                       {product.title}
                     </h3>
-                    <p className="text-primary font-bold text-sm">${product.price}</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-primary font-bold text-xl">${product.price}</p>
+                      <Badge variant="secondary" className="text-xs">Digital</Badge>
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -349,8 +370,8 @@ const Index = () => {
           </div>
 
           {featuredProducts.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground text-sm">No products available yet.</p>
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No products available yet.</p>
             </div>
           )}
 
@@ -358,9 +379,9 @@ const Index = () => {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="text-center mt-8"
+            className="text-center mt-12"
           >
-            <Button variant="outline" asChild>
+            <Button size="lg" variant="outline" asChild>
               <Link to="/store">
                 <ShoppingBag className="mr-2 w-4 h-4" />
                 View All Products
@@ -389,7 +410,7 @@ const Index = () => {
               >
                 <GlassCard hover={false} className="h-full">
                   <div className="flex items-center gap-1 mb-4">
-                    {[...Array(5)].map((_, i) => (
+                    {[...Array(testimonial.rating || 5)].map((_, i) => (
                       <Star key={i} className="w-4 h-4 fill-primary text-primary" />
                     ))}
                   </div>
@@ -398,7 +419,7 @@ const Index = () => {
                   </p>
                   <div className="flex items-center gap-3">
                     <img
-                      src={testimonial.avatar}
+                      src={testimonial.avatar_url || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop'}
                       alt={testimonial.name}
                       className="w-12 h-12 rounded-full object-cover"
                     />

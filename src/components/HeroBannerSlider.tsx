@@ -42,10 +42,10 @@ export const HeroBannerSlider = () => {
     }
   }, [slides.length]);
 
-  // Auto-advance slides
+  // Auto-advance slides every 4 seconds
   useEffect(() => {
     if (slides.length <= 1) return;
-    const interval = setInterval(nextSlide, 5000);
+    const interval = setInterval(nextSlide, 4000);
     return () => clearInterval(interval);
   }, [slides.length, nextSlide]);
 
@@ -53,51 +53,64 @@ export const HeroBannerSlider = () => {
 
   return (
     <div className="absolute inset-0 overflow-hidden">
+      {/* Image-only slider - no text overlay */}
       <AnimatePresence mode="wait">
         <motion.div
           key={currentIndex}
-          initial={{ opacity: 0, scale: 1.1 }}
+          initial={{ opacity: 0, scale: 1.05 }}
           animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          transition={{ duration: 0.7 }}
+          exit={{ opacity: 0, scale: 1.02 }}
+          transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="absolute inset-0"
         >
-          <img
+          <motion.img
             src={slides[currentIndex]?.image_url}
-            alt={slides[currentIndex]?.title || 'Hero slide'}
+            alt="Banner slide"
             className="w-full h-full object-cover"
+            initial={{ scale: 1 }}
+            animate={{ scale: 1.05 }}
+            transition={{ duration: 8, ease: "linear" }}
           />
         </motion.div>
       </AnimatePresence>
 
-      {/* Navigation Buttons */}
+      {/* Gradient overlay for better text readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/60 to-background z-10" />
+
+      {/* Navigation Buttons - sleek design */}
       {slides.length > 1 && (
         <>
-          <button
+          <motion.button
             onClick={prevSlide}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-background/20 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-background/40 transition-colors"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-background/20 backdrop-blur-md border border-border/30 flex items-center justify-center text-foreground hover:bg-background/40 transition-all duration-300"
             aria-label="Previous slide"
           >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <button
+            <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+          </motion.button>
+          <motion.button
             onClick={nextSlide}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-background/20 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-background/40 transition-colors"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-background/20 backdrop-blur-md border border-border/30 flex items-center justify-center text-foreground hover:bg-background/40 transition-all duration-300"
             aria-label="Next slide"
           >
-            <ChevronRight className="w-5 h-5" />
-          </button>
+            <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+          </motion.button>
 
-          {/* Dots Indicator */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+          {/* Dots Indicator - modern pill style */}
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3 py-2 rounded-full bg-background/20 backdrop-blur-md">
             {slides.map((_, index) => (
-              <button
+              <motion.button
                 key={index}
                 onClick={() => setCurrentIndex(index)}
-                className={`w-2 h-2 rounded-full transition-all ${
+                whileHover={{ scale: 1.2 }}
+                whileTap={{ scale: 0.9 }}
+                className={`h-2 rounded-full transition-all duration-300 ${
                   index === currentIndex
                     ? 'bg-primary w-6'
-                    : 'bg-foreground/50 hover:bg-foreground/70'
+                    : 'bg-foreground/40 w-2 hover:bg-foreground/60'
                 }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
