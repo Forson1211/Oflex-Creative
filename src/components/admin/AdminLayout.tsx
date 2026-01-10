@@ -26,7 +26,9 @@ interface AdminLayoutProps {
 
 const navItems = [
   { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/admin/hero-slides', label: 'Hero Slides', icon: Image },
   { path: '/admin/featured-projects', label: 'Featured Projects', icon: Image },
+  { path: '/admin/portfolio', label: 'Portfolio', icon: Briefcase },
   { path: '/admin/services', label: 'Services', icon: Briefcase },
   { path: '/admin/products', label: 'Products', icon: Package },
   { path: '/admin/orders', label: 'Orders', icon: ShoppingCart },

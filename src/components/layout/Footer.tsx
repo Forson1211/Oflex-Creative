@@ -1,7 +1,11 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Instagram, Twitter, Linkedin, Facebook, Mail } from 'lucide-react';
+import { Instagram, Twitter, Linkedin, Facebook, Mail, Send } from 'lucide-react';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 import oflexLogo from '@/assets/oflex-logo.png';
 
 const quickLinks = [
@@ -20,6 +24,9 @@ const serviceLinks = [
 
 export const Footer = () => {
   const { getSetting } = useSiteSettings();
+  const { toast } = useToast();
+  const [email, setEmail] = useState('');
+  const [isSubscribing, setIsSubscribing] = useState(false);
 
   const socialLinks = [
     { icon: Instagram, href: getSetting('social_instagram', '#'), label: 'Instagram' },
@@ -30,8 +37,47 @@ export const Footer = () => {
 
   const logoUrl = getSetting('logo_url', '');
 
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    
+    setIsSubscribing(true);
+    // Simulate subscription
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    toast({ title: 'Subscribed!', description: 'Thanks for subscribing to our newsletter.' });
+    setEmail('');
+    setIsSubscribing(false);
+  };
+
   return (
     <footer className="bg-card border-t border-border">
+      {/* Mobile Newsletter Section */}
+      <div className="md:hidden border-b border-border">
+        <div className="container mx-auto px-4 py-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <h4 className="font-semibold text-foreground mb-2 text-center">Subscribe to Newsletter</h4>
+            <p className="text-sm text-muted-foreground mb-4 text-center">Stay updated with our latest projects and offers</p>
+            <form onSubmit={handleSubscribe} className="flex gap-2">
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="flex-1"
+                required
+              />
+              <Button type="submit" size="icon" disabled={isSubscribing}>
+                <Send className="w-4 h-4" />
+              </Button>
+            </form>
+          </motion.div>
+        </div>
+      </div>
+
       <div className="container mx-auto px-4 py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
           {/* Brand */}

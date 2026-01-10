@@ -1,31 +1,46 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
-import { SectionHeading } from '@/components/ui/SectionHeading';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/button';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
-const categories = ['All', 'UI/UX', 'Branding', 'Posters', 'Prompts', 'Web'];
-
-const portfolioItems = [
-  { id: 1, title: 'E-commerce Dashboard', category: 'UI/UX', image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop' },
-  { id: 2, title: 'Tech Startup Brand', category: 'Branding', image: 'https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=600&h=400&fit=crop' },
-  { id: 3, title: 'Music Festival Poster', category: 'Posters', image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&h=400&fit=crop' },
-  { id: 4, title: 'AI Art Collection', category: 'Prompts', image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600&h=400&fit=crop' },
-  { id: 5, title: 'Portfolio Website', category: 'Web', image: 'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=600&h=400&fit=crop' },
-  { id: 6, title: 'Mobile Banking App', category: 'UI/UX', image: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&h=400&fit=crop' },
-  { id: 7, title: 'Coffee Shop Brand', category: 'Branding', image: 'https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?w=600&h=400&fit=crop' },
-  { id: 8, title: 'Art Exhibition Poster', category: 'Posters', image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&h=400&fit=crop' },
-  { id: 9, title: 'Fitness App Design', category: 'UI/UX', image: 'https://images.unsplash.com/photo-1434494878577-86c23bcb06b9?w=600&h=400&fit=crop' },
-  { id: 10, title: 'Fashion Brand Identity', category: 'Branding', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=400&fit=crop' },
-  { id: 11, title: 'Travel Agency Site', category: 'Web', image: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=600&h=400&fit=crop' },
-  { id: 12, title: 'Cyberpunk Prompts', category: 'Prompts', image: 'https://images.unsplash.com/photo-1614850715649-1d0106293bd1?w=600&h=400&fit=crop' },
-];
+interface FeaturedProject {
+  id: string;
+  title: string;
+  category: string;
+  image_url: string;
+  description: string | null;
+  is_featured: boolean;
+  display_order: number;
+}
 
 const Portfolio = () => {
   const [activeCategory, setActiveCategory] = useState('All');
-  const [selectedItem, setSelectedItem] = useState<typeof portfolioItems[0] | null>(null);
+  const [selectedItem, setSelectedItem] = useState<FeaturedProject | null>(null);
+  const { getSetting } = useSiteSettings();
+
+  // Fetch all featured projects from database
+  const { data: portfolioItems = [] } = useQuery({
+    queryKey: ['portfolio-projects'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('featured_projects')
+        .select('*')
+        .order('display_order', { ascending: true });
+      if (error) throw error;
+      return data as FeaturedProject[];
+    },
+  });
+
+  // Extract unique categories from projects
+  const categories = useMemo(() => {
+    const cats = new Set(portfolioItems.map(item => item.category));
+    return ['All', ...Array.from(cats)];
+  }, [portfolioItems]);
 
   const filteredItems = activeCategory === 'All'
     ? portfolioItems
@@ -42,14 +57,13 @@ const Portfolio = () => {
             className="max-w-3xl mx-auto text-center"
           >
             <span className="inline-block px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-sm font-medium mb-6">
-              Portfolio
+              {getSetting('portfolio_badge', 'Portfolio')}
             </span>
             <h1 className="font-sans text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight tracking-tight">
-              Our Creative Work
+              {getSetting('portfolio_title', 'Our Creative Work')}
             </h1>
             <p className="text-lg text-muted-foreground">
-              Explore our diverse portfolio of design projects, from brand identities 
-              to digital interfaces and AI-generated art.
+              {getSetting('portfolio_description', 'Explore our diverse portfolio of design projects, from brand identities to digital interfaces and AI-generated art.')}
             </p>
           </motion.div>
         </div>
@@ -99,9 +113,12 @@ const Portfolio = () => {
                   >
                     <div className="relative aspect-[4/3] overflow-hidden">
                       <img
-                        src={item.image}
+                        src={item.image_url}
                         alt={item.title}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600&h=400&fit=crop';
+                        }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
                         <div>
@@ -109,6 +126,9 @@ const Portfolio = () => {
                             {item.category}
                           </span>
                           <h3 className="text-foreground font-semibold">{item.title}</h3>
+                          {item.description && (
+                            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{item.description}</p>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -147,7 +167,7 @@ const Portfolio = () => {
               </Button>
               <div className="rounded-2xl overflow-hidden">
                 <img
-                  src={selectedItem.image}
+                  src={selectedItem.image_url}
                   alt={selectedItem.title}
                   className="w-full h-auto"
                 />
