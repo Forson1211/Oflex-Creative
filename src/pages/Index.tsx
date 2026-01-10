@@ -131,20 +131,20 @@ const Index = () => {
 
   return (
     <Layout>
+      {/* Hero Banner Slider - Separate banner at top */}
+      <HeroBannerSlider />
+
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden">
-        {/* Hero Banner Slider */}
-        <HeroBannerSlider />
-        
-        {/* Fallback background */}
+      <section className="relative min-h-[70vh] flex items-center overflow-hidden">
+        {/* Background */}
         <div 
-          className="absolute inset-0 bg-cover bg-center opacity-20 -z-10"
+          className="absolute inset-0 bg-cover bg-center opacity-30"
           style={{ backgroundImage: `url(${getSetting('hero_background_url', '') || heroBg})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/80 to-background z-10" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background" />
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
+          <div className="max-w-4xl mx-auto text-center pt-8">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}

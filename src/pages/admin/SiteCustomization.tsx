@@ -394,6 +394,76 @@ const SiteCustomization = () => {
                 </div>
               </div>
 
+              {/* Store Page */}
+              <div className="bg-card border border-border rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground">Store Page</h2>
+                    <p className="text-sm text-muted-foreground">Customize the store page header</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="store_title">Store Page Title</Label>
+                    <Input
+                      id="store_title"
+                      value={settings.store_title || ''}
+                      onChange={(e) => updateSetting('store_title', e.target.value)}
+                      placeholder="Premium Digital Products"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="store_description">Store Page Description</Label>
+                    <Textarea
+                      id="store_description"
+                      value={settings.store_description || ''}
+                      onChange={(e) => updateSetting('store_description', e.target.value)}
+                      rows={3}
+                      placeholder="Discover our collection of premium digital assets..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Page */}
+              <div className="bg-card border border-border rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center">
+                    <Mail className="w-5 h-5 text-accent-foreground" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground">Contact Page</h2>
+                    <p className="text-sm text-muted-foreground">Customize the contact page header</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="contact_page_title">Contact Page Title</Label>
+                    <Input
+                      id="contact_page_title"
+                      value={settings.contact_page_title || ''}
+                      onChange={(e) => updateSetting('contact_page_title', e.target.value)}
+                      placeholder="Get in Touch"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="contact_page_description">Contact Page Description</Label>
+                    <Textarea
+                      id="contact_page_description"
+                      value={settings.contact_page_description || ''}
+                      onChange={(e) => updateSetting('contact_page_description', e.target.value)}
+                      rows={3}
+                      placeholder="Have a project in mind? Let's discuss how we can help..."
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* About Page */}
               <div className="bg-card border border-border rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-6">
@@ -424,6 +494,41 @@ const SiteCustomization = () => {
                       onChange={(e) => updateSetting('about_description', e.target.value)}
                       rows={4}
                       placeholder="Oflex Creative is a digital design studio..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Portfolio Page */}
+              <div className="bg-card border border-border rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground">Portfolio Page</h2>
+                    <p className="text-sm text-muted-foreground">Customize the portfolio page header</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="portfolio_title">Portfolio Page Title</Label>
+                    <Input
+                      id="portfolio_title"
+                      value={settings.portfolio_title || ''}
+                      onChange={(e) => updateSetting('portfolio_title', e.target.value)}
+                      placeholder="Our Creative Portfolio"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="portfolio_description">Portfolio Page Description</Label>
+                    <Textarea
+                      id="portfolio_description"
+                      value={settings.portfolio_description || ''}
+                      onChange={(e) => updateSetting('portfolio_description', e.target.value)}
+                      rows={3}
+                      placeholder="Explore our collection of creative works..."
                     />
                   </div>
                 </div>

@@ -54,11 +54,10 @@ const Contact = () => {
               Contact Us
             </span>
             <h1 className="font-sans text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight tracking-tight">
-              Let's Work Together
+              {getSetting('contact_page_title', 'Let\'s Work Together')}
             </h1>
             <p className="text-lg text-muted-foreground">
-              Have a project in mind? We'd love to hear from you. 
-              Send us a message and we'll respond as soon as possible.
+              {getSetting('contact_page_description', 'Have a project in mind? We\'d love to hear from you. Send us a message and we\'ll respond as soon as possible.')}
             </p>
           </motion.div>
         </div>
