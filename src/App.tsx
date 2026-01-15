@@ -22,6 +22,7 @@ import AdminPortfolio from "./pages/admin/Portfolio";
 import HeroSlides from "./pages/admin/HeroSlides";
 import SiteCustomization from "./pages/admin/SiteCustomization";
 import Testimonials from "./pages/admin/Testimonials";
+import FAQs from "./pages/admin/FAQs";
 import Orders from "./pages/admin/Orders";
 import Users from "./pages/admin/Users";
 import Settings from "./pages/admin/Settings";
@@ -54,6 +55,7 @@ const App = () => (
               <Route path="/admin/services" element={<AdminServices />} />
               <Route path="/admin/products" element={<Products />} />
               <Route path="/admin/testimonials" element={<Testimonials />} />
+              <Route path="/admin/faqs" element={<FAQs />} />
               <Route path="/admin/customization" element={<SiteCustomization />} />
               <Route path="/admin/orders" element={<Orders />} />
               <Route path="/admin/users" element={<Users />} />

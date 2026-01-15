@@ -131,9 +131,6 @@ const Index = () => {
 
   return (
     <Layout>
-      {/* Hero Banner Slider - Separate banner at top */}
-      <HeroBannerSlider />
-
       {/* Hero Section */}
       <section className="relative min-h-[70vh] flex items-center overflow-hidden">
         {/* Background */}
@@ -214,6 +211,9 @@ const Index = () => {
           className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-accent-foreground/10 blur-3xl"
         />
       </section>
+
+      {/* Hero Banner Slider - Below Hero Section */}
+      <HeroBannerSlider />
 
       {/* Services Preview */}
       <section className="py-20 bg-card">

@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Phone, MapPin, Send, CheckCircle } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, CheckCircle, ChevronDown } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -10,11 +12,38 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+
+interface FAQ {
+  id: string;
+  question: string;
+  answer: string;
+  display_order: number;
+}
 
 const Contact = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const { getSetting } = useSiteSettings();
+
+  // Fetch FAQs from database
+  const { data: faqs = [] } = useQuery({
+    queryKey: ['faqs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('faqs')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+      if (error) throw error;
+      return data as FAQ[];
+    },
+  });
 
   const contactInfo = [
     { icon: Mail, label: 'Email', value: getSetting('contact_email', 'hello@oflexcreative.com') },
@@ -222,26 +251,36 @@ const Contact = () => {
             description="Quick answers to questions you might have"
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {[
-              { q: 'What is your typical response time?', a: 'We typically respond within 24 hours during business days.' },
-              { q: 'Do you offer custom design services?', a: 'Yes! We offer bespoke design solutions tailored to your specific needs.' },
-              { q: 'What payment methods do you accept?', a: 'We accept all major credit cards and PayPal for digital products.' },
-              { q: 'Can I request revisions?', a: 'Absolutely. We work with you until you\'re completely satisfied.' },
-            ].map((faq, index) => (
-              <motion.div
-                key={faq.q}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <GlassCard hover={false}>
-                  <h3 className="font-semibold text-foreground mb-2">{faq.q}</h3>
-                  <p className="text-muted-foreground text-sm">{faq.a}</p>
-                </GlassCard>
-              </motion.div>
-            ))}
+          <div className="max-w-3xl mx-auto">
+            <Accordion type="single" collapsible className="space-y-4">
+              {faqs.map((faq, index) => (
+                <motion.div
+                  key={faq.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <AccordionItem 
+                    value={faq.id} 
+                    className="bg-background/50 border border-border rounded-xl px-6 overflow-hidden"
+                  >
+                    <AccordionTrigger className="hover:no-underline text-left py-5">
+                      <span className="font-semibold text-foreground">{faq.question}</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground pb-5">
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                </motion.div>
+              ))}
+            </Accordion>
+
+            {faqs.length === 0 && (
+              <div className="text-center py-12 text-muted-foreground">
+                No FAQs available at the moment.
+              </div>
+            )}
           </div>
         </div>
       </section>
