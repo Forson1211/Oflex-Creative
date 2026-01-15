@@ -37,8 +37,9 @@ const navItems = [
   { path: '/admin/products', label: 'Products', icon: Package },
   { path: '/admin/testimonials', label: 'Testimonials', icon: MessageSquare },
   { path: '/admin/faqs', label: 'FAQs', icon: HelpCircle },
+  { path: '/admin/about', label: 'About Page', icon: Users },
   { path: '/admin/orders', label: 'Orders', icon: ShoppingCart },
-  { path: '/admin/users', label: 'Users', icon: Users },
+  { path: '/admin/users', label: 'User Management', icon: Users },
   { path: '/admin/customization', label: 'Customization', icon: Palette },
   { path: '/admin/settings', label: 'Settings', icon: Settings },
 ];
@@ -89,8 +90,8 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
             </Button>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1">
+          {/* Navigation - Scrollable */}
+          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (

@@ -1,8 +1,23 @@
 import { useEffect, useState } from 'react';
-import { Search, Shield, User } from 'lucide-react';
+import { Search, Shield, User, UserCog, Loader2 } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ProtectedRoute } from '@/components/admin/ProtectedRoute';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
@@ -18,6 +33,9 @@ const Users = () => {
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
+  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [updatingRole, setUpdatingRole] = useState(false);
   const { toast } = useToast();
 
   const fetchUsers = async () => {
@@ -59,19 +77,93 @@ const Users = () => {
     fetchUsers();
   }, []);
 
+  const handleRoleChange = async (newRole: string) => {
+    if (!selectedUser) return;
+    
+    setUpdatingRole(true);
+    
+    try {
+      // Check if user already has a role entry
+      const { data: existingRole } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('user_id', selectedUser.user_id)
+        .maybeSingle();
+
+      if (existingRole) {
+        // Update existing role
+        const { error } = await supabase
+          .from('user_roles')
+          .update({ role: newRole as 'admin' | 'moderator' | 'user' })
+          .eq('user_id', selectedUser.user_id);
+        
+        if (error) throw error;
+      } else {
+        // Insert new role
+        const { error } = await supabase
+          .from('user_roles')
+          .insert({ 
+            user_id: selectedUser.user_id, 
+            role: newRole as 'admin' | 'moderator' | 'user'
+          });
+        
+        if (error) throw error;
+      }
+
+      toast({
+        title: 'Role Updated',
+        description: `${selectedUser.full_name || selectedUser.email}'s role has been changed to ${newRole}`,
+      });
+      
+      setIsRoleDialogOpen(false);
+      fetchUsers();
+    } catch (error) {
+      console.error('Error updating role:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update user role',
+        variant: 'destructive',
+      });
+    } finally {
+      setUpdatingRole(false);
+    }
+  };
+
   const filteredUsers = users.filter(
     (user) =>
       user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return <Shield className="w-3 h-3" />;
+      case 'moderator':
+        return <UserCog className="w-3 h-3" />;
+      default:
+        return <User className="w-3 h-3" />;
+    }
+  };
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 'bg-primary/20 text-primary';
+      case 'moderator':
+        return 'bg-accent text-accent-foreground';
+      default:
+        return 'bg-muted text-muted-foreground';
+    }
+  };
+
   return (
     <ProtectedRoute requireAdmin>
       <AdminLayout>
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Users</h1>
-            <p className="text-muted-foreground">View registered users</p>
+            <h1 className="text-2xl font-bold text-foreground">User Management</h1>
+            <p className="text-muted-foreground">Manage users and assign roles (Admin, Moderator, User)</p>
           </div>
 
           <div className="relative">
@@ -114,6 +206,7 @@ const Users = () => {
                       <th className="text-left p-4 font-medium text-foreground">Email</th>
                       <th className="text-left p-4 font-medium text-foreground">Role</th>
                       <th className="text-left p-4 font-medium text-foreground">Joined</th>
+                      <th className="text-right p-4 font-medium text-foreground">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -132,22 +225,27 @@ const Users = () => {
                         <td className="p-4 text-muted-foreground">{user.email}</td>
                         <td className="p-4">
                           <span
-                            className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full capitalize ${
-                              user.role === 'admin'
-                                ? 'bg-primary/20 text-primary'
-                                : 'bg-muted text-muted-foreground'
-                            }`}
+                            className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full capitalize ${getRoleColor(user.role || 'user')}`}
                           >
-                            {user.role === 'admin' ? (
-                              <Shield className="w-3 h-3" />
-                            ) : (
-                              <User className="w-3 h-3" />
-                            )}
+                            {getRoleIcon(user.role || 'user')}
                             {user.role}
                           </span>
                         </td>
                         <td className="p-4 text-muted-foreground">
                           {new Date(user.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="p-4 text-right">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setIsRoleDialogOpen(true);
+                            }}
+                          >
+                            <UserCog className="w-4 h-4 mr-2" />
+                            Change Role
+                          </Button>
                         </td>
                       </tr>
                     ))}
@@ -156,6 +254,67 @@ const Users = () => {
               </div>
             </div>
           )}
+
+          {/* Role Change Dialog */}
+          <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Change User Role</DialogTitle>
+                <DialogDescription>
+                  Update the role for {selectedUser?.full_name || selectedUser?.email}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Select Role</label>
+                  <Select 
+                    defaultValue={selectedUser?.role || 'user'} 
+                    onValueChange={handleRoleChange}
+                    disabled={updatingRole}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4" />
+                          <div>
+                            <p className="font-medium">User</p>
+                            <p className="text-xs text-muted-foreground">Regular user with basic access</p>
+                          </div>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="moderator">
+                        <div className="flex items-center gap-2">
+                          <UserCog className="w-4 h-4" />
+                          <div>
+                            <p className="font-medium">Moderator</p>
+                            <p className="text-xs text-muted-foreground">Can manage content and view dashboard</p>
+                          </div>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="admin">
+                        <div className="flex items-center gap-2">
+                          <Shield className="w-4 h-4" />
+                          <div>
+                            <p className="font-medium">Admin</p>
+                            <p className="text-xs text-muted-foreground">Full access to all features and settings</p>
+                          </div>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {updatingRole && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Updating role...</span>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </AdminLayout>
     </ProtectedRoute>

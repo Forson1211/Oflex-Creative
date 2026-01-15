@@ -1,11 +1,22 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Target, Eye, Heart, Lightbulb } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout/Layout';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { GlassCard } from '@/components/ui/GlassCard';
+
+interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  bio: string | null;
+  image_url: string | null;
+  display_order: number;
+}
 
 const values = [
   { icon: Target, title: 'Mission', description: 'To empower creators and businesses with premium digital tools and stunning designs that elevate their brand presence.' },
@@ -16,6 +27,22 @@ const values = [
 
 const About = () => {
   const { getSetting } = useSiteSettings();
+
+  // Fetch team members from database
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ['team-members-public'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('team_members')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+      if (error) throw error;
+      return data as TeamMember[];
+    },
+  });
+
+  const storyParagraphs = getSetting('about_story', '').split('\n\n').filter(p => p.trim());
 
   return (
     <Layout>
@@ -53,7 +80,7 @@ const About = () => {
             >
               <div className="aspect-[4/3] rounded-2xl overflow-hidden">
                 <img
-                  src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=600&fit=crop"
+                  src={getSetting('about_image_url', 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=600&fit=crop')}
                   alt="Creative team collaboration"
                   className="w-full h-full object-cover"
                 />
@@ -64,7 +91,7 @@ const About = () => {
                 transition={{ duration: 0.4, delay: 0.5 }}
                 className="absolute -bottom-6 -left-6 bg-card border border-border rounded-xl p-4 shadow-lg"
               >
-                <p className="text-3xl font-bold text-primary">5+</p>
+                <p className="text-3xl font-bold text-primary">{getSetting('about_years_experience', '5+')}</p>
                 <p className="text-sm text-muted-foreground">Years Experience</p>
               </motion.div>
               <motion.div
@@ -73,7 +100,7 @@ const About = () => {
                 transition={{ duration: 0.4, delay: 0.6 }}
                 className="absolute -top-6 -right-6 bg-card border border-border rounded-xl p-4 shadow-lg"
               >
-                <p className="text-3xl font-bold text-primary">200+</p>
+                <p className="text-3xl font-bold text-primary">{getSetting('about_projects_completed', '200+')}</p>
                 <p className="text-sm text-muted-foreground">Projects Completed</p>
               </motion.div>
             </motion.div>
@@ -87,7 +114,7 @@ const About = () => {
           <div className="max-w-4xl mx-auto">
             <SectionHeading
               badge="Our Story"
-              title="The Journey So Far"
+              title={getSetting('about_story_title', 'The Journey So Far')}
             />
             
             <motion.div
@@ -96,16 +123,26 @@ const About = () => {
               viewport={{ once: true }}
               className="prose prose-lg max-w-none text-center"
             >
-              <p className="text-muted-foreground leading-relaxed mb-6">
-                What started as a passion for digital design has evolved into a full-service 
-                creative studio. Oflex Creative was born from the belief that great design 
-                should be accessible to everyone, from startups to established brands.
-              </p>
-              <p className="text-muted-foreground leading-relaxed">
-                Today, we combine traditional design principles with cutting-edge AI technology 
-                to deliver solutions that are both beautiful and effective. Our digital products 
-                have helped countless creators streamline their workflows and achieve stunning results.
-              </p>
+              {storyParagraphs.length > 0 ? (
+                storyParagraphs.map((paragraph, index) => (
+                  <p key={index} className="text-muted-foreground leading-relaxed mb-6 last:mb-0">
+                    {paragraph}
+                  </p>
+                ))
+              ) : (
+                <>
+                  <p className="text-muted-foreground leading-relaxed mb-6">
+                    What started as a passion for digital design has evolved into a full-service 
+                    creative studio. Oflex Creative was born from the belief that great design 
+                    should be accessible to everyone, from startups to established brands.
+                  </p>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Today, we combine traditional design principles with cutting-edge AI technology 
+                    to deliver solutions that are both beautiful and effective. Our digital products 
+                    have helped countless creators streamline their workflows and achieve stunning results.
+                  </p>
+                </>
+              )}
             </motion.div>
           </div>
         </div>
@@ -146,34 +183,46 @@ const About = () => {
         </div>
       </section>
 
-      {/* Founder Section */}
-      <section className="py-20 bg-card">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-center"
-            >
-              <div className="w-32 h-32 rounded-full overflow-hidden mx-auto mb-6 ring-4 ring-primary/20">
-                <img
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop"
-                  alt="Founder"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <h3 className="font-serif text-2xl font-bold text-foreground mb-2">Creative Director</h3>
-              <p className="text-primary font-medium mb-4">Founder & Lead Designer</p>
-              <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                "Design is not just what it looks like and feels like. Design is how it works. 
-                At Oflex Creative, we believe in creating meaningful experiences that resonate 
-                with audiences and drive results."
-              </p>
-            </motion.div>
+      {/* Team Section */}
+      {teamMembers.length > 0 && (
+        <section className="py-20 bg-card">
+          <div className="container mx-auto px-4">
+            <SectionHeading
+              badge="Our Team"
+              title="Meet the Team"
+              description="The creative minds behind our work"
+            />
+            
+            <div className={`grid gap-8 ${teamMembers.length === 1 ? 'max-w-md mx-auto' : teamMembers.length === 2 ? 'grid-cols-1 md:grid-cols-2 max-w-3xl mx-auto' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
+              {teamMembers.map((member, index) => (
+                <motion.div
+                  key={member.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  className="text-center"
+                >
+                  <div className="w-32 h-32 rounded-full overflow-hidden mx-auto mb-6 ring-4 ring-primary/20">
+                    <img
+                      src={member.image_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop'}
+                      alt={member.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <h3 className="font-serif text-2xl font-bold text-foreground mb-2">{member.name}</h3>
+                  <p className="text-primary font-medium mb-4">{member.role}</p>
+                  {member.bio && (
+                    <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
+                      "{member.bio}"
+                    </p>
+                  )}
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* CTA Section */}
       <section className="py-20">
