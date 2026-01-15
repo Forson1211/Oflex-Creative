@@ -75,9 +75,6 @@ export const HeroBannerSlider = () => {
           </motion.div>
         </AnimatePresence>
 
-        {/* Subtle gradient overlay at bottom for smooth transition */}
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent z-10" />
-
         {/* Navigation Buttons - sleek design */}
         {slides.length > 1 && (
           <>
