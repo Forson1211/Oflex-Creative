@@ -15,9 +15,12 @@ import {
   Briefcase,
   Palette,
   MessageSquare,
+  HelpCircle,
+  Layers,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useState } from 'react';
 import oflexLogo from '@/assets/oflex-logo.png';
 
@@ -27,12 +30,13 @@ interface AdminLayoutProps {
 
 const navItems = [
   { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/admin/hero-slides', label: 'Hero Slides', icon: Image },
+  { path: '/admin/hero-slides', label: 'Hero Slides', icon: Layers },
   { path: '/admin/featured-projects', label: 'Featured Projects', icon: Image },
   { path: '/admin/portfolio', label: 'Portfolio', icon: Briefcase },
   { path: '/admin/services', label: 'Services', icon: Briefcase },
   { path: '/admin/products', label: 'Products', icon: Package },
   { path: '/admin/testimonials', label: 'Testimonials', icon: MessageSquare },
+  { path: '/admin/faqs', label: 'FAQs', icon: HelpCircle },
   { path: '/admin/orders', label: 'Orders', icon: ShoppingCart },
   { path: '/admin/users', label: 'Users', icon: Users },
   { path: '/admin/customization', label: 'Customization', icon: Palette },
@@ -41,9 +45,12 @@ const navItems = [
 
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { signOut, user } = useAuth();
+  const { getSetting } = useSiteSettings();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  const logoUrl = getSetting('logo_url', '');
 
   const handleSignOut = async () => {
     await signOut();
@@ -70,7 +77,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
           {/* Logo */}
           <div className="p-6 border-b border-border flex items-center justify-between">
             <Link to="/admin" className="flex items-center">
-              <img src={oflexLogo} alt="Oflex Admin" className="h-8 w-auto" />
+              <img src={logoUrl || oflexLogo} alt="Admin" className="h-8 w-auto" />
             </Link>
             <Button
               variant="ghost"
