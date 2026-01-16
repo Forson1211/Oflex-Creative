@@ -33,7 +33,6 @@ interface CartItem {
 
 const Store = () => {
   const [activeCategory, setActiveCategory] = useState('All');
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -434,7 +433,7 @@ const Store = () => {
                           <Button
                             size="icon"
                             variant="secondary"
-                            onClick={() => setSelectedProduct(product)}
+                            onClick={() => navigate(`/product/${product.id}`)}
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
@@ -456,15 +455,24 @@ const Store = () => {
                         </span>
                         <h3 className="font-semibold text-foreground mt-1 mb-2">{product.title}</h3>
                         <p className="text-sm text-muted-foreground line-clamp-2">{product.description}</p>
-                        <Button 
-                          className="w-full mt-4" 
-                          size="sm"
-                          onClick={() => addToCartMutation.mutate(product.id)}
-                          disabled={addToCartMutation.isPending}
-                        >
-                          <ShoppingCart className="w-4 h-4 mr-2" />
-                          Add to Cart
-                        </Button>
+                        <div className="flex gap-2 mt-4">
+                          <Button 
+                            className="flex-1" 
+                            size="sm"
+                            onClick={() => addToCartMutation.mutate(product.id)}
+                            disabled={addToCartMutation.isPending}
+                          >
+                            <ShoppingCart className="w-4 h-4 mr-2" />
+                            Add to Cart
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate(`/product/${product.id}`)}
+                          >
+                            View
+                          </Button>
+                        </div>
                       </div>
                     </GlassCard>
                   </motion.div>
@@ -474,71 +482,6 @@ const Store = () => {
           )}
         </div>
       </section>
-
-      {/* Product Modal */}
-      <AnimatePresence>
-        {selectedProduct && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center p-4"
-            onClick={() => setSelectedProduct(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="relative max-w-3xl w-full bg-card border border-border rounded-2xl overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-4 right-4 z-10"
-                onClick={() => setSelectedProduct(null)}
-              >
-                <X className="w-5 h-5" />
-              </Button>
-              
-              <div className="grid md:grid-cols-2">
-                <div className="aspect-square">
-                  <img
-                    src={selectedProduct.image_url || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=300&fit=crop'}
-                    alt={selectedProduct.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-6 md:p-8 flex flex-col justify-center">
-                  <span className="text-xs text-primary font-medium uppercase tracking-wide">
-                    {selectedProduct.category}
-                  </span>
-                  <h2 className="font-serif text-2xl md:text-3xl font-bold text-foreground mt-2 mb-4">
-                    {selectedProduct.title}
-                  </h2>
-                  <p className="text-muted-foreground mb-6">{selectedProduct.description}</p>
-                  <div className="flex items-center gap-4 mb-6">
-                    <span className="text-3xl font-bold text-foreground">${selectedProduct.price.toFixed(2)}</span>
-                    <span className="text-sm text-muted-foreground">One-time purchase</span>
-                  </div>
-                  <Button 
-                    size="lg" 
-                    className="w-full"
-                    onClick={() => {
-                      addToCartMutation.mutate(selectedProduct.id);
-                      setSelectedProduct(null);
-                    }}
-                    disabled={addToCartMutation.isPending}
-                  >
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    Add to Cart
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* CTA Section */}
       <section className="py-20 bg-card">

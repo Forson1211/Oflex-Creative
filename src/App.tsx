@@ -14,6 +14,7 @@ import Contact from "./pages/Contact";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Checkout from "./pages/Checkout";
+import ProductDetail from "./pages/ProductDetail";
 import Dashboard from "./pages/admin/Dashboard";
 import Products from "./pages/admin/Products";
 import FeaturedProjects from "./pages/admin/FeaturedProjects";
@@ -45,6 +46,7 @@ const App = () => (
               <Route path="/services" element={<Services />} />
               <Route path="/portfolio" element={<Portfolio />} />
               <Route path="/store" element={<Store />} />
+              <Route path="/product/:id" element={<ProductDetail />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/profile" element={<Profile />} />
