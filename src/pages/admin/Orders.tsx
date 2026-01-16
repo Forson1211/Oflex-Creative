@@ -74,7 +74,7 @@ const Orders = () => {
   );
 
   return (
-    <ProtectedRoute requireAdmin>
+    <ProtectedRoute requireModerator>
       <AdminLayout>
         <div className="space-y-6">
           <div>

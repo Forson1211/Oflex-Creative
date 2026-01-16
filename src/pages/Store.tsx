@@ -1,7 +1,23 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, X, ArrowRight, Eye, Plus, Minus, Trash2 } from 'lucide-react';
+import { 
+  ShoppingCart, 
+  ArrowRight, 
+  Eye, 
+  Plus, 
+  Minus, 
+  Trash2, 
+  Search, 
+  SlidersHorizontal, 
+  Grid3X3, 
+  LayoutList,
+  Star,
+  Heart,
+  Sparkles,
+  Tag,
+  Package
+} from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,7 +27,21 @@ import { SectionHeading } from '@/components/ui/SectionHeading';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Input } from '@/components/ui/input';
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetHeader, 
+  SheetTitle, 
+  SheetTrigger 
+} from '@/components/ui/sheet';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 interface Product {
@@ -34,6 +64,9 @@ interface CartItem {
 const Store = () => {
   const [activeCategory, setActiveCategory] = useState('All');
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'name'>('newest');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -81,10 +114,28 @@ const Store = () => {
   // Get unique categories
   const categories = ['All', ...new Set(products.map((p) => p.category).filter(Boolean))];
 
-  // Filter products
-  const filteredProducts = activeCategory === 'All'
-    ? products
-    : products.filter((p) => p.category === activeCategory);
+  // Filter and sort products
+  const filteredProducts = products
+    .filter((p) => {
+      const matchesCategory = activeCategory === 'All' || p.category === activeCategory;
+      const matchesSearch = 
+        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.category.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'price-low':
+          return a.price - b.price;
+        case 'price-high':
+          return b.price - a.price;
+        case 'name':
+          return a.title.localeCompare(b.title);
+        default:
+          return 0; // Already sorted by newest from query
+      }
+    });
 
   // Add to cart mutation
   const addToCartMutation = useMutation({
@@ -116,7 +167,7 @@ const Store = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
-      toast({ title: 'Added to cart', description: 'Item added successfully' });
+      toast({ title: 'Added to cart!', description: 'Item added successfully' });
     },
     onError: (error: Error) => {
       if (error.message.includes('login')) {
@@ -162,63 +213,6 @@ const Store = () => {
     },
   });
 
-  // Checkout mutation
-  const checkoutMutation = useMutation({
-    mutationFn: async () => {
-      if (!user || cartItems.length === 0) throw new Error('Cart is empty');
-
-      const totalAmount = cartItems.reduce(
-        (sum, item) => sum + (item.product?.price || 0) * item.quantity,
-        0
-      );
-
-      // Create order
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          user_id: user.id,
-          total_amount: totalAmount,
-          status: 'pending',
-        })
-        .select()
-        .single();
-
-      if (orderError) throw orderError;
-
-      // Create order items
-      const orderItems = cartItems.map((item) => ({
-        order_id: order.id,
-        product_id: item.product_id,
-        product_title: item.product?.title || 'Unknown',
-        product_price: item.product?.price || 0,
-        quantity: item.quantity,
-      }));
-
-      const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
-      if (itemsError) throw itemsError;
-
-      // Clear cart
-      const { error: clearError } = await supabase
-        .from('cart_items')
-        .delete()
-        .eq('user_id', user.id);
-      if (clearError) throw clearError;
-
-      return order;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
-      toast({
-        title: 'Order placed!',
-        description: 'Thank you for your purchase. Your order has been placed successfully.',
-      });
-      setIsCartOpen(false);
-    },
-    onError: (error: Error) => {
-      toast({ title: 'Checkout failed', description: error.message, variant: 'destructive' });
-    },
-  });
-
   const cartTotal = cartItems.reduce(
     (sum, item) => sum + (item.product?.price || 0) * item.quantity,
     0
@@ -226,137 +220,201 @@ const Store = () => {
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
+  const handleCheckout = () => {
+    setIsCartOpen(false);
+    navigate('/checkout');
+  };
+
   return (
     <Layout>
       {/* Hero Section */}
-      <section className="py-20 md:py-32">
+      <section className="relative py-20 md:py-28 overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-72 h-72 bg-accent/10 rounded-full blur-3xl" />
+        </div>
+        
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="max-w-3xl mx-auto text-center"
           >
-            <span className="inline-block px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-sm font-medium mb-6">
-              Digital Store
-            </span>
-            <h1 className="font-sans text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight tracking-tight">
-              {getSetting('store_title', 'Premium Digital Products')}
-            </h1>
-            <p className="text-lg text-muted-foreground mb-8">
-              {getSetting('store_description', 'Discover our collection of premium digital assets, templates, and AI prompts to supercharge your creative workflow.')}
-            </p>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6"
+            >
+              <Sparkles className="w-4 h-4" />
+              Premium Digital Products
+            </motion.div>
             
-            {/* Cart Button */}
-            <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="lg" className="relative">
-                  <ShoppingCart className="w-5 h-5 mr-2" />
-                  View Cart
-                  {cartCount > 0 && (
-                    <Badge className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 flex items-center justify-center">
-                      {cartCount}
-                    </Badge>
-                  )}
-                </Button>
-              </SheetTrigger>
-              <SheetContent className="w-full sm:max-w-lg flex flex-col">
-                <SheetHeader>
-                  <SheetTitle>Shopping Cart ({cartCount} items)</SheetTitle>
-                </SheetHeader>
-                <div className="flex-1 flex flex-col mt-6 overflow-hidden">
-                  {!user ? (
-                    <div className="flex-1 flex flex-col items-center justify-center gap-4">
-                      <p className="text-muted-foreground">Please login to view your cart</p>
-                      <Button onClick={() => { setIsCartOpen(false); navigate('/auth'); }}>
-                        Login
-                      </Button>
-                    </div>
-                  ) : cartItems.length === 0 ? (
-                    <div className="flex-1 flex items-center justify-center">
-                      <p className="text-muted-foreground">Your cart is empty</p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex-1 overflow-auto space-y-4 pr-2">
-                        {cartItems.map((item) => (
-                          <div
-                            key={item.id}
-                            className="flex gap-4 p-4 border border-border rounded-lg bg-card"
-                          >
-                            {item.product?.image_url && (
-                              <img
-                                src={item.product.image_url}
-                                alt={item.product.title}
-                                className="w-20 h-20 object-cover rounded-md"
-                              />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-foreground truncate">
-                                {item.product?.title}
-                              </h4>
-                              <p className="text-sm text-muted-foreground">
-                                ${item.product?.price?.toFixed(2)}
-                              </p>
-                              <div className="flex items-center gap-2 mt-2">
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={() =>
-                                    updateQuantityMutation.mutate({
-                                      itemId: item.id,
-                                      quantity: item.quantity - 1,
-                                    })
-                                  }
-                                >
-                                  <Minus className="h-4 w-4" />
-                                </Button>
-                                <span className="w-8 text-center text-foreground">{item.quantity}</span>
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={() =>
-                                    updateQuantityMutation.mutate({
-                                      itemId: item.id,
-                                      quantity: item.quantity + 1,
-                                    })
-                                  }
-                                >
-                                  <Plus className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 ml-auto text-destructive hover:text-destructive"
-                                  onClick={() => removeFromCartMutation.mutate(item.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="border-t border-border pt-4 mt-4">
-                        <div className="flex justify-between text-lg font-semibold mb-4 text-foreground">
-                          <span>Total:</span>
-                          <span>${cartTotal.toFixed(2)}</span>
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="font-sans text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight tracking-tight"
+            >
+              {getSetting('store_title', 'Canva Templates & Digital Assets')}
+            </motion.h1>
+            
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-lg text-muted-foreground mb-8"
+            >
+              {getSetting('store_description', 'Professional Canva templates, social media kits, and digital assets to elevate your brand and boost your creativity.')}
+            </motion.p>
+            
+            {/* Search and Cart */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            >
+              <div className="relative w-full max-w-md">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  placeholder="Search templates..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-12 pr-4 h-12 rounded-full border-border/50 bg-background/50 backdrop-blur-sm"
+                />
+              </div>
+              
+              <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
+                <SheetTrigger asChild>
+                  <Button size="lg" className="relative rounded-full h-12 px-6">
+                    <ShoppingCart className="w-5 h-5 mr-2" />
+                    Cart
+                    {cartCount > 0 && (
+                      <Badge className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 flex items-center justify-center">
+                        {cartCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="w-full sm:max-w-lg flex flex-col bg-background">
+                  <SheetHeader>
+                    <SheetTitle className="flex items-center gap-2">
+                      <ShoppingCart className="w-5 h-5" />
+                      Shopping Cart ({cartCount} items)
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="flex-1 flex flex-col mt-6 overflow-hidden">
+                    {!user ? (
+                      <div className="flex-1 flex flex-col items-center justify-center gap-4">
+                        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                          <ShoppingCart className="w-8 h-8 text-muted-foreground" />
                         </div>
-                        <Button
-                          className="w-full"
-                          size="lg"
-                          onClick={() => checkoutMutation.mutate()}
-                          disabled={checkoutMutation.isPending}
-                        >
-                          {checkoutMutation.isPending ? 'Processing...' : 'Complete Purchase'}
+                        <p className="text-muted-foreground">Please login to view your cart</p>
+                        <Button onClick={() => { setIsCartOpen(false); navigate('/auth'); }}>
+                          Login to Continue
                         </Button>
                       </div>
-                    </>
-                  )}
-                </div>
-              </SheetContent>
-            </Sheet>
+                    ) : cartItems.length === 0 ? (
+                      <div className="flex-1 flex flex-col items-center justify-center gap-4">
+                        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                          <Package className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                        <p className="text-muted-foreground">Your cart is empty</p>
+                        <Button variant="outline" onClick={() => setIsCartOpen(false)}>
+                          Continue Shopping
+                        </Button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex-1 overflow-auto space-y-4 pr-2">
+                          {cartItems.map((item) => (
+                            <motion.div
+                              key={item.id}
+                              layout
+                              initial={{ opacity: 0, x: 20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0, x: -20 }}
+                              className="flex gap-4 p-4 border border-border rounded-xl bg-card"
+                            >
+                              {item.product?.image_url && (
+                                <img
+                                  src={item.product.image_url}
+                                  alt={item.product.title}
+                                  className="w-20 h-20 object-cover rounded-lg"
+                                />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium text-foreground truncate">
+                                  {item.product?.title}
+                                </h4>
+                                <p className="text-sm text-primary font-semibold">
+                                  ${item.product?.price?.toFixed(2)}
+                                </p>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={() =>
+                                      updateQuantityMutation.mutate({
+                                        itemId: item.id,
+                                        quantity: item.quantity - 1,
+                                      })
+                                    }
+                                  >
+                                    <Minus className="h-4 w-4" />
+                                  </Button>
+                                  <span className="w-8 text-center text-foreground font-medium">
+                                    {item.quantity}
+                                  </span>
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={() =>
+                                      updateQuantityMutation.mutate({
+                                        itemId: item.id,
+                                        quantity: item.quantity + 1,
+                                      })
+                                    }
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 ml-auto text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    onClick={() => removeFromCartMutation.mutate(item.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                        <div className="border-t border-border pt-4 mt-4 space-y-4">
+                          <div className="flex justify-between text-lg font-semibold text-foreground">
+                            <span>Total:</span>
+                            <span>${cartTotal.toFixed(2)}</span>
+                          </div>
+                          <Button
+                            className="w-full"
+                            size="lg"
+                            onClick={handleCheckout}
+                          >
+                            Proceed to Checkout
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -364,32 +422,77 @@ const Store = () => {
       {/* Products Section */}
       <section className="pb-20">
         <div className="container mx-auto px-4">
-          {/* Category Filter */}
+          {/* Filters and Controls */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="flex flex-wrap items-center justify-center gap-2 mb-12"
+            className="mb-8"
           >
-            {categories.map((category) => (
-              <Button
-                key={category}
-                variant={activeCategory === category ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setActiveCategory(category)}
-                className="rounded-full"
-              >
-                {category}
-              </Button>
-            ))}
+            {/* Category Filter */}
+            <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
+              {categories.map((category) => (
+                <Button
+                  key={category}
+                  variant={activeCategory === category ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setActiveCategory(category)}
+                  className="rounded-full"
+                >
+                  {category}
+                </Button>
+              ))}
+            </div>
+            
+            {/* Sort and View controls */}
+            <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-card border border-border">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Tag className="w-4 h-4" />
+                <span>{filteredProducts.length} products found</span>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+                  <SelectTrigger className="w-40">
+                    <SlidersHorizontal className="w-4 h-4 mr-2" />
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="price-low">Price: Low to High</SelectItem>
+                    <SelectItem value="price-high">Price: High to Low</SelectItem>
+                    <SelectItem value="name">Name A-Z</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <div className="hidden sm:flex items-center border border-border rounded-lg overflow-hidden">
+                  <Button
+                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="rounded-none"
+                    onClick={() => setViewMode('grid')}
+                  >
+                    <Grid3X3 className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'list' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="rounded-none"
+                    onClick={() => setViewMode('list')}
+                  >
+                    <LayoutList className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
           </motion.div>
 
-          {/* Products Grid */}
+          {/* Products Grid/List */}
           {productsLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                 <div key={i} className="animate-pulse">
-                  <div className="bg-muted aspect-[4/3] rounded-t-2xl" />
+                  <div className={`bg-muted rounded-2xl ${viewMode === 'grid' ? 'aspect-[4/3]' : 'h-32'}`} />
                   <div className="p-5 bg-card rounded-b-2xl border border-border border-t-0">
                     <div className="h-3 bg-muted rounded w-1/4 mb-2" />
                     <div className="h-4 bg-muted rounded w-3/4 mb-2" />
@@ -400,17 +503,38 @@ const Store = () => {
               ))}
             </div>
           ) : filteredProducts.length === 0 ? (
-            <div className="text-center py-12">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-16"
+            >
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
+                <Package className="w-10 h-10 text-muted-foreground" />
+              </div>
+              <h3 className="text-xl font-semibold text-foreground mb-2">No products found</h3>
               <p className="text-muted-foreground text-lg">
                 {products.length === 0 
                   ? 'No products available yet. Check back soon!' 
-                  : 'No products found in this category'}
+                  : 'Try adjusting your search or filter criteria'}
               </p>
-            </div>
+              {searchQuery && (
+                <Button 
+                  variant="outline" 
+                  className="mt-4"
+                  onClick={() => { setSearchQuery(''); setActiveCategory('All'); }}
+                >
+                  Clear filters
+                </Button>
+              )}
+            </motion.div>
           ) : (
             <motion.div
               layout
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+              className={`grid gap-6 ${
+                viewMode === 'grid' 
+                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+                  : 'grid-cols-1'
+              }`}
             >
               <AnimatePresence mode="popLayout">
                 {filteredProducts.map((product, index) => (
@@ -420,61 +544,108 @@ const Store = () => {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ delay: index * 0.05 }}
+                    transition={{ delay: index * 0.03 }}
                   >
-                    <GlassCard className="overflow-hidden p-0 group">
-                      <div className="relative aspect-[4/3] overflow-hidden">
-                        <img
-                          src={product.image_url || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=300&fit=crop'}
-                          alt={product.title}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
-                          <Button
-                            size="icon"
-                            variant="secondary"
-                            onClick={() => navigate(`/product/${product.id}`)}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            size="icon"
-                            onClick={() => addToCartMutation.mutate(product.id)}
-                            disabled={addToCartMutation.isPending}
-                          >
-                            <ShoppingCart className="w-4 h-4" />
-                          </Button>
+                    {viewMode === 'grid' ? (
+                      <GlassCard className="overflow-hidden p-0 group h-full flex flex-col">
+                        <div className="relative aspect-[4/3] overflow-hidden">
+                          <img
+                            src={product.image_url || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=300&fit=crop'}
+                            alt={product.title}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          <div className="absolute inset-0 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <Button
+                              size="icon"
+                              variant="secondary"
+                              className="rounded-full shadow-lg"
+                              onClick={() => navigate(`/product/${product.id}`)}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              size="icon"
+                              className="rounded-full shadow-lg"
+                              onClick={() => addToCartMutation.mutate(product.id)}
+                              disabled={addToCartMutation.isPending}
+                            >
+                              <ShoppingCart className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <span className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-background/90 backdrop-blur-sm text-foreground text-sm font-bold shadow-lg">
+                            ${product.price.toFixed(2)}
+                          </span>
                         </div>
-                        <span className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-background text-foreground text-sm font-bold shadow-lg">
-                          ${product.price.toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="p-5">
-                        <span className="text-xs text-primary font-medium uppercase tracking-wide">
-                          {product.category}
-                        </span>
-                        <h3 className="font-semibold text-foreground mt-1 mb-2">{product.title}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2">{product.description}</p>
-                        <div className="flex gap-2 mt-4">
-                          <Button 
-                            className="flex-1" 
-                            size="sm"
-                            onClick={() => addToCartMutation.mutate(product.id)}
-                            disabled={addToCartMutation.isPending}
-                          >
-                            <ShoppingCart className="w-4 h-4 mr-2" />
-                            Add to Cart
-                          </Button>
-                          <Button 
-                            variant="outline"
-                            size="sm"
-                            onClick={() => navigate(`/product/${product.id}`)}
-                          >
-                            View
-                          </Button>
+                        <div className="p-5 flex-1 flex flex-col">
+                          <Badge variant="secondary" className="w-fit mb-2 text-xs">
+                            {product.category}
+                          </Badge>
+                          <h3 className="font-semibold text-foreground mb-2 line-clamp-1">{product.title}</h3>
+                          <p className="text-sm text-muted-foreground line-clamp-2 flex-1">{product.description}</p>
+                          <div className="flex gap-2 mt-4">
+                            <Button 
+                              className="flex-1" 
+                              size="sm"
+                              onClick={() => addToCartMutation.mutate(product.id)}
+                              disabled={addToCartMutation.isPending}
+                            >
+                              <ShoppingCart className="w-4 h-4 mr-2" />
+                              Add to Cart
+                            </Button>
+                            <Button 
+                              variant="outline"
+                              size="sm"
+                              onClick={() => navigate(`/product/${product.id}`)}
+                            >
+                              View
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    </GlassCard>
+                      </GlassCard>
+                    ) : (
+                      <GlassCard className="overflow-hidden p-0 group">
+                        <div className="flex flex-col sm:flex-row">
+                          <div className="relative w-full sm:w-48 h-48 sm:h-auto overflow-hidden flex-shrink-0">
+                            <img
+                              src={product.image_url || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=300&fit=crop'}
+                              alt={product.title}
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                          </div>
+                          <div className="p-6 flex-1 flex flex-col justify-center">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1">
+                                <Badge variant="secondary" className="mb-2 text-xs">
+                                  {product.category}
+                                </Badge>
+                                <h3 className="font-semibold text-foreground text-lg mb-2">{product.title}</h3>
+                                <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{product.description}</p>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-2xl font-bold text-primary">${product.price.toFixed(2)}</span>
+                              </div>
+                            </div>
+                            <div className="flex gap-3 mt-auto">
+                              <Button 
+                                onClick={() => addToCartMutation.mutate(product.id)}
+                                disabled={addToCartMutation.isPending}
+                              >
+                                <ShoppingCart className="w-4 h-4 mr-2" />
+                                Add to Cart
+                              </Button>
+                              <Button 
+                                variant="outline"
+                                onClick={() => navigate(`/product/${product.id}`)}
+                              >
+                                <Eye className="w-4 h-4 mr-2" />
+                                View Details
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </GlassCard>
+                    )}
                   </motion.div>
                 ))}
               </AnimatePresence>
@@ -484,7 +655,7 @@ const Store = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-card">
+      <section className="py-20 bg-card border-t border-border">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -492,11 +663,15 @@ const Store = () => {
             viewport={{ once: true }}
             className="max-w-3xl mx-auto text-center"
           >
-            <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+              <Sparkles className="w-4 h-4" />
+              Custom Designs Available
+            </div>
+            <h2 className="font-sans text-3xl md:text-4xl font-bold text-foreground mb-6">
               Need Something Custom?
             </h2>
             <p className="text-muted-foreground text-lg mb-8">
-              Can't find what you're looking for? Let's create something unique for your needs.
+              Can't find what you're looking for? I create custom Canva templates and designs tailored to your brand.
             </p>
             <Button size="lg" asChild>
               <Link to="/contact">

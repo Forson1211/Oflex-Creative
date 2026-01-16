@@ -17,36 +17,41 @@ import {
   MessageSquare,
   HelpCircle,
   Layers,
+  Lock,
+  Shield,
+  UserCog,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useState } from 'react';
 import oflexLogo from '@/assets/oflex-logo.png';
+import { Badge } from '@/components/ui/badge';
 
 interface AdminLayoutProps {
   children: ReactNode;
 }
 
+// Define nav items with access level: 'admin' = admin only, 'moderator' = admin + moderator
 const navItems = [
-  { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/admin/hero-slides', label: 'Hero Slides', icon: Layers },
-  { path: '/admin/featured-projects', label: 'Featured Projects', icon: Image },
-  { path: '/admin/portfolio', label: 'Portfolio', icon: Briefcase },
-  { path: '/admin/services', label: 'Services', icon: Briefcase },
-  { path: '/admin/products', label: 'Products', icon: Package },
-  { path: '/admin/testimonials', label: 'Testimonials', icon: MessageSquare },
-  { path: '/admin/faqs', label: 'FAQs', icon: HelpCircle },
-  { path: '/admin/about', label: 'About Page', icon: Users },
-  { path: '/admin/trusted-partners', label: 'Trusted Partners', icon: Briefcase },
-  { path: '/admin/orders', label: 'Orders', icon: ShoppingCart },
-  { path: '/admin/users', label: 'User Management', icon: Users },
-  { path: '/admin/customization', label: 'Customization', icon: Palette },
-  { path: '/admin/settings', label: 'Settings', icon: Settings },
+  { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, access: 'moderator' },
+  { path: '/admin/hero-slides', label: 'Hero Slides', icon: Layers, access: 'moderator' },
+  { path: '/admin/featured-projects', label: 'Featured Projects', icon: Image, access: 'moderator' },
+  { path: '/admin/portfolio', label: 'Portfolio', icon: Briefcase, access: 'moderator' },
+  { path: '/admin/services', label: 'Services', icon: Briefcase, access: 'moderator' },
+  { path: '/admin/products', label: 'Products', icon: Package, access: 'moderator' },
+  { path: '/admin/testimonials', label: 'Testimonials', icon: MessageSquare, access: 'moderator' },
+  { path: '/admin/faqs', label: 'FAQs', icon: HelpCircle, access: 'moderator' },
+  { path: '/admin/about', label: 'About Page', icon: Users, access: 'moderator' },
+  { path: '/admin/trusted-partners', label: 'Trusted Partners', icon: Briefcase, access: 'moderator' },
+  { path: '/admin/orders', label: 'Orders', icon: ShoppingCart, access: 'moderator' },
+  { path: '/admin/users', label: 'User Management', icon: Users, access: 'admin' },
+  { path: '/admin/customization', label: 'Customization', icon: Palette, access: 'admin' },
+  { path: '/admin/settings', label: 'Settings', icon: Settings, access: 'admin' },
 ];
 
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
-  const { signOut, user } = useAuth();
+  const { signOut, user, isAdmin, isModerator, userRole } = useAuth();
   const { getSetting } = useSiteSettings();
   const location = useLocation();
   const navigate = useNavigate();
@@ -57,6 +62,25 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
+  };
+
+  // Filter nav items based on user role
+  const accessibleNavItems = navItems.filter((item) => {
+    if (isAdmin) return true; // Admin can see everything
+    if (isModerator && item.access === 'moderator') return true;
+    return false;
+  });
+
+  const getRoleIcon = () => {
+    if (isAdmin) return <Shield className="w-3 h-3" />;
+    if (isModerator) return <UserCog className="w-3 h-3" />;
+    return null;
+  };
+
+  const getRoleBadge = () => {
+    if (isAdmin) return 'Admin';
+    if (isModerator) return 'Moderator';
+    return 'User';
   };
 
   return (
@@ -93,8 +117,9 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
 
           {/* Navigation - Scrollable */}
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-            {navItems.map((item) => {
+            {accessibleNavItems.map((item) => {
               const isActive = location.pathname === item.path;
+              const isAdminOnly = item.access === 'admin';
               return (
                 <Link
                   key={item.path}
@@ -107,7 +132,10 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
                   }`}
                 >
                   <item.icon className="w-5 h-5" />
-                  {item.label}
+                  <span className="flex-1">{item.label}</span>
+                  {isAdminOnly && !isActive && (
+                    <Lock className="w-3 h-3 text-muted-foreground/50" />
+                  )}
                 </Link>
               );
             })}
@@ -147,6 +175,10 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
           </Button>
           <div className="flex-1" />
           <div className="flex items-center gap-3">
+            <Badge variant="outline" className="hidden sm:flex items-center gap-1">
+              {getRoleIcon()}
+              {getRoleBadge()}
+            </Badge>
             <span className="text-sm text-muted-foreground hidden sm:block">
               {user?.email}
             </span>

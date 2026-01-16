@@ -143,7 +143,7 @@ const Testimonials = () => {
   };
 
   return (
-    <ProtectedRoute requireAdmin>
+    <ProtectedRoute requireModerator>
       <AdminLayout>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
