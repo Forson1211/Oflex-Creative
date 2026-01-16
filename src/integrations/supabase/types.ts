@@ -239,6 +239,7 @@ export type Database = {
           image_url: string | null
           is_active: boolean | null
           price: number
+          template_link: string | null
           title: string
           updated_at: string
         }
@@ -251,6 +252,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           price: number
+          template_link?: string | null
           title: string
           updated_at?: string
         }
@@ -263,6 +265,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           price?: number
+          template_link?: string | null
           title?: string
           updated_at?: string
         }
@@ -298,6 +301,51 @@ export type Database = {
         }
         Relationships: []
       }
+      purchases: {
+        Row: {
+          id: string
+          order_id: string | null
+          product_id: string | null
+          product_title: string
+          purchased_at: string | null
+          template_link: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          order_id?: string | null
+          product_id?: string | null
+          product_title: string
+          purchased_at?: string | null
+          template_link?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          order_id?: string | null
+          product_id?: string | null
+          product_title?: string
+          purchased_at?: string | null
+          template_link?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           created_at: string
@@ -331,6 +379,39 @@ export type Database = {
           is_active?: boolean | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      site_analytics: {
+        Row: {
+          created_at: string | null
+          date: string
+          id: string
+          new_users: number | null
+          orders_count: number | null
+          page_views: number | null
+          revenue: number | null
+          unique_visitors: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          date?: string
+          id?: string
+          new_users?: number | null
+          orders_count?: number | null
+          page_views?: number | null
+          revenue?: number | null
+          unique_visitors?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          id?: string
+          new_users?: number | null
+          orders_count?: number | null
+          page_views?: number | null
+          revenue?: number | null
+          unique_visitors?: number | null
         }
         Relationships: []
       }

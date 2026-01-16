@@ -18,6 +18,7 @@ interface Product {
   title: string;
   price: number;
   image_url: string | null;
+  template_link: string | null;
 }
 
 interface CartItem {
@@ -41,7 +42,7 @@ const Checkout = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('id, title, price, image_url')
+        .select('id, title, price, image_url, template_link')
         .eq('is_active', true);
       if (error) throw error;
       return data as Product[];
@@ -103,6 +104,18 @@ const Checkout = () => {
       const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
       if (itemsError) throw itemsError;
 
+      // Create purchase records for digital downloads
+      const purchaseRecords = cartItems.map((item) => ({
+        user_id: user.id,
+        order_id: order.id,
+        product_id: item.product_id,
+        product_title: item.product?.title || 'Unknown',
+        template_link: item.product?.template_link || null,
+      }));
+
+      const { error: purchaseError } = await supabase.from('purchases').insert(purchaseRecords);
+      if (purchaseError) console.error('Error creating purchases:', purchaseError);
+
       // Clear cart
       const { error: clearError } = await supabase
         .from('cart_items')
@@ -114,6 +127,7 @@ const Checkout = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
+      queryClient.invalidateQueries({ queryKey: ['purchases'] });
       setOrderComplete(true);
       setIsProcessing(false);
     },

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { User, Package, Settings, LogOut, ShoppingBag } from 'lucide-react';
+import { User, Package, Settings, LogOut, ShoppingBag, Download, ExternalLink } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,6 +11,15 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+interface Purchase {
+  id: string;
+  product_id: string;
+  product_title: string;
+  template_link: string | null;
+  purchased_at: string;
+}
 
 const Profile = () => {
   const { user, signOut, isAdmin } = useAuth();
@@ -54,6 +63,23 @@ const Profile = () => {
       
       if (error) throw error;
       return data;
+    },
+    enabled: !!user,
+  });
+
+  // Fetch user purchases (for downloads)
+  const { data: purchases = [] } = useQuery({
+    queryKey: ['purchases', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from('purchases')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('purchased_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as Purchase[];
     },
     enabled: !!user,
   });
@@ -124,52 +150,113 @@ const Profile = () => {
               )}
             </div>
 
-            {/* Recent Orders */}
-            <GlassCard className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="font-serif text-xl font-bold text-foreground flex items-center gap-2">
-                  <Package className="w-5 h-5" />
-                  Your Orders
-                </h2>
-              </div>
+            {/* Tabs for Orders and Downloads */}
+            <Tabs defaultValue="downloads" className="w-full">
+              <TabsList className="w-full justify-start mb-6">
+                <TabsTrigger value="downloads" className="flex items-center gap-2">
+                  <Download className="w-4 h-4" />
+                  My Downloads
+                </TabsTrigger>
+                <TabsTrigger value="orders" className="flex items-center gap-2">
+                  <Package className="w-4 h-4" />
+                  Order History
+                </TabsTrigger>
+              </TabsList>
 
-              {orders.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">You haven't placed any orders yet.</p>
-                  <Button onClick={() => navigate('/store')}>
-                    Start Shopping
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {orders.slice(0, 5).map((order) => (
-                    <div
-                      key={order.id}
-                      className="flex items-center justify-between p-4 rounded-lg border border-border bg-card"
-                    >
-                      <div>
-                        <p className="font-medium text-foreground">
-                          Order #{order.id.slice(0, 8)}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(order.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-foreground">
-                          ${order.total_amount.toFixed(2)}
-                        </p>
-                        <Badge
-                          variant={order.status === 'completed' ? 'default' : 'secondary'}
-                        >
-                          {order.status}
-                        </Badge>
-                      </div>
+              <TabsContent value="downloads">
+                <GlassCard className="p-6">
+                  <h2 className="font-serif text-xl font-bold text-foreground flex items-center gap-2 mb-6">
+                    <Download className="w-5 h-5" />
+                    Your Digital Products
+                  </h2>
+
+                  {purchases.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground mb-4">You haven't purchased any products yet.</p>
+                      <Button onClick={() => navigate('/store')}>
+                        Start Shopping
+                      </Button>
                     </div>
-                  ))}
-                </div>
-              )}
-            </GlassCard>
+                  ) : (
+                    <div className="space-y-4">
+                      {purchases.map((purchase) => (
+                        <div
+                          key={purchase.id}
+                          className="flex items-center justify-between p-4 rounded-lg border border-border bg-card"
+                        >
+                          <div>
+                            <p className="font-medium text-foreground">
+                              {purchase.product_title}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Purchased {new Date(purchase.purchased_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div>
+                            {purchase.template_link ? (
+                              <Button size="sm" asChild>
+                                <a href={purchase.template_link} target="_blank" rel="noopener noreferrer">
+                                  <ExternalLink className="w-4 h-4 mr-2" />
+                                  Open Template
+                                </a>
+                              </Button>
+                            ) : (
+                              <Badge variant="secondary">Link coming soon</Badge>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </GlassCard>
+              </TabsContent>
+
+              <TabsContent value="orders">
+                <GlassCard className="p-6">
+                  <h2 className="font-serif text-xl font-bold text-foreground flex items-center gap-2 mb-6">
+                    <Package className="w-5 h-5" />
+                    Your Orders
+                  </h2>
+
+                  {orders.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground mb-4">You haven't placed any orders yet.</p>
+                      <Button onClick={() => navigate('/store')}>
+                        Start Shopping
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {orders.map((order) => (
+                        <div
+                          key={order.id}
+                          className="flex items-center justify-between p-4 rounded-lg border border-border bg-card"
+                        >
+                          <div>
+                            <p className="font-medium text-foreground">
+                              Order #{order.id.slice(0, 8)}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(order.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold text-foreground">
+                              ${order.total_amount.toFixed(2)}
+                            </p>
+                            <Badge
+                              variant={order.status === 'completed' ? 'default' : 'secondary'}
+                            >
+                              {order.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </GlassCard>
+              </TabsContent>
+            </Tabs>
 
             {/* Sign Out */}
             <div className="text-center mt-8">

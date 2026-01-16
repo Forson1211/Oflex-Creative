@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Package, ShoppingCart, DollarSign, Users } from 'lucide-react';
+import { Package, ShoppingCart, DollarSign, Users, TrendingUp } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ProtectedRoute } from '@/components/admin/ProtectedRoute';
+import { AnalyticsCharts } from '@/components/admin/AnalyticsCharts';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Stats {
@@ -85,9 +86,15 @@ const Dashboard = () => {
     <ProtectedRoute requireAdmin>
       <AdminLayout>
         <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-            <p className="text-muted-foreground">Welcome to your admin dashboard</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+              <p className="text-muted-foreground">Welcome to your admin dashboard</p>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <TrendingUp className="w-4 h-4 text-chart-3" />
+              <span>Real-time analytics</span>
+            </div>
           </div>
 
           {loading ? (
@@ -116,6 +123,12 @@ const Dashboard = () => {
               ))}
             </div>
           )}
+
+          {/* Analytics Charts */}
+          <div>
+            <h2 className="text-xl font-semibold text-foreground mb-4">Site Analytics</h2>
+            <AnalyticsCharts />
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-card border border-border rounded-xl p-6">
