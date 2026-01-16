@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CreditCard, Lock, CheckCircle, ArrowLeft, Package } from 'lucide-react';
+import { CreditCard, Lock, CheckCircle, ArrowLeft, Package, Wallet, Building2, Smartphone } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface Product {
   id: string;
@@ -28,6 +29,8 @@ interface CartItem {
   product?: Product;
 }
 
+type PaymentMethod = 'card' | 'paypal' | 'paystack' | 'bank';
+
 const Checkout = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -35,6 +38,7 @@ const Checkout = () => {
   const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
 
   // Fetch products
   const { data: products = [] } = useQuery({
@@ -175,7 +179,7 @@ const Checkout = () => {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button onClick={() => navigate('/profile')}>
                 <Package className="w-4 h-4 mr-2" />
-                View Orders
+                View Downloads
               </Button>
               <Button variant="outline" onClick={() => navigate('/store')}>
                 Continue Shopping
@@ -287,7 +291,65 @@ const Checkout = () => {
           </div>
 
           {/* Payment Form */}
-          <div>
+          <div className="space-y-6">
+            {/* Payment Method Selection */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Wallet className="w-5 h-5" />
+                  Payment Method
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RadioGroup value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)} className="space-y-3">
+                  <div className={`flex items-center space-x-3 p-4 rounded-lg border transition-colors ${paymentMethod === 'card' ? 'border-primary bg-primary/5' : 'border-border'}`}>
+                    <RadioGroupItem value="card" id="card" />
+                    <Label htmlFor="card" className="flex items-center gap-3 cursor-pointer flex-1">
+                      <CreditCard className="w-5 h-5 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium text-foreground">Credit/Debit Card</p>
+                        <p className="text-sm text-muted-foreground">Pay with Visa, Mastercard, etc.</p>
+                      </div>
+                    </Label>
+                  </div>
+                  
+                  <div className={`flex items-center space-x-3 p-4 rounded-lg border transition-colors ${paymentMethod === 'paypal' ? 'border-primary bg-primary/5' : 'border-border'}`}>
+                    <RadioGroupItem value="paypal" id="paypal" />
+                    <Label htmlFor="paypal" className="flex items-center gap-3 cursor-pointer flex-1">
+                      <Wallet className="w-5 h-5 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium text-foreground">PayPal</p>
+                        <p className="text-sm text-muted-foreground">Pay with your PayPal account</p>
+                      </div>
+                    </Label>
+                  </div>
+                  
+                  <div className={`flex items-center space-x-3 p-4 rounded-lg border transition-colors ${paymentMethod === 'paystack' ? 'border-primary bg-primary/5' : 'border-border'}`}>
+                    <RadioGroupItem value="paystack" id="paystack" />
+                    <Label htmlFor="paystack" className="flex items-center gap-3 cursor-pointer flex-1">
+                      <Smartphone className="w-5 h-5 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium text-foreground">Paystack</p>
+                        <p className="text-sm text-muted-foreground">Pay with mobile money, bank, or card (Africa)</p>
+                      </div>
+                    </Label>
+                  </div>
+                  
+                  <div className={`flex items-center space-x-3 p-4 rounded-lg border transition-colors ${paymentMethod === 'bank' ? 'border-primary bg-primary/5' : 'border-border'}`}>
+                    <RadioGroupItem value="bank" id="bank" />
+                    <Label htmlFor="bank" className="flex items-center gap-3 cursor-pointer flex-1">
+                      <Building2 className="w-5 h-5 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium text-foreground">Bank Transfer</p>
+                        <p className="text-sm text-muted-foreground">Manual bank transfer</p>
+                      </div>
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </CardContent>
+            </Card>
+
+            {/* Payment Details */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -297,31 +359,66 @@ const Checkout = () => {
               </CardHeader>
               <CardContent>
                 <form onSubmit={(e) => { e.preventDefault(); checkoutMutation.mutate(); }} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="cardName">Name on Card</Label>
-                    <Input id="cardName" placeholder="John Doe" required />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="cardNumber">Card Number</Label>
-                    <Input 
-                      id="cardNumber" 
-                      placeholder="4242 4242 4242 4242" 
-                      required
-                      maxLength={19}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="expiry">Expiry Date</Label>
-                      <Input id="expiry" placeholder="MM/YY" required maxLength={5} />
+                  {paymentMethod === 'card' && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="cardName">Name on Card</Label>
+                        <Input id="cardName" placeholder="John Doe" required />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="cardNumber">Card Number</Label>
+                        <Input 
+                          id="cardNumber" 
+                          placeholder="4242 4242 4242 4242" 
+                          required
+                          maxLength={19}
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="expiry">Expiry Date</Label>
+                          <Input id="expiry" placeholder="MM/YY" required maxLength={5} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="cvc">CVC</Label>
+                          <Input id="cvc" placeholder="123" required maxLength={4} />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {paymentMethod === 'paypal' && (
+                    <div className="p-6 rounded-lg bg-accent text-center">
+                      <p className="text-foreground mb-2">You will be redirected to PayPal</p>
+                      <p className="text-sm text-muted-foreground">Complete your payment securely with PayPal</p>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cvc">CVC</Label>
-                      <Input id="cvc" placeholder="123" required maxLength={4} />
+                  )}
+
+                  {paymentMethod === 'paystack' && (
+                    <div className="p-6 rounded-lg bg-accent text-center">
+                      <p className="text-foreground mb-2">You will be redirected to Paystack</p>
+                      <p className="text-sm text-muted-foreground">Pay with mobile money, bank, or card</p>
                     </div>
-                  </div>
+                  )}
+
+                  {paymentMethod === 'bank' && (
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-lg bg-accent">
+                        <p className="font-medium text-foreground mb-2">Bank Transfer Details:</p>
+                        <p className="text-sm text-muted-foreground">
+                          Bank: Example Bank<br />
+                          Account Name: Oflex Creative<br />
+                          Account Number: 1234567890<br />
+                          Reference: Your Email
+                        </p>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        After making the transfer, your order will be processed within 24 hours.
+                      </p>
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
