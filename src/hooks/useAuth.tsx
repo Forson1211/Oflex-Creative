@@ -27,17 +27,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userRole, setUserRole] = useState<AppRole | null>(null);
 
   const checkUserRole = async (userId: string) => {
+    // Get all roles for user and select the highest one
     const { data, error } = await supabase
       .from('user_roles')
       .select('role')
-      .eq('user_id', userId)
-      .maybeSingle();
+      .eq('user_id', userId);
     
-    if (!error && data) {
-      const role = data.role as AppRole;
-      setUserRole(role);
-      setIsAdmin(role === 'admin');
-      setIsModerator(role === 'admin' || role === 'moderator');
+    if (!error && data && data.length > 0) {
+      // Priority: admin > moderator > user
+      const roles = data.map(r => r.role);
+      let highestRole: AppRole = 'user';
+      
+      if (roles.includes('admin')) {
+        highestRole = 'admin';
+      } else if (roles.includes('moderator')) {
+        highestRole = 'moderator';
+      }
+      
+      setUserRole(highestRole);
+      setIsAdmin(highestRole === 'admin');
+      setIsModerator(highestRole === 'admin' || highestRole === 'moderator');
     } else {
       setUserRole('user');
       setIsAdmin(false);
