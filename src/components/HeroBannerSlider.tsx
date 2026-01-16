@@ -53,8 +53,8 @@ export const HeroBannerSlider = () => {
 
   return (
     <div className="w-full">
-      {/* Banner Slider - Separate section above hero */}
-      <div className="relative w-full h-[300px] md:h-[400px] lg:h-[500px] overflow-hidden">
+      {/* Banner Slider - Full width and responsive height */}
+      <div className="relative w-full h-[250px] sm:h-[350px] md:h-[450px] lg:h-[550px] xl:h-[600px] overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}

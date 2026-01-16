@@ -44,6 +44,7 @@ const Products = () => {
     category: '',
     image_url: '',
     file_url: '',
+    template_link: '',
     is_active: true,
   });
   const { toast } = useToast();
@@ -84,6 +85,7 @@ const Products = () => {
       category: '',
       image_url: '',
       file_url: '',
+      template_link: '',
       is_active: true,
     });
     setEditingProduct(null);
@@ -98,6 +100,7 @@ const Products = () => {
       category: product.category,
       image_url: product.image_url || '',
       file_url: product.file_url || '',
+      template_link: product.template_link || '',
       is_active: product.is_active ?? true,
     });
     setIsDialogOpen(true);
@@ -133,6 +136,7 @@ const Products = () => {
       category: formData.category,
       image_url: formData.image_url || null,
       file_url: formData.file_url || null,
+      template_link: formData.template_link || null,
       is_active: formData.is_active,
     };
 
@@ -286,6 +290,19 @@ const Products = () => {
                       onChange={(e) => setFormData({ ...formData, file_url: e.target.value })}
                       placeholder="https://..."
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="template_link">Canva Template Link</Label>
+                    <Input
+                      id="template_link"
+                      type="url"
+                      value={formData.template_link}
+                      onChange={(e) => setFormData({ ...formData, template_link: e.target.value })}
+                      placeholder="https://www.canva.com/design/..."
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Canva template URL that buyers can access after purchase
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <input

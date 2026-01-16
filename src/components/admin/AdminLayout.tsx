@@ -38,6 +38,7 @@ const navItems = [
   { path: '/admin/testimonials', label: 'Testimonials', icon: MessageSquare },
   { path: '/admin/faqs', label: 'FAQs', icon: HelpCircle },
   { path: '/admin/about', label: 'About Page', icon: Users },
+  { path: '/admin/trusted-partners', label: 'Trusted Partners', icon: Briefcase },
   { path: '/admin/orders', label: 'Orders', icon: ShoppingCart },
   { path: '/admin/users', label: 'User Management', icon: Users },
   { path: '/admin/customization', label: 'Customization', icon: Palette },
