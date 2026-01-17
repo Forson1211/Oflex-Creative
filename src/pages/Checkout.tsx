@@ -19,7 +19,6 @@ interface Product {
   title: string;
   price: number;
   image_url: string | null;
-  template_link: string | null;
 }
 
 interface CartItem {
@@ -40,14 +39,13 @@ const Checkout = () => {
   const [orderComplete, setOrderComplete] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
 
-  // Fetch products
+  // Fetch products from secure public view (excludes sensitive columns like template_link)
   const { data: products = [] } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('products')
-        .select('id, title, price, image_url, template_link')
-        .eq('is_active', true);
+        .from('products_public')
+        .select('id, title, price, image_url');
       if (error) throw error;
       return data as Product[];
     },
@@ -108,13 +106,24 @@ const Checkout = () => {
       const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
       if (itemsError) throw itemsError;
 
+      // Fetch template links for purchased products (from full products table - only for creating purchase records)
+      const productIds = cartItems.map(item => item.product_id);
+      const { data: productDetails } = await supabase
+        .from('products')
+        .select('id, template_link')
+        .in('id', productIds);
+
+      const templateLinkMap = new Map(
+        (productDetails || []).map(p => [p.id, p.template_link])
+      );
+
       // Create purchase records for digital downloads
       const purchaseRecords = cartItems.map((item) => ({
         user_id: user.id,
         order_id: order.id,
         product_id: item.product_id,
         product_title: item.product?.title || 'Unknown',
-        template_link: item.product?.template_link || null,
+        template_link: templateLinkMap.get(item.product_id) || null,
       }));
 
       const { error: purchaseError } = await supabase.from('purchases').insert(purchaseRecords);
