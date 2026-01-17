@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles, Palette, Code, Zap, Star, ShoppingBag, ShoppingCart } from 'lucide-react';
+import { ArrowRight, Sparkles, Palette, Code, Zap, Star, ShoppingBag, ShoppingCart, Users, Package, Briefcase } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -33,6 +33,12 @@ interface Testimonial {
   rating: number;
 }
 
+interface SiteStats {
+  productCount: number;
+  userCount: number;
+  projectCount: number;
+}
+
 const services = [
   { icon: Sparkles, title: 'Prompt Engineering', description: 'AI-powered creative prompts' },
   { icon: Palette, title: 'Brand Design', description: 'Visual identity systems' },
@@ -45,6 +51,23 @@ const Index = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { getSetting } = useSiteSettings();
+
+  // Fetch site stats
+  const { data: siteStats } = useQuery({
+    queryKey: ['site-stats'],
+    queryFn: async () => {
+      const [productsRes, usersRes, projectsRes] = await Promise.all([
+        supabase.from('products').select('id', { count: 'exact', head: true }).eq('is_active', true),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }),
+        supabase.from('featured_projects').select('id', { count: 'exact', head: true }),
+      ]);
+      return {
+        productCount: productsRes.count || 0,
+        userCount: usersRes.count || 0,
+        projectCount: projectsRes.count || 0,
+      } as SiteStats;
+    },
+  });
 
   // Fetch featured projects from database
   const { data: featuredProjects = [] } = useQuery({
@@ -239,6 +262,44 @@ const Index = () => {
                 </Button>
               </motion.div>
             </motion.div>
+
+            {/* Stats Section */}
+            {siteStats && (
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 1 }}
+                className="flex flex-wrap items-center justify-center gap-8 mt-12 pt-8 border-t border-border/50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Package className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-foreground">{siteStats.productCount}+</p>
+                    <p className="text-sm text-muted-foreground">Products</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-chart-2/10 flex items-center justify-center">
+                    <Users className="w-6 h-6 text-chart-2" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-foreground">{siteStats.userCount}+</p>
+                    <p className="text-sm text-muted-foreground">Happy Clients</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-chart-3/10 flex items-center justify-center">
+                    <Briefcase className="w-6 h-6 text-chart-3" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-foreground">{siteStats.projectCount}+</p>
+                    <p className="text-sm text-muted-foreground">Projects</p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </div>
         </div>
 

@@ -1,15 +1,26 @@
 import { useEffect, useState } from 'react';
-import { Package, ShoppingCart, DollarSign, Users, TrendingUp } from 'lucide-react';
+import { Package, ShoppingCart, DollarSign, Users, TrendingUp, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ProtectedRoute } from '@/components/admin/ProtectedRoute';
 import { AnalyticsCharts } from '@/components/admin/AnalyticsCharts';
 import { supabase } from '@/integrations/supabase/client';
+import { Link } from 'react-router-dom';
 
 interface Stats {
   totalProducts: number;
   totalOrders: number;
   totalRevenue: number;
   totalUsers: number;
+  completedOrders: number;
+  pendingOrders: number;
+}
+
+interface RecentOrder {
+  id: string;
+  status: string;
+  total_amount: number;
+  created_at: string;
+  payment_provider: string | null;
 }
 
 const Dashboard = () => {
@@ -18,29 +29,40 @@ const Dashboard = () => {
     totalOrders: 0,
     totalRevenue: 0,
     totalUsers: 0,
+    completedOrders: 0,
+    pendingOrders: 0,
   });
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [productsRes, ordersRes, usersRes] = await Promise.all([
-          supabase.from('products').select('id', { count: 'exact', head: true }),
-          supabase.from('orders').select('id, total_amount'),
+        const [productsRes, ordersRes, usersRes, recentOrdersRes] = await Promise.all([
+          supabase.from('products').select('id', { count: 'exact', head: true }).eq('is_active', true),
+          supabase.from('orders').select('id, total_amount, status'),
           supabase.from('profiles').select('id', { count: 'exact', head: true }),
+          supabase.from('orders').select('id, status, total_amount, created_at, payment_provider').order('created_at', { ascending: false }).limit(5),
         ]);
 
-        const totalRevenue = ordersRes.data?.reduce(
+        const orders = ordersRes.data || [];
+        const completedOrders = orders.filter(o => o.status === 'completed');
+        const pendingOrders = orders.filter(o => o.status === 'pending');
+        const totalRevenue = completedOrders.reduce(
           (sum, order) => sum + Number(order.total_amount),
           0
-        ) || 0;
+        );
 
         setStats({
           totalProducts: productsRes.count || 0,
-          totalOrders: ordersRes.data?.length || 0,
+          totalOrders: orders.length,
           totalRevenue,
           totalUsers: usersRes.count || 0,
+          completedOrders: completedOrders.length,
+          pendingOrders: pendingOrders.length,
         });
+
+        setRecentOrders(recentOrdersRes.data || []);
       } catch (error) {
         console.error('Error fetching stats:', error);
       } finally {
@@ -81,6 +103,32 @@ const Dashboard = () => {
       bgColor: 'bg-chart-4/10',
     },
   ];
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle2 className="w-4 h-4 text-chart-3" />;
+      case 'pending':
+        return <Clock className="w-4 h-4 text-chart-1" />;
+      case 'cancelled':
+        return <XCircle className="w-4 h-4 text-destructive" />;
+      default:
+        return <AlertCircle className="w-4 h-4 text-muted-foreground" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-chart-3/20 text-chart-3';
+      case 'pending':
+        return 'bg-chart-1/20 text-chart-1';
+      case 'cancelled':
+        return 'bg-destructive/20 text-destructive';
+      default:
+        return 'bg-muted text-muted-foreground';
+    }
+  };
 
   return (
     <ProtectedRoute requireModerator>
@@ -124,6 +172,32 @@ const Dashboard = () => {
             </div>
           )}
 
+          {/* Order Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-card border border-border rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-lg bg-chart-3/10 flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5 text-chart-3" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Completed Orders</p>
+                  <p className="text-2xl font-bold text-foreground">{stats.completedOrders}</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-card border border-border rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-lg bg-chart-1/10 flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-chart-1" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Pending Orders</p>
+                  <p className="text-2xl font-bold text-foreground">{stats.pendingOrders}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Analytics Charts */}
           <div>
             <h2 className="text-xl font-semibold text-foreground mb-4">Site Analytics</h2>
@@ -134,8 +208,8 @@ const Dashboard = () => {
             <div className="bg-card border border-border rounded-xl p-6">
               <h2 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h2>
               <div className="space-y-3">
-                <a
-                  href="/admin/products"
+                <Link
+                  to="/admin/products"
                   className="block p-4 rounded-lg bg-accent hover:bg-accent/80 transition-colors"
                 >
                   <div className="flex items-center gap-3">
@@ -145,9 +219,9 @@ const Dashboard = () => {
                       <p className="text-sm text-muted-foreground">Add, edit, or remove products</p>
                     </div>
                   </div>
-                </a>
-                <a
-                  href="/admin/orders"
+                </Link>
+                <Link
+                  to="/admin/orders"
                   className="block p-4 rounded-lg bg-accent hover:bg-accent/80 transition-colors"
                 >
                   <div className="flex items-center gap-3">
@@ -157,15 +231,42 @@ const Dashboard = () => {
                       <p className="text-sm text-muted-foreground">Check and manage orders</p>
                     </div>
                   </div>
-                </a>
+                </Link>
               </div>
             </div>
 
             <div className="bg-card border border-border rounded-xl p-6">
-              <h2 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h2>
-              <p className="text-muted-foreground text-sm">
-                Activity tracking will be displayed here once there's more data.
-              </p>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-foreground">Recent Orders</h2>
+                <Link to="/admin/orders" className="text-sm text-primary hover:underline">
+                  View all
+                </Link>
+              </div>
+              {recentOrders.length === 0 ? (
+                <p className="text-muted-foreground text-sm">No orders yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {recentOrders.map((order) => (
+                    <div key={order.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                      <div className="flex items-center gap-3">
+                        {getStatusIcon(order.status)}
+                        <div>
+                          <p className="font-mono text-sm text-foreground">{order.id.slice(0, 8)}...</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(order.created_at).toLocaleDateString()} • {order.payment_provider || 'N/A'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium text-foreground">${Number(order.total_amount).toFixed(2)}</p>
+                        <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${getStatusColor(order.status)}`}>
+                          {order.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
