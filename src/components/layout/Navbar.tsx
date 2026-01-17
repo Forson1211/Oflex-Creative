@@ -122,42 +122,6 @@ export const Navbar = () => {
     },
   });
 
-  // Checkout mutation
-  const checkoutMutation = useMutation({
-    mutationFn: async () => {
-      if (!user || cartItems.length === 0) throw new Error('Cart is empty');
-      const totalAmount = cartItems.reduce(
-        (sum, item) => sum + (item.product?.price || 0) * item.quantity,
-        0
-      );
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({ user_id: user.id, total_amount: totalAmount, status: 'pending' })
-        .select()
-        .single();
-      if (orderError) throw orderError;
-      const orderItems = cartItems.map((item) => ({
-        order_id: order.id,
-        product_id: item.product_id,
-        product_title: item.product?.title || 'Unknown',
-        product_price: item.product?.price || 0,
-        quantity: item.quantity,
-      }));
-      const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
-      if (itemsError) throw itemsError;
-      const { error: clearError } = await supabase.from('cart_items').delete().eq('user_id', user.id);
-      if (clearError) throw clearError;
-      return order;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
-      toast({ title: 'Order placed!', description: 'Thank you for your purchase.' });
-      setIsCartOpen(false);
-    },
-    onError: (error: Error) => {
-      toast({ title: 'Checkout failed', description: error.message, variant: 'destructive' });
-    },
-  });
 
   const handleSignOut = async () => {
     await signOut();
