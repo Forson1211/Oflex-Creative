@@ -61,14 +61,13 @@ const Index = () => {
     },
   });
 
-  // Fetch featured products from database
+  // Fetch featured products from secure public view (excludes sensitive columns like template_link)
   const { data: featuredProducts = [] } = useQuery({
     queryKey: ['featured-products'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('products')
+        .from('products_public')
         .select('*')
-        .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(4);
       if (error) throw error;

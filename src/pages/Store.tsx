@@ -73,14 +73,13 @@ const Store = () => {
   const queryClient = useQueryClient();
   const { getSetting } = useSiteSettings();
 
-  // Fetch products from database
+  // Fetch products from secure public view (excludes sensitive columns like template_link)
   const { data: products = [], isLoading: productsLoading } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('products')
+        .from('products_public')
         .select('*')
-        .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
