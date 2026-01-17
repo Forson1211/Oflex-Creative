@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CreditCard, Lock, CheckCircle, ArrowLeft, Package, Wallet, Building2, Smartphone } from 'lucide-react';
+import { Lock, CheckCircle, ArrowLeft, Package, Wallet, Smartphone, Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -28,18 +28,65 @@ interface CartItem {
   product?: Product;
 }
 
-type PaymentMethod = 'card' | 'paypal' | 'paystack' | 'bank';
+type PaymentMethod = 'paystack' | 'paypal';
 
 const Checkout = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('paystack');
+  const [verifyingPayment, setVerifyingPayment] = useState(false);
 
-  // Fetch products from secure public view (excludes sensitive columns like template_link)
+  // Check for payment callback
+  useEffect(() => {
+    const reference = searchParams.get('reference');
+    const trxref = searchParams.get('trxref');
+    
+    if (reference || trxref) {
+      verifyPayment(reference || trxref!);
+    }
+  }, [searchParams]);
+
+  const verifyPayment = async (reference: string) => {
+    if (!user) return;
+    
+    setVerifyingPayment(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('paystack-verify', {
+        body: { reference }
+      });
+
+      if (error) throw error;
+
+      if (data.success && data.status === 'completed') {
+        queryClient.invalidateQueries({ queryKey: ['cart'] });
+        queryClient.invalidateQueries({ queryKey: ['purchases'] });
+        setOrderComplete(true);
+        toast({ title: 'Payment successful!', description: 'Your order has been completed.' });
+      } else {
+        toast({ 
+          title: 'Payment not completed', 
+          description: 'Please try again or contact support.',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      console.error('Payment verification error:', error);
+      toast({ 
+        title: 'Verification failed', 
+        description: 'Please contact support if payment was deducted.',
+        variant: 'destructive'
+      });
+    } finally {
+      setVerifyingPayment(false);
+    }
+  };
+
+  // Fetch products from secure public view
   const { data: products = [] } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
@@ -74,20 +121,22 @@ const Checkout = () => {
     0
   );
 
-  // Checkout mutation
+  // Create pending order and initialize payment
   const checkoutMutation = useMutation({
     mutationFn: async () => {
       if (!user || cartItems.length === 0) throw new Error('Cart is empty');
+      if (!user.email) throw new Error('Email is required');
       
       setIsProcessing(true);
       
-      // Create order
+      // Create order with PENDING status
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({ 
           user_id: user.id, 
           total_amount: cartTotal, 
-          status: 'completed' 
+          status: 'pending',
+          payment_provider: paymentMethod
         })
         .select()
         .single();
@@ -106,43 +155,40 @@ const Checkout = () => {
       const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
       if (itemsError) throw itemsError;
 
-      // Fetch template links for purchased products (from full products table - only for creating purchase records)
-      const productIds = cartItems.map(item => item.product_id);
-      const { data: productDetails } = await supabase
-        .from('products')
-        .select('id, template_link')
-        .in('id', productIds);
+      if (paymentMethod === 'paystack') {
+        // Initialize Paystack payment
+        const callbackUrl = `${window.location.origin}/checkout`;
+        
+        const { data, error } = await supabase.functions.invoke('paystack-initialize', {
+          body: {
+            orderId: order.id,
+            email: user.email,
+            amount: cartTotal,
+            callbackUrl
+          }
+        });
 
-      const templateLinkMap = new Map(
-        (productDetails || []).map(p => [p.id, p.template_link])
-      );
+        if (error || !data.success) {
+          throw new Error(data?.error || 'Failed to initialize payment');
+        }
 
-      // Create purchase records for digital downloads
-      const purchaseRecords = cartItems.map((item) => ({
-        user_id: user.id,
-        order_id: order.id,
-        product_id: item.product_id,
-        product_title: item.product?.title || 'Unknown',
-        template_link: templateLinkMap.get(item.product_id) || null,
-      }));
-
-      const { error: purchaseError } = await supabase.from('purchases').insert(purchaseRecords);
-      if (purchaseError) console.error('Error creating purchases:', purchaseError);
-
-      // Clear cart
-      const { error: clearError } = await supabase
-        .from('cart_items')
-        .delete()
-        .eq('user_id', user.id);
-      if (clearError) throw clearError;
-
-      return order;
+        // Redirect to Paystack
+        window.location.href = data.authorizationUrl;
+        return { redirecting: true };
+      } else {
+        // PayPal - show instructions for now
+        toast({ 
+          title: 'PayPal Coming Soon', 
+          description: 'PayPal integration is being set up. Please use Paystack for now.',
+          variant: 'destructive'
+        });
+        throw new Error('PayPal not yet available');
+      }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
-      queryClient.invalidateQueries({ queryKey: ['purchases'] });
-      setOrderComplete(true);
-      setIsProcessing(false);
+    onSuccess: (data) => {
+      if (!data?.redirecting) {
+        setIsProcessing(false);
+      }
     },
     onError: (error: Error) => {
       toast({ 
@@ -169,6 +215,26 @@ const Checkout = () => {
     );
   }
 
+  if (verifyingPayment) {
+    return (
+      <Layout>
+        <div className="min-h-[60vh] flex items-center justify-center py-20">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center max-w-md"
+          >
+            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+              <Loader2 className="w-10 h-10 text-primary animate-spin" />
+            </div>
+            <h1 className="text-2xl font-bold text-foreground mb-4">Verifying Payment...</h1>
+            <p className="text-muted-foreground">Please wait while we confirm your payment.</p>
+          </motion.div>
+        </div>
+      </Layout>
+    );
+  }
+
   if (orderComplete) {
     return (
       <Layout>
@@ -181,7 +247,7 @@ const Checkout = () => {
             <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="w-10 h-10 text-primary" />
             </div>
-            <h1 className="text-3xl font-bold text-foreground mb-4">Order Complete!</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-4">Payment Successful!</h1>
             <p className="text-muted-foreground mb-8">
               Thank you for your purchase. Your digital products are now available in your account.
             </p>
@@ -311,46 +377,24 @@ const Checkout = () => {
               </CardHeader>
               <CardContent>
                 <RadioGroup value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)} className="space-y-3">
-                  <div className={`flex items-center space-x-3 p-4 rounded-lg border transition-colors ${paymentMethod === 'card' ? 'border-primary bg-primary/5' : 'border-border'}`}>
-                    <RadioGroupItem value="card" id="card" />
-                    <Label htmlFor="card" className="flex items-center gap-3 cursor-pointer flex-1">
-                      <CreditCard className="w-5 h-5 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium text-foreground">Credit/Debit Card</p>
-                        <p className="text-sm text-muted-foreground">Pay with Visa, Mastercard, etc.</p>
-                      </div>
-                    </Label>
-                  </div>
-                  
-                  <div className={`flex items-center space-x-3 p-4 rounded-lg border transition-colors ${paymentMethod === 'paypal' ? 'border-primary bg-primary/5' : 'border-border'}`}>
-                    <RadioGroupItem value="paypal" id="paypal" />
-                    <Label htmlFor="paypal" className="flex items-center gap-3 cursor-pointer flex-1">
-                      <Wallet className="w-5 h-5 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium text-foreground">PayPal</p>
-                        <p className="text-sm text-muted-foreground">Pay with your PayPal account</p>
-                      </div>
-                    </Label>
-                  </div>
-                  
                   <div className={`flex items-center space-x-3 p-4 rounded-lg border transition-colors ${paymentMethod === 'paystack' ? 'border-primary bg-primary/5' : 'border-border'}`}>
                     <RadioGroupItem value="paystack" id="paystack" />
                     <Label htmlFor="paystack" className="flex items-center gap-3 cursor-pointer flex-1">
                       <Smartphone className="w-5 h-5 text-muted-foreground" />
                       <div>
                         <p className="font-medium text-foreground">Paystack</p>
-                        <p className="text-sm text-muted-foreground">Pay with mobile money, bank, or card (Africa)</p>
+                        <p className="text-sm text-muted-foreground">Pay with card, bank transfer, or mobile money</p>
                       </div>
                     </Label>
                   </div>
                   
-                  <div className={`flex items-center space-x-3 p-4 rounded-lg border transition-colors ${paymentMethod === 'bank' ? 'border-primary bg-primary/5' : 'border-border'}`}>
-                    <RadioGroupItem value="bank" id="bank" />
-                    <Label htmlFor="bank" className="flex items-center gap-3 cursor-pointer flex-1">
-                      <Building2 className="w-5 h-5 text-muted-foreground" />
+                  <div className={`flex items-center space-x-3 p-4 rounded-lg border transition-colors ${paymentMethod === 'paypal' ? 'border-primary bg-primary/5' : 'border-border'} opacity-50`}>
+                    <RadioGroupItem value="paypal" id="paypal" disabled />
+                    <Label htmlFor="paypal" className="flex items-center gap-3 cursor-pointer flex-1">
+                      <Wallet className="w-5 h-5 text-muted-foreground" />
                       <div>
-                        <p className="font-medium text-foreground">Bank Transfer</p>
-                        <p className="text-sm text-muted-foreground">Manual bank transfer</p>
+                        <p className="font-medium text-foreground">PayPal</p>
+                        <p className="text-sm text-muted-foreground">Coming soon</p>
                       </div>
                     </Label>
                   </div>
@@ -358,96 +402,50 @@ const Checkout = () => {
               </CardContent>
             </Card>
 
-            {/* Payment Details */}
+            {/* Payment Info */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="w-5 h-5" />
-                  Payment Details
+                  <Lock className="w-5 h-5" />
+                  Secure Payment
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <form onSubmit={(e) => { e.preventDefault(); checkoutMutation.mutate(); }} className="space-y-4">
-                  {paymentMethod === 'card' && (
-                    <>
-                      <div className="space-y-2">
-                        <Label htmlFor="cardName">Name on Card</Label>
-                        <Input id="cardName" placeholder="John Doe" required />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="cardNumber">Card Number</Label>
-                        <Input 
-                          id="cardNumber" 
-                          placeholder="4242 4242 4242 4242" 
-                          required
-                          maxLength={19}
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="expiry">Expiry Date</Label>
-                          <Input id="expiry" placeholder="MM/YY" required maxLength={5} />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="cvc">CVC</Label>
-                          <Input id="cvc" placeholder="123" required maxLength={4} />
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  {paymentMethod === 'paypal' && (
-                    <div className="p-6 rounded-lg bg-accent text-center">
-                      <p className="text-foreground mb-2">You will be redirected to PayPal</p>
-                      <p className="text-sm text-muted-foreground">Complete your payment securely with PayPal</p>
-                    </div>
-                  )}
-
+                <div className="space-y-4">
                   {paymentMethod === 'paystack' && (
                     <div className="p-6 rounded-lg bg-accent text-center">
-                      <p className="text-foreground mb-2">You will be redirected to Paystack</p>
-                      <p className="text-sm text-muted-foreground">Pay with mobile money, bank, or card</p>
-                    </div>
-                  )}
-
-                  {paymentMethod === 'bank' && (
-                    <div className="space-y-4">
-                      <div className="p-4 rounded-lg bg-accent">
-                        <p className="font-medium text-foreground mb-2">Bank Transfer Details:</p>
-                        <p className="text-sm text-muted-foreground">
-                          Bank: Example Bank<br />
-                          Account Name: Oflex Creative<br />
-                          Account Number: 1234567890<br />
-                          Reference: Your Email
-                        </p>
-                      </div>
+                      <Smartphone className="w-12 h-12 text-primary mx-auto mb-3" />
+                      <p className="text-foreground font-medium mb-2">Pay securely with Paystack</p>
                       <p className="text-sm text-muted-foreground">
-                        After making the transfer, your order will be processed within 24 hours.
+                        You'll be redirected to Paystack to complete your payment using card, bank transfer, or mobile money.
                       </p>
                     </div>
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">Email for receipt</Label>
                     <Input 
                       id="email" 
                       type="email" 
                       defaultValue={user.email || ''} 
-                      required 
+                      disabled
+                      className="bg-muted"
                     />
+                    <p className="text-xs text-muted-foreground">Your receipt will be sent to this email</p>
                   </div>
                   
                   <div className="pt-4">
                     <Button 
-                      type="submit" 
                       className="w-full" 
                       size="lg"
-                      disabled={isProcessing}
+                      onClick={() => checkoutMutation.mutate()}
+                      disabled={isProcessing || checkoutMutation.isPending}
                     >
-                      {isProcessing ? (
-                        'Processing...'
+                      {isProcessing || checkoutMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Processing...
+                        </>
                       ) : (
                         <>
                           <Lock className="w-4 h-4 mr-2" />
@@ -457,11 +455,11 @@ const Checkout = () => {
                     </Button>
                   </div>
                   
-                  <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
+                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                     <Lock className="w-3 h-3" />
-                    Secure checkout - Your payment info is protected
-                  </p>
-                </form>
+                    <span>Secured by Paystack - Your payment information is safe</span>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>

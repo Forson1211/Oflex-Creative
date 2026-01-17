@@ -214,6 +214,8 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          payment_provider: string | null
+          payment_reference: string | null
           status: string
           stripe_payment_intent_id: string | null
           stripe_session_id: string | null
@@ -224,6 +226,8 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          payment_provider?: string | null
+          payment_reference?: string | null
           status?: string
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
@@ -234,6 +238,8 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          payment_provider?: string | null
+          payment_reference?: string | null
           status?: string
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
