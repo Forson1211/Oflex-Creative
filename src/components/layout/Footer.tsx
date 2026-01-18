@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import oflexLogo from '@/assets/oflex-logo.png';
+
 
 interface TrustedPartner {
   id: string;
@@ -97,6 +97,7 @@ export const Footer = () => {
   ].filter(link => link.href && link.href !== '#');
 
   const logoUrl = getSetting('logo_url', '');
+  const footerColor = getSetting('footer_color', '');
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,10 +111,14 @@ export const Footer = () => {
     setIsSubscribing(false);
   };
 
+  // Dynamic footer background style
+  const footerStyle = footerColor ? { backgroundColor: footerColor } : {};
+
   return (
-    <footer className="bg-card border-t border-border">
+    <footer className="border-t border-border" style={footerStyle}>
+      {!footerColor && <div className="absolute inset-0 bg-card -z-10" />}
       {/* Newsletter Section - Shows on ALL devices */}
-      <div className="border-b border-border bg-gradient-to-r from-primary/5 via-transparent to-primary/5">
+      <div className={`border-b border-border ${!footerColor ? 'bg-gradient-to-r from-primary/5 via-transparent to-primary/5' : ''}`}>
         <div className="container mx-auto px-4 py-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -166,9 +171,9 @@ export const Footer = () => {
           >
             <Link to="/" className="flex items-center gap-2 mb-4">
               <img 
-                src={logoUrl || oflexLogo} 
+                src={logoUrl || '/placeholder.svg'} 
                 alt={getSetting('site_name', 'Oflex Creative')} 
-                className="h-10 w-auto" 
+                className="h-10 w-auto"
               />
             </Link>
             <p className="text-muted-foreground text-sm leading-relaxed mb-6">

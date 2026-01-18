@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Phone, MapPin, Send, CheckCircle, ChevronDown } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { Mail, Phone, MapPin, Send, CheckCircle } from 'lucide-react';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
@@ -11,7 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
+import { z } from 'zod';
 import {
   Accordion,
   AccordionContent,
@@ -26,10 +27,19 @@ interface FAQ {
   display_order: number;
 }
 
+// Contact form validation schema
+const contactSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
+  email: z.string().trim().email('Invalid email address').max(255, 'Email must be less than 255 characters'),
+  subject: z.string().trim().min(1, 'Subject is required').max(200, 'Subject must be less than 200 characters'),
+  message: z.string().trim().min(1, 'Message is required').max(2000, 'Message must be less than 2000 characters'),
+});
+
 const Contact = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
   const { getSetting } = useSiteSettings();
+  const { toast } = useToast();
 
   // Fetch FAQs from database
   const { data: faqs = [] } = useQuery({
@@ -45,28 +55,47 @@ const Contact = () => {
     },
   });
 
+  // Submit contact form mutation
+  const submitMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      // Validate input
+      const validated = contactSchema.parse(data);
+      
+      const { error } = await supabase
+        .from('contact_messages')
+        .insert({
+          name: validated.name,
+          email: validated.email,
+          subject: validated.subject,
+          message: validated.message,
+        });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setIsSubmitted(true);
+      toast({ title: 'Message sent!', description: "We'll get back to you soon." });
+      setFormData({ name: '', email: '', subject: '', message: '' });
+      setTimeout(() => setIsSubmitted(false), 3000);
+    },
+    onError: (error) => {
+      if (error instanceof z.ZodError) {
+        toast({ title: 'Validation error', description: error.errors[0].message, variant: 'destructive' });
+      } else {
+        toast({ title: 'Error', description: 'Failed to send message. Please try again.', variant: 'destructive' });
+      }
+    },
+  });
+
   const contactInfo = [
     { icon: Mail, label: 'Email', value: getSetting('contact_email', 'hello@oflexcreative.com') },
     { icon: Phone, label: 'Phone', value: getSetting('phone_number', '+1 (555) 123-4567') },
     { icon: MapPin, label: 'Location', value: getSetting('address', 'San Francisco, CA') },
   ];
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setIsSubmitting(false);
-    setIsSubmitted(true);
-    toast.success('Message sent successfully! We\'ll get back to you soon.');
-    
-    // Reset form after animation
-    setTimeout(() => {
-      setIsSubmitted(false);
-      (e.target as HTMLFormElement).reset();
-    }, 3000);
+    submitMutation.mutate(formData);
   };
 
   return (
@@ -172,7 +201,10 @@ const Contact = () => {
                         id="name"
                         placeholder="Your name"
                         required
-                        disabled={isSubmitting}
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        disabled={submitMutation.isPending}
+                        maxLength={100}
                       />
                     </div>
                     <div className="space-y-2">
@@ -182,7 +214,10 @@ const Contact = () => {
                         type="email"
                         placeholder="your@email.com"
                         required
-                        disabled={isSubmitting}
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        disabled={submitMutation.isPending}
+                        maxLength={255}
                       />
                     </div>
                   </div>
@@ -193,7 +228,10 @@ const Contact = () => {
                       id="subject"
                       placeholder="What's this about?"
                       required
-                      disabled={isSubmitting}
+                      value={formData.subject}
+                      onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                      disabled={submitMutation.isPending}
+                      maxLength={200}
                     />
                   </div>
 
@@ -204,7 +242,10 @@ const Contact = () => {
                       placeholder="Tell us about your project..."
                       rows={6}
                       required
-                      disabled={isSubmitting}
+                      value={formData.message}
+                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                      disabled={submitMutation.isPending}
+                      maxLength={2000}
                     />
                   </div>
 
@@ -212,9 +253,9 @@ const Contact = () => {
                     type="submit"
                     size="lg"
                     className="w-full md:w-auto"
-                    disabled={isSubmitting}
+                    disabled={submitMutation.isPending}
                   >
-                    {isSubmitting ? (
+                    {submitMutation.isPending ? (
                       <>
                         <motion.div
                           animate={{ rotate: 360 }}

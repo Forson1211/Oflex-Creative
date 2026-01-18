@@ -663,18 +663,39 @@ const SiteCustomization = () => {
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold text-foreground">Footer</h2>
-                    <p className="text-sm text-muted-foreground">Footer text and copyright</p>
+                    <p className="text-sm text-muted-foreground">Footer text, copyright and background color</p>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="footer_text">Footer Copyright Text</Label>
-                  <Input
-                    id="footer_text"
-                    value={settings.footer_text || ''}
-                    onChange={(e) => updateSetting('footer_text', e.target.value)}
-                    placeholder="© 2024 Your Company. All rights reserved."
-                  />
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="footer_text">Footer Copyright Text</Label>
+                    <Input
+                      id="footer_text"
+                      value={settings.footer_text || ''}
+                      onChange={(e) => updateSetting('footer_text', e.target.value)}
+                      placeholder="© 2024 Your Company. All rights reserved."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="footer_color">Footer Background Color</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="footer_color"
+                        type="color"
+                        value={settings.footer_color || '#1a1a1a'}
+                        onChange={(e) => updateSetting('footer_color', e.target.value)}
+                        className="w-16 h-10 p-1"
+                      />
+                      <Input
+                        value={settings.footer_color || ''}
+                        onChange={(e) => updateSetting('footer_color', e.target.value)}
+                        className="flex-1"
+                        placeholder="Leave empty for default theme color"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">Leave empty to use the default theme background</p>
+                  </div>
                 </div>
               </div>
             </TabsContent>

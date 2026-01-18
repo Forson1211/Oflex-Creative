@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { User, Package, Settings, LogOut, ShoppingBag, Download, ExternalLink, Edit2, Camera, Shield } from 'lucide-react';
+import { User, Package, Settings, LogOut, ShoppingBag, Download, ExternalLink, Edit2, Camera, Shield, Trash2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -22,6 +22,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface Purchase {
   id: string;
@@ -134,6 +145,26 @@ const ProfilePage = () => {
     },
     onError: () => {
       toast({ title: 'Error updating profile', variant: 'destructive' });
+    },
+  });
+
+  // Delete purchase mutation
+  const deletePurchaseMutation = useMutation({
+    mutationFn: async (purchaseId: string) => {
+      const { error } = await supabase
+        .from('purchases')
+        .delete()
+        .eq('id', purchaseId)
+        .eq('user_id', user!.id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['purchases'] });
+      toast({ title: 'Purchase removed from your account' });
+    },
+    onError: () => {
+      toast({ title: 'Error removing purchase', variant: 'destructive' });
     },
   });
 
@@ -273,17 +304,41 @@ const ProfilePage = () => {
                               Purchased {new Date(purchase.purchased_at).toLocaleDateString()}
                             </p>
                           </div>
-                          <div>
+                          <div className="flex items-center gap-2">
                             {purchase.template_link ? (
                               <Button size="sm" asChild>
                                 <a href={purchase.template_link} target="_blank" rel="noopener noreferrer">
                                   <ExternalLink className="w-4 h-4 mr-2" />
-                                  Open Template
+                                  Open
                                 </a>
                               </Button>
                             ) : (
                               <Badge variant="secondary">Link coming soon</Badge>
                             )}
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Remove this purchase?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will remove "{purchase.product_title}" from your downloads. You won't be able to access the template link anymore.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => deletePurchaseMutation.mutate(purchase.id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Remove
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </div>
                       ))}
