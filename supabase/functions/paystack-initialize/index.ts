@@ -66,8 +66,11 @@ Deno.serve(async (req) => {
       throw new Error('Order not found or already processed');
     }
 
-    // Convert amount to kobo (Paystack uses smallest currency unit)
-    const amountInKobo = Math.round(amount * 100);
+    // Convert USD to GHS (Paystack Ghana uses pesewas - smallest unit)
+    // Exchange rate: 1 USD = 15.5 GHS
+    const USD_TO_GHS_RATE = 15.5;
+    const amountInGHS = amount * USD_TO_GHS_RATE;
+    const amountInPesewas = Math.round(amountInGHS * 100);
 
     // Initialize Paystack transaction
     const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
@@ -78,7 +81,8 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         email,
-        amount: amountInKobo,
+        amount: amountInPesewas,
+        currency: 'GHS',
         reference: `order_${orderId}_${Date.now()}`,
         callback_url: callbackUrl,
         metadata: {

@@ -12,7 +12,7 @@ import { SectionHeading } from '@/components/ui/SectionHeading';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/badge';
 import { HeroBannerSlider } from '@/components/HeroBannerSlider';
-import heroBg from '@/assets/hero-bg.jpg';
+
 
 interface FeaturedProject {
   id: string;
@@ -161,7 +161,7 @@ const Index = () => {
           animate={{ scale: 1, opacity: 0.3 }}
           transition={{ duration: 1.5, ease: "easeOut" }}
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${getSetting('hero_background_url', '') || heroBg})` }}
+          style={{ backgroundImage: `url(${getSetting('hero_background_url', 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=1920&h=1080&fit=crop')})` }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background" />
         
@@ -263,45 +263,42 @@ const Index = () => {
               </motion.div>
             </motion.div>
 
-            {/* Stats Section */}
-            {siteStats && (
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 1 }}
-                className="flex flex-wrap items-center justify-center gap-8 mt-12 pt-8 border-t border-border/50"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Package className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-foreground">{siteStats.productCount}+</p>
-                    <p className="text-sm text-muted-foreground">Products</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-chart-2/10 flex items-center justify-center">
-                    <Users className="w-6 h-6 text-chart-2" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-foreground">{siteStats.userCount}+</p>
-                    <p className="text-sm text-muted-foreground">Happy Clients</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-chart-3/10 flex items-center justify-center">
-                    <Briefcase className="w-6 h-6 text-chart-3" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-foreground">{siteStats.projectCount}+</p>
-                    <p className="text-sm text-muted-foreground">Projects</p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
           </div>
         </div>
+
+        {/* Stats Section - Moved below hero with better spacing and responsiveness */}
+        {siteStats && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 1 }}
+            className="container mx-auto px-4 mt-8 relative z-10"
+          >
+            <div className="grid grid-cols-3 gap-4 md:gap-8 max-w-3xl mx-auto bg-card/50 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-border/50">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                  <Package className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+                </div>
+                <p className="text-xl md:text-2xl font-bold text-foreground">{siteStats.productCount}+</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Products</p>
+              </div>
+              <div className="flex flex-col items-center text-center">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-chart-2/10 flex items-center justify-center mb-2">
+                  <Users className="w-5 h-5 md:w-6 md:h-6 text-chart-2" />
+                </div>
+                <p className="text-xl md:text-2xl font-bold text-foreground">{siteStats.userCount}+</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Clients</p>
+              </div>
+              <div className="flex flex-col items-center text-center">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-chart-3/10 flex items-center justify-center mb-2">
+                  <Briefcase className="w-5 h-5 md:w-6 md:h-6 text-chart-3" />
+                </div>
+                <p className="text-xl md:text-2xl font-bold text-foreground">{siteStats.projectCount}+</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Projects</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Animated Gradient Orbs with Pulse Effect */}
         <motion.div
@@ -368,8 +365,8 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Works */}
-      <section className="py-20">
+      {/* Featured Works - Smaller size */}
+      <section className="py-16">
         <div className="container mx-auto px-4">
           <SectionHeading
             badge="Our Work"
@@ -377,7 +374,7 @@ const Index = () => {
             description="A glimpse into our creative portfolio"
           />
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {featuredProjects.map((project, index) => (
               <motion.div
                 key={project.id}
@@ -388,21 +385,21 @@ const Index = () => {
               >
                 <Link to="/portfolio">
                   <GlassCard className="overflow-hidden p-0 group">
-                    <div className="relative aspect-[4/3] overflow-hidden">
+                    <div className="relative aspect-square overflow-hidden">
                       <img
                         src={project.image_url}
                         alt={project.title}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600&h=400&fit=crop';
+                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=300&h=300&fit=crop';
                         }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <span className="inline-block px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-medium mb-2">
+                      <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <span className="inline-block px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium mb-1">
                           {project.category}
                         </span>
-                        <h3 className="text-lg font-semibold text-foreground">{project.title}</h3>
+                        <h3 className="text-sm font-semibold text-foreground line-clamp-1">{project.title}</h3>
                       </div>
                     </div>
                   </GlassCard>

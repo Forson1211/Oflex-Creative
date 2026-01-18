@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react';
-import { Package, ShoppingCart, DollarSign, Users, TrendingUp, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { Package, ShoppingCart, DollarSign, Users, TrendingUp, Clock, CheckCircle2, XCircle, AlertCircle, RefreshCw, Bell } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ProtectedRoute } from '@/components/admin/ProtectedRoute';
 import { AnalyticsCharts } from '@/components/admin/AnalyticsCharts';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { useRealtimeOrders } from '@/hooks/useRealtimeOrders';
+import { useToast } from '@/hooks/use-toast';
 
 interface Stats {
   totalProducts: number;
@@ -34,44 +37,56 @@ const Dashboard = () => {
   });
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const { toast } = useToast();
+
+  // Enable real-time order notifications
+  useRealtimeOrders();
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const [productsRes, ordersRes, usersRes, recentOrdersRes] = await Promise.all([
+        supabase.from('products').select('id', { count: 'exact', head: true }).eq('is_active', true),
+        supabase.from('orders').select('id, total_amount, status'),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }),
+        supabase.from('orders').select('id, status, total_amount, created_at, payment_provider').order('created_at', { ascending: false }).limit(5),
+      ]);
+
+      const orders = ordersRes.data || [];
+      const completedOrders = orders.filter(o => o.status === 'completed');
+      const pendingOrders = orders.filter(o => o.status === 'pending');
+      const totalRevenue = completedOrders.reduce(
+        (sum, order) => sum + Number(order.total_amount),
+        0
+      );
+
+      setStats({
+        totalProducts: productsRes.count || 0,
+        totalOrders: orders.length,
+        totalRevenue,
+        totalUsers: usersRes.count || 0,
+        completedOrders: completedOrders.length,
+        pendingOrders: pendingOrders.length,
+      });
+
+      setRecentOrders(recentOrdersRes.data || []);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const [productsRes, ordersRes, usersRes, recentOrdersRes] = await Promise.all([
-          supabase.from('products').select('id', { count: 'exact', head: true }).eq('is_active', true),
-          supabase.from('orders').select('id, total_amount, status'),
-          supabase.from('profiles').select('id', { count: 'exact', head: true }),
-          supabase.from('orders').select('id, status, total_amount, created_at, payment_provider').order('created_at', { ascending: false }).limit(5),
-        ]);
-
-        const orders = ordersRes.data || [];
-        const completedOrders = orders.filter(o => o.status === 'completed');
-        const pendingOrders = orders.filter(o => o.status === 'pending');
-        const totalRevenue = completedOrders.reduce(
-          (sum, order) => sum + Number(order.total_amount),
-          0
-        );
-
-        setStats({
-          totalProducts: productsRes.count || 0,
-          totalOrders: orders.length,
-          totalRevenue,
-          totalUsers: usersRes.count || 0,
-          completedOrders: completedOrders.length,
-          pendingOrders: pendingOrders.length,
-        });
-
-        setRecentOrders(recentOrdersRes.data || []);
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchStats();
-  }, []);
+  }, [fetchStats]);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchStats();
+    toast({ title: 'Dashboard refreshed!' });
+  };
 
   const statCards = [
     {
@@ -139,9 +154,20 @@ const Dashboard = () => {
               <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
               <p className="text-muted-foreground">Welcome to your admin dashboard</p>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <TrendingUp className="w-4 h-4 text-chart-3" />
-              <span>Real-time analytics</span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Bell className="w-4 h-4 text-primary animate-pulse" />
+                <span>Real-time updates</span>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleRefresh}
+                disabled={refreshing}
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
             </div>
           </div>
 

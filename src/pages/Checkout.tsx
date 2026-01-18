@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Lock, CheckCircle, ArrowLeft, Package, Wallet, Smartphone, Loader2 } from 'lucide-react';
+import { Lock, CheckCircle, ArrowLeft, Package, Wallet, Smartphone, Loader2, DollarSign } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,6 +13,7 @@ import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { formatPriceWithConversion } from '@/lib/currency';
 
 interface Product {
   id: string;
@@ -337,7 +338,7 @@ const Checkout = () => {
                       <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium text-foreground">
+                    <p className="font-medium text-foreground">
                         ${((item.product?.price || 0) * item.quantity).toFixed(2)}
                       </p>
                     </div>
@@ -348,7 +349,7 @@ const Checkout = () => {
                 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal</span>
+                    <span className="text-muted-foreground">Subtotal (USD)</span>
                     <span className="text-foreground">${cartTotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
@@ -357,9 +358,18 @@ const Checkout = () => {
                   </div>
                   <Separator />
                   <div className="flex justify-between text-lg font-bold">
-                    <span className="text-foreground">Total</span>
+                    <span className="text-foreground">Total (USD)</span>
                     <span className="text-primary">${cartTotal.toFixed(2)}</span>
                   </div>
+                  {paymentMethod === 'paystack' && (
+                    <div className="flex justify-between text-sm text-muted-foreground bg-accent/50 rounded-lg p-2 mt-2">
+                      <span className="flex items-center gap-1">
+                        <DollarSign className="w-3 h-3" />
+                        Amount in GHS
+                      </span>
+                      <span className="font-medium">{formatPriceWithConversion(cartTotal).ghs}</span>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -416,8 +426,11 @@ const Checkout = () => {
                     <div className="p-6 rounded-lg bg-accent text-center">
                       <Smartphone className="w-12 h-12 text-primary mx-auto mb-3" />
                       <p className="text-foreground font-medium mb-2">Pay securely with Paystack</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-muted-foreground mb-3">
                         You'll be redirected to Paystack to complete your payment using card, bank transfer, or mobile money.
+                      </p>
+                      <p className="text-sm font-medium text-primary">
+                        Amount: {formatPriceWithConversion(cartTotal).ghs} (≈ ${cartTotal.toFixed(2)} USD)
                       </p>
                     </div>
                   )}
