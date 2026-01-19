@@ -154,7 +154,7 @@ const Index = () => {
   return (
     <Layout>
       {/* Hero Section - Modern & Professional */}
-      <section className="relative min-h-[85vh] md:min-h-[90vh] flex flex-col justify-center overflow-hidden">
+      <section className="relative min-h-[85vh] md:min-h-[90vh] flex flex-col justify-center overflow-hidden pt-8 md:pt-12">
         {/* Animated Background */}
         <div className="absolute inset-0">
           <motion.div 
@@ -234,18 +234,18 @@ const Index = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-12 md:mb-16"
+              className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-12 md:mb-16 px-4"
             >
-              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
-                <Button size="lg" asChild className="w-full sm:w-auto min-w-[180px] h-12 text-base">
+              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
+                <Button size="lg" asChild className="min-w-[160px] sm:min-w-[180px] h-12 text-base">
                   <Link to="/portfolio">
                     View Portfolio
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Link>
                 </Button>
               </motion.div>
-              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
-                <Button size="lg" variant="outline" asChild className="w-full sm:w-auto min-w-[180px] h-12 text-base">
+              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
+                <Button size="lg" variant="outline" asChild className="min-w-[160px] sm:min-w-[180px] h-12 text-base">
                   <Link to="/store">
                     <ShoppingBag className="mr-2 w-4 h-4" />
                     Visit Store
