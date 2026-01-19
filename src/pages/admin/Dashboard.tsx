@@ -44,6 +44,7 @@ const Dashboard = () => {
   useRealtimeOrders();
 
   const fetchStats = useCallback(async () => {
+    setLoading(true);
     try {
       const [productsRes, ordersRes, usersRes, recentOrdersRes] = await Promise.all([
         supabase.from('products').select('id', { count: 'exact', head: true }).eq('is_active', true),
@@ -78,8 +79,19 @@ const Dashboard = () => {
     }
   }, []);
 
+  // Fetch stats on mount and when page becomes visible (for refresh)
   useEffect(() => {
     fetchStats();
+    
+    // Re-fetch when page becomes visible (e.g., after tab switch or browser refresh)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchStats();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [fetchStats]);
 
   const handleRefresh = () => {

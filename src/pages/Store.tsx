@@ -75,11 +75,12 @@ const Store = () => {
 
   // Fetch products from secure public view (excludes sensitive columns like template_link)
   const { data: products = [], isLoading: productsLoading } = useQuery({
-    queryKey: ['products'],
+    queryKey: ['products', searchQuery],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products_public')
         .select('*')
+        .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -116,11 +117,15 @@ const Store = () => {
   // Filter and sort products
   const filteredProducts = products
     .filter((p) => {
+      if (!p.is_active) return false;
       const matchesCategory = activeCategory === 'All' || p.category === activeCategory;
+      const searchLower = searchQuery.toLowerCase().trim();
+      if (!searchLower) return matchesCategory;
+      
       const matchesSearch = 
-        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.category.toLowerCase().includes(searchQuery.toLowerCase());
+        p.title.toLowerCase().includes(searchLower) ||
+        (p.description && p.description.toLowerCase().includes(searchLower)) ||
+        p.category.toLowerCase().includes(searchLower);
       return matchesCategory && matchesSearch;
     })
     .sort((a, b) => {
