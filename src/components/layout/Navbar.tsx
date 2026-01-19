@@ -21,7 +21,7 @@ import {
 import { Plus, Minus, Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import oflexLogo from '@/assets/oflex-logo.png';
+
 
 const navLinks = [
   { name: 'Home', path: '/' },
@@ -142,7 +142,7 @@ export const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <motion.img
-              src={logoUrl || oflexLogo}
+              src={logoUrl || '/placeholder.svg'}
               alt={getSetting('site_name', 'Oflex Creative')}
               className="h-10 w-auto"
               whileHover={{ scale: 1.05 }}
