@@ -20,6 +20,7 @@ import {
   Lock,
   Shield,
   UserCog,
+  Mail,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -44,6 +45,7 @@ const navItems = [
   { path: '/admin/about', label: 'About Page', icon: Users, access: 'moderator' },
   { path: '/admin/trusted-partners', label: 'Trusted Partners', icon: Briefcase, access: 'moderator' },
   { path: '/admin/orders', label: 'Orders', icon: ShoppingCart, access: 'moderator' },
+  { path: '/admin/contact-messages', label: 'Contact Messages', icon: Mail, access: 'moderator' },
   { path: '/admin/users', label: 'User Management', icon: Users, access: 'admin' },
   { path: '/admin/customization', label: 'Customization', icon: Palette, access: 'admin' },
   { path: '/admin/settings', label: 'Settings', icon: Settings, access: 'admin' },

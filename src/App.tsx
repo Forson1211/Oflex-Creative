@@ -29,6 +29,7 @@ import TrustedPartners from "./pages/admin/TrustedPartners";
 import Orders from "./pages/admin/Orders";
 import Users from "./pages/admin/Users";
 import Settings from "./pages/admin/Settings";
+import ContactMessages from "./pages/admin/ContactMessages";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="/admin/orders" element={<Orders />} />
               <Route path="/admin/users" element={<Users />} />
               <Route path="/admin/settings" element={<Settings />} />
+              <Route path="/admin/contact-messages" element={<ContactMessages />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
