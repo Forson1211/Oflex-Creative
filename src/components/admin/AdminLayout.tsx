@@ -25,7 +25,6 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useState } from 'react';
-import oflexLogo from '@/assets/oflex-logo.png';
 import { Badge } from '@/components/ui/badge';
 
 interface AdminLayoutProps {
@@ -103,7 +102,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
           {/* Logo */}
           <div className="p-6 border-b border-border flex items-center justify-between">
             <Link to="/admin" className="flex items-center">
-              <img src={logoUrl || oflexLogo} alt="Admin" className="h-8 w-auto" />
+              <img src={logoUrl || '/placeholder.svg'} alt="Admin" className="h-8 w-auto" />
             </Link>
             <Button
               variant="ghost"
