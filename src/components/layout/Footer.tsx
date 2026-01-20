@@ -111,18 +111,18 @@ export const Footer = () => {
     setIsSubscribing(false);
   };
 
-  // Dynamic footer background style - parse color properly
-  const getFooterStyle = () => {
-    if (footerColor && footerColor.trim() !== '') {
-      return { backgroundColor: footerColor };
-    }
-    return {};
-  };
-
-  const hasCustomColor = footerColor && footerColor.trim() !== '';
+  // Dynamic footer background style - ensure color is applied correctly
+  const hasCustomColor = footerColor && footerColor.trim() !== '' && footerColor !== 'undefined';
+  
+  const footerStyle: React.CSSProperties = hasCustomColor 
+    ? { backgroundColor: footerColor } 
+    : {};
 
   return (
-    <footer className={`border-t border-border ${!hasCustomColor ? 'bg-card' : ''}`} style={getFooterStyle()}>
+    <footer 
+      className={`border-t border-border ${!hasCustomColor ? 'bg-card' : ''}`} 
+      style={footerStyle}
+    >
       {/* Newsletter Section - Shows on ALL devices */}
       <div className={`border-b border-border ${!hasCustomColor ? 'bg-gradient-to-r from-primary/5 via-transparent to-primary/5' : ''}`}>
         <div className="container mx-auto px-4 py-10">

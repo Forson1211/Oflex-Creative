@@ -281,12 +281,12 @@ const Store = () => {
               className="flex flex-col sm:flex-row items-center justify-center gap-4"
             >
               <div className="relative w-full max-w-md">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
                 <Input
                   placeholder="Search templates..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 pr-4 h-12 rounded-full border-border/50 bg-background/50 backdrop-blur-sm"
+                  className="pl-12 pr-4 h-12 rounded-full border-border bg-background backdrop-blur-sm"
                 />
               </div>
               

@@ -154,17 +154,18 @@ const Index = () => {
   return (
     <Layout>
       {/* Hero Section - Modern & Professional */}
-      <section className="relative min-h-[85vh] md:min-h-[90vh] flex flex-col justify-center overflow-hidden pt-8 md:pt-12">
+      <section className="relative min-h-[85vh] md:min-h-[90vh] flex flex-col justify-center overflow-hidden pt-16 md:pt-20">
         {/* Animated Background */}
         <div className="absolute inset-0">
           <motion.div 
             initial={{ scale: 1.1, opacity: 0 }}
-            animate={{ scale: 1, opacity: 0.2 }}
+            animate={{ scale: 1, opacity: 0.6 }}
             transition={{ duration: 1.5, ease: "easeOut" }}
             className="absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: `url(${getSetting('hero_background_url', 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=1920&h=1080&fit=crop')})` }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
+          {/* Gradient overlay that shows background but ensures text readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/80 to-background" />
         </div>
         
         {/* Gradient Orbs - Subtle background effects */}
@@ -335,7 +336,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Works - Smaller size */}
+      {/* Featured Works - Larger on desktop, vertical on mobile */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <SectionHeading
@@ -344,7 +345,8 @@ const Index = () => {
             description="A glimpse into our creative portfolio"
           />
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Grid: 1 column on mobile (vertical), 3 columns on desktop (larger) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredProjects.map((project, index) => (
               <motion.div
                 key={project.id}
@@ -355,7 +357,7 @@ const Index = () => {
               >
                 <Link to="/portfolio">
                   <GlassCard className="overflow-hidden p-0 group">
-                    <div className="relative aspect-square overflow-hidden">
+                    <div className="relative aspect-[4/3] overflow-hidden">
                       <img
                         src={project.image_url}
                         alt={project.title}
@@ -365,11 +367,11 @@ const Index = () => {
                         }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <span className="inline-block px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium mb-1">
+                      <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <span className="inline-block px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-medium mb-2">
                           {project.category}
                         </span>
-                        <h3 className="text-sm font-semibold text-foreground line-clamp-1">{project.title}</h3>
+                        <h3 className="text-base font-semibold text-foreground line-clamp-1">{project.title}</h3>
                       </div>
                     </div>
                   </GlassCard>
