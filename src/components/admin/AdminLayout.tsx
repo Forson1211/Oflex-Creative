@@ -165,25 +165,25 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Top bar */}
-        <header className="h-16 border-b border-border bg-card flex items-center px-4 lg:px-6 gap-4">
+        <header className="h-16 border-b border-border bg-card flex items-center px-4 lg:px-6 gap-2 sm:gap-4">
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden"
+            className="lg:hidden flex-shrink-0"
             onClick={() => setSidebarOpen(true)}
           >
             <Menu className="w-5 h-5" />
           </Button>
           <div className="flex-1" />
-          <div className="flex items-center gap-3">
-            <Badge variant="outline" className="hidden sm:flex items-center gap-1">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Badge variant="outline" className="flex items-center gap-1 text-xs sm:text-sm px-2 py-1">
               {getRoleIcon()}
-              {getRoleBadge()}
+              <span className="hidden xs:inline">{getRoleBadge()}</span>
             </Badge>
-            <span className="text-sm text-muted-foreground hidden sm:block">
+            <span className="text-sm text-muted-foreground hidden md:block truncate max-w-[150px]">
               {user?.email}
             </span>
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-medium">
+            <div className="w-8 h-8 flex-shrink-0 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-medium text-sm">
               {user?.email?.charAt(0).toUpperCase()}
             </div>
           </div>
