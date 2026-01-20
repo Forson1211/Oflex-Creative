@@ -78,10 +78,17 @@ const SiteCustomization = () => {
       }));
 
       for (const update of updates) {
+        // Use upsert to handle both new and existing settings
         const { error } = await supabase
           .from('site_settings')
-          .update({ setting_value: update.setting_value })
-          .eq('setting_key', update.setting_key);
+          .upsert(
+            { 
+              setting_key: update.setting_key, 
+              setting_value: update.setting_value,
+              setting_type: 'text'
+            },
+            { onConflict: 'setting_key' }
+          );
         if (error) throw error;
       }
     },

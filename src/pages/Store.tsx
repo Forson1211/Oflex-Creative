@@ -43,6 +43,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { StoreHeroSlider } from '@/components/StoreHeroSlider';
 
 interface Product {
   id: string;
@@ -231,8 +232,11 @@ const Store = () => {
 
   return (
     <Layout>
+      {/* Store Hero Slider */}
+      <StoreHeroSlider />
+
       {/* Hero Section */}
-      <section className="relative py-20 md:py-28 overflow-hidden">
+      <section className="relative py-12 md:py-20 overflow-hidden">
         {/* Background decoration */}
         <div className="absolute inset-0 -z-10">
           <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
