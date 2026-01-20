@@ -57,6 +57,7 @@ export const Navbar = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  const { isLoading: settingsLoading } = useSiteSettings();
   const logoUrl = getSetting('logo_url', '');
 
   // Fetch products for cart
@@ -141,13 +142,17 @@ export const Navbar = () => {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <motion.img
-              src={logoUrl || '/placeholder.svg'}
-              alt={getSetting('site_name', 'Oflex Creative')}
-              className="h-10 w-auto"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.2 }}
-            />
+            {settingsLoading ? (
+              <div className="h-10 w-24 bg-muted animate-pulse rounded" />
+            ) : (
+              <motion.img
+                src={logoUrl || '/placeholder.svg'}
+                alt={getSetting('site_name', 'Oflex Creative')}
+                className="h-10 w-auto"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+              />
+            )}
           </Link>
 
           {/* Desktop Navigation */}

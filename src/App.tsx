@@ -25,6 +25,7 @@ const FeaturedProjects = lazy(() => import("./pages/admin/FeaturedProjects"));
 const AdminServices = lazy(() => import("./pages/admin/Services"));
 const AdminPortfolio = lazy(() => import("./pages/admin/Portfolio"));
 const HeroSlides = lazy(() => import("./pages/admin/HeroSlides"));
+const StoreSlides = lazy(() => import("./pages/admin/StoreSlides"));
 const SiteCustomization = lazy(() => import("./pages/admin/SiteCustomization"));
 const Testimonials = lazy(() => import("./pages/admin/Testimonials"));
 const FAQs = lazy(() => import("./pages/admin/FAQs"));
@@ -38,6 +39,62 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
+// Component to handle initial load vs navigation
+const AppContent = () => {
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    // Mark initial load complete after first render
+    const timer = setTimeout(() => {
+      setIsReady(true);
+      // Small delay before removing loading screen
+      setTimeout(() => setIsInitialLoad(false), 100);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Show loading screen only on initial page load (refresh)
+  if (isInitialLoad && !isReady) {
+    return <LoadingScreen />;
+  }
+
+  return (
+    <Suspense fallback={isInitialLoad ? <LoadingScreen /> : null}>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/services" element={<Services />} />
+        <Route path="/portfolio" element={<Portfolio />} />
+        <Route path="/store" element={<Store />} />
+        <Route path="/product/:id" element={<ProductDetail />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/admin" element={<Dashboard />} />
+        <Route path="/admin/hero-slides" element={<HeroSlides />} />
+        <Route path="/admin/store-slides" element={<StoreSlides />} />
+        <Route path="/admin/featured-projects" element={<FeaturedProjects />} />
+        <Route path="/admin/portfolio" element={<AdminPortfolio />} />
+        <Route path="/admin/services" element={<AdminServices />} />
+        <Route path="/admin/products" element={<Products />} />
+        <Route path="/admin/testimonials" element={<Testimonials />} />
+        <Route path="/admin/faqs" element={<FAQs />} />
+        <Route path="/admin/about" element={<AboutPage />} />
+        <Route path="/admin/trusted-partners" element={<TrustedPartners />} />
+        <Route path="/admin/customization" element={<SiteCustomization />} />
+        <Route path="/admin/orders" element={<Orders />} />
+        <Route path="/admin/users" element={<Users />} />
+        <Route path="/admin/settings" element={<Settings />} />
+        <Route path="/admin/contact-messages" element={<ContactMessages />} />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -46,37 +103,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Suspense fallback={<LoadingScreen />}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/services" element={<Services />} />
-                <Route path="/portfolio" element={<Portfolio />} />
-                <Route path="/store" element={<Store />} />
-                <Route path="/product/:id" element={<ProductDetail />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/admin" element={<Dashboard />} />
-                <Route path="/admin/hero-slides" element={<HeroSlides />} />
-                <Route path="/admin/featured-projects" element={<FeaturedProjects />} />
-                <Route path="/admin/portfolio" element={<AdminPortfolio />} />
-                <Route path="/admin/services" element={<AdminServices />} />
-                <Route path="/admin/products" element={<Products />} />
-                <Route path="/admin/testimonials" element={<Testimonials />} />
-                <Route path="/admin/faqs" element={<FAQs />} />
-                <Route path="/admin/about" element={<AboutPage />} />
-                <Route path="/admin/trusted-partners" element={<TrustedPartners />} />
-                <Route path="/admin/customization" element={<SiteCustomization />} />
-                <Route path="/admin/orders" element={<Orders />} />
-                <Route path="/admin/users" element={<Users />} />
-                <Route path="/admin/settings" element={<Settings />} />
-                <Route path="/admin/contact-messages" element={<ContactMessages />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
+            <AppContent />
           </BrowserRouter>
         </TooltipProvider>
       </ThemeProvider>

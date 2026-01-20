@@ -499,6 +499,45 @@ export type Database = {
         }
         Relationships: []
       }
+      store_slides: {
+        Row: {
+          button_link: string | null
+          button_text: string | null
+          created_at: string
+          display_order: number | null
+          id: string
+          image_url: string
+          is_active: boolean | null
+          subtitle: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          button_link?: string | null
+          button_text?: string | null
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          image_url: string
+          is_active?: boolean | null
+          subtitle?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          button_link?: string | null
+          button_text?: string | null
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          image_url?: string
+          is_active?: boolean | null
+          subtitle?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       team_members: {
         Row: {
           bio: string | null
