@@ -4,6 +4,7 @@ import { Instagram, Twitter, Linkedin, Facebook, Mail, ArrowUp } from 'lucide-re
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { Button } from '@/components/ui/button';
 import { FooterLinksColumn } from '@/components/layout/footer/FooterLinksColumn';
+import { FooterContactCard } from '@/components/layout/footer/FooterContactCard';
 import { FooterNewsletter } from '@/components/layout/footer/FooterNewsletter';
 import { TrustedPartnersSection } from '@/components/layout/footer/TrustedPartnersSection';
 
@@ -164,6 +165,16 @@ export const Footer = () => {
             className="text-center sm:text-left"
           >
             <h4 className="font-semibold text-foreground mb-4">Contact</h4>
+
+            <div className="mb-4 flex justify-center sm:justify-start">
+              <div className="w-full max-w-sm">
+                <FooterContactCard
+                  phone={getSetting('phone_number')}
+                  address={getSetting('address')}
+                />
+              </div>
+            </div>
+
             <ul className="space-y-3 text-sm text-muted-foreground">
               {getSetting('contact_email') && (
                 <li className="flex items-center gap-2 justify-center sm:justify-start">
@@ -178,8 +189,6 @@ export const Footer = () => {
                   </a>
                 </li>
               )}
-              {getSetting('phone_number') && <li>{getSetting('phone_number')}</li>}
-              {getSetting('address') && <li>{getSetting('address')}</li>}
             </ul>
           </motion.div>
         </div>
