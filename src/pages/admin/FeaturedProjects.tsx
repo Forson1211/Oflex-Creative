@@ -27,6 +27,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Pencil, Trash2, Image as ImageIcon, GripVertical } from 'lucide-react';
+import { AdminTableContainer, ADMIN_TABLE_HEADER_CLASS } from '@/components/admin/AdminTable';
 
 interface FeaturedProject {
   id: string;
@@ -176,7 +177,7 @@ const FeaturedProjects = () => {
             </Button>
           </div>
 
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <AdminTableContainer>
             {isLoading ? (
               <div className="p-6 space-y-4">
                 {[...Array(4)].map((_, i) => (
@@ -190,7 +191,7 @@ const FeaturedProjects = () => {
               </div>
             ) : (
               <Table className="min-w-[820px]">
-                <TableHeader>
+                <TableHeader className={ADMIN_TABLE_HEADER_CLASS}>
                   <TableRow>
                     <TableHead className="w-12"></TableHead>
                     <TableHead>Image</TableHead>
@@ -250,7 +251,7 @@ const FeaturedProjects = () => {
                 </TableBody>
               </Table>
             )}
-          </div>
+          </AdminTableContainer>
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

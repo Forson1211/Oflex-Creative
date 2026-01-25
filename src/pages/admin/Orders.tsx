@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { AdminTable, ADMIN_TABLE_HEADER_CLASS } from '@/components/admin/AdminTable';
 
 type Order = Tables<'orders'>;
 type OrderItem = Tables<'order_items'>;
@@ -114,10 +115,8 @@ const Orders = () => {
               <p className="text-muted-foreground">No orders found</p>
             </div>
           ) : (
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[720px]">
-                  <thead>
+            <AdminTable minWidthClassName="min-w-[720px]">
+                <thead className={ADMIN_TABLE_HEADER_CLASS}>
                     <tr className="border-b border-border bg-muted/50">
                       <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Order ID</th>
                       <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Date</th>
@@ -159,9 +158,7 @@ const Orders = () => {
                       </tr>
                     ))}
                   </tbody>
-                </table>
-              </div>
-            </div>
+            </AdminTable>
           )}
 
           <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>

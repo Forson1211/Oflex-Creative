@@ -28,6 +28,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Plus, Edit, Trash2, Loader2, Save, Users, FileText } from 'lucide-react';
+import { AdminTableContainer, ADMIN_TABLE_HEADER_CLASS } from '@/components/admin/AdminTable';
 
 interface TeamMember {
   id: string;
@@ -437,9 +438,9 @@ const AboutPage = () => {
                   <p className="text-muted-foreground">Add your first team member to display on the About page.</p>
                 </div>
               ) : (
-                <div className="bg-card border border-border rounded-xl overflow-hidden">
-                  <Table>
-                    <TableHeader>
+                <AdminTableContainer>
+                  <Table className="min-w-[840px]">
+                    <TableHeader className={ADMIN_TABLE_HEADER_CLASS}>
                       <TableRow>
                         <TableHead>Order</TableHead>
                         <TableHead>Photo</TableHead>
@@ -488,7 +489,7 @@ const AboutPage = () => {
                       ))}
                     </TableBody>
                   </Table>
-                </div>
+                </AdminTableContainer>
               )}
             </TabsContent>
           </Tabs>
