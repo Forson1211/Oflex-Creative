@@ -6,8 +6,8 @@ import { AnalyticsCharts } from '@/components/admin/AnalyticsCharts';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { useRealtimeOrders } from '@/hooks/useRealtimeOrders';
 import { useToast } from '@/hooks/use-toast';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 interface Stats {
   totalProducts: number;
@@ -39,9 +39,6 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const { toast } = useToast();
-
-  // Enable real-time order notifications
-  useRealtimeOrders();
 
   const fetchStats = useCallback(async () => {
     setLoading(true);
@@ -161,27 +158,27 @@ const Dashboard = () => {
     <ProtectedRoute requireModerator>
       <AdminLayout>
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-              <p className="text-muted-foreground">Welcome to your admin dashboard</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Bell className="w-4 h-4 text-primary animate-pulse" />
-                <span>Real-time updates</span>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleRefresh}
-                disabled={refreshing}
-              >
-                <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
-            </div>
-          </div>
+          <AdminPageHeader
+            title="Dashboard"
+            description="Welcome to your admin dashboard"
+            actions={
+              <>
+                <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
+                  <Bell className="w-4 h-4 text-primary animate-pulse" />
+                  <span>Real-time updates</span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              </>
+            }
+          />
 
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

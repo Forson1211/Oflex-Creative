@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Instagram, Twitter, Linkedin, Facebook, Mail, Send } from 'lucide-react';
+import { Instagram, Twitter, Linkedin, Facebook, Mail, Send, ArrowUpRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { supabase } from '@/integrations/supabase/client';
@@ -51,13 +51,13 @@ const TrustedPartnersSection = () => {
             href={partner.website_url || '#'}
             target="_blank"
             rel="noopener noreferrer"
-            whileHover={{ scale: 1.1, opacity: 1 }}
-            className="opacity-70 hover:opacity-100 transition-opacity"
+            whileHover={{ scale: 1.06 }}
+            className="opacity-90 hover:opacity-100 transition-opacity"
           >
             <img
               src={partner.logo_url}
               alt={partner.name}
-              className="h-8 w-auto max-w-[120px] object-contain"
+              className="h-8 w-auto max-w-[140px] object-contain dark:brightness-110"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
@@ -81,6 +81,12 @@ const serviceLinks = [
   { name: 'Digital Design', path: '/services' },
   { name: 'Branding', path: '/services' },
   { name: 'UI/UX Design', path: '/services' },
+];
+
+const resourceLinks = [
+  { name: 'Store', path: '/store' },
+  { name: 'Services', path: '/services' },
+  { name: 'FAQs', path: '/services' },
 ];
 
 export const Footer = () => {
@@ -167,13 +173,13 @@ export const Footer = () => {
       </div>
 
       <div className="container mx-auto px-4 py-12 md:py-16">
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10">
           {/* Brand */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="col-span-2 lg:col-span-1"
+            className="sm:col-span-2 lg:col-span-2"
           >
             <Link to="/" className="flex items-center gap-2 mb-4">
               <img 
@@ -185,6 +191,18 @@ export const Footer = () => {
             <p className="text-muted-foreground text-sm leading-relaxed mb-6">
               {getSetting('about_description', 'Crafting digital experiences that inspire. From AI prompts to stunning designs, we bring your creative visions to life.')}
             </p>
+
+            {getSetting('contact_email') && (
+              <a
+                href={`mailto:${getSetting('contact_email')}`}
+                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+              >
+                <span className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
+                  <Mail className="w-4 h-4" />
+                </span>
+                <span className="truncate">{getSetting('contact_email')}</span>
+              </a>
+            )}
             {socialLinks.length > 0 && (
               <div className="flex items-center gap-3">
                 {socialLinks.map((social) => (
@@ -203,6 +221,30 @@ export const Footer = () => {
                 ))}
               </div>
             )}
+          </motion.div>
+
+          {/* Resources */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.15 }}
+            className="text-left"
+          >
+            <h4 className="font-semibold text-foreground mb-4">Resources</h4>
+            <ul className="space-y-3">
+              {resourceLinks.map((link) => (
+                <li key={link.name}>
+                  <Link
+                    to={link.path}
+                    className="text-muted-foreground hover:text-primary transition-colors text-sm inline-flex items-center gap-1"
+                  >
+                    {link.name}
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </motion.div>
 
           {/* Quick Links */}
@@ -260,15 +302,20 @@ export const Footer = () => {
             className="text-left"
           >
             <h4 className="font-semibold text-foreground mb-4">Contact</h4>
-            <ul className="space-y-3 text-sm text-muted-foreground">
-              {getSetting('contact_email') && (
-                <li className="flex items-center gap-2">
-                  <Mail className="w-4 h-4" />
-                  <a href={`mailto:${getSetting('contact_email')}`} className="hover:text-primary transition-colors">
-                    {getSetting('contact_email')}
-                  </a>
-                </li>
-              )}
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                {getSetting('contact_email') && (
+                  <li className="flex items-center gap-2">
+                    <span className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
+                      <Mail className="w-4 h-4" />
+                    </span>
+                    <a
+                      href={`mailto:${getSetting('contact_email')}`}
+                      className="hover:text-primary transition-colors break-all"
+                    >
+                      {getSetting('contact_email')}
+                    </a>
+                  </li>
+                )}
               {getSetting('phone_number') && (
                 <li>{getSetting('phone_number')}</li>
               )}
