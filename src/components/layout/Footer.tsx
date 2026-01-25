@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { FooterLinksColumn } from '@/components/layout/footer/FooterLinksColumn';
 import { FooterContactCard } from '@/components/layout/footer/FooterContactCard';
 import { FooterNewsletter } from '@/components/layout/footer/FooterNewsletter';
+import { FooterSocialProof } from '@/components/layout/footer/FooterSocialProof';
 import { TrustedPartnersSection } from '@/components/layout/footer/TrustedPartnersSection';
 
 
@@ -60,6 +61,9 @@ export const Footer = () => {
     >
       {/* Newsletter Section - Shows on ALL devices */}
       <FooterNewsletter hasCustomColor={hasCustomColor} />
+
+      {/* Social Proof Stats */}
+      <FooterSocialProof />
 
       <div className="container mx-auto px-4 py-12 md:py-16">
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-x-8 gap-y-10">
