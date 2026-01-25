@@ -91,7 +91,7 @@ export const Footer = () => {
           {/* Main Footer Content */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
            {/* Left Column - Logo & Navigation Accordions */}
-            <div className="lg:col-span-8 space-y-6">
+            <div className="lg:col-span-8 xl:col-span-7 space-y-6">
              {/* Accordion Navigation - Mobile */}
              <div className="md:hidden">
                <Accordion type="single" collapsible className="w-full">
@@ -286,7 +286,7 @@ export const Footer = () => {
            </div>
 
            {/* Right Column - Featured Projects */}
-            <div className="lg:col-span-4">
+            <div className="lg:col-span-4 xl:col-span-5 lg:pl-8 lg:border-l lg:border-white/10">
              <h4 className="font-semibold text-white mb-4">Featured Projects</h4>
              <div className="space-y-4">
                {featuredProjects.length > 0 ? (
@@ -294,7 +294,7 @@ export const Footer = () => {
                    <motion.div
                      key={project.id}
                      whileHover={{ x: 4 }}
-                     className="group flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                      className="group flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
                    >
                      <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-white/10">
                        <img
