@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 interface StoreSlide {
   id: string;
@@ -18,6 +19,10 @@ interface StoreSlide {
 
 export const StoreHeroSlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const { getSetting } = useSiteSettings();
+
+  const imageFit = (getSetting('store_slider_image_fit', 'cover') || 'cover').toLowerCase();
+  const imgFitClass = imageFit === 'contain' ? 'object-contain' : 'object-cover';
 
   const { data: slides = [] } = useQuery({
     queryKey: ['store-slides'],
@@ -73,7 +78,7 @@ export const StoreHeroSlider = () => {
           <motion.img
             src={currentSlide?.image_url}
             alt="Store banner"
-            className="w-full h-full object-cover"
+            className={`w-full h-full ${imgFitClass} object-center`}
             initial={{ scale: 1 }}
             animate={{ scale: 1.05 }}
             transition={{ duration: 10, ease: "linear" }}

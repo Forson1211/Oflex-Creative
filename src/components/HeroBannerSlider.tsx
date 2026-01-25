@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 interface HeroSlide {
   id: string;
@@ -16,6 +17,10 @@ interface HeroSlide {
 
 export const HeroBannerSlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const { getSetting } = useSiteSettings();
+
+  const imageFit = (getSetting('hero_slider_image_fit', 'cover') || 'cover').toLowerCase();
+  const imgFitClass = imageFit === 'contain' ? 'object-contain' : 'object-cover';
 
   const { data: slides = [] } = useQuery({
     queryKey: ['hero-slides'],
@@ -70,7 +75,7 @@ export const HeroBannerSlider = () => {
             <motion.img
               src={slides[currentIndex]?.image_url}
               alt="Banner slide"
-              className="w-full h-full object-cover"
+              className={`w-full h-full ${imgFitClass} object-center`}
               initial={{ scale: 1 }}
               animate={{ scale: 1.05 }}
               transition={{ duration: 8, ease: "linear" }}
