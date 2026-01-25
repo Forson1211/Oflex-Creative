@@ -101,18 +101,46 @@ const Index = () => {
     },
   });
 
-  // Fetch testimonials
+  // Fetch testimonials with manual join for safety
   const { data: testimonials = [] } = useQuery({
     queryKey: ['testimonials'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // 1. Get active testimonials
+      const { data: testimonialsData, error: testimonialsError } = await supabase
         .from('testimonials')
         .select('*')
         .eq('is_active', true)
         .order('display_order', { ascending: true });
 
-      if (error) throw error;
-      return data as Testimonial[];
+      if (testimonialsError) throw testimonialsError;
+
+      // 2. Get unique user IDs from testimonials that have a user_id but might lack an avatar
+      const userIds = [...new Set(
+        testimonialsData
+          .filter(t => t.user_id && !t.avatar_url)
+          .map(t => t.user_id)
+      )];
+
+      if (userIds.length === 0) return testimonialsData as Testimonial[];
+
+      // 3. Fetch profiles for those users
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, avatar_url')
+        .in('user_id', userIds);
+
+      // 4. Merge data
+      const mergedTestimonials = testimonialsData.map(t => {
+        if (!t.avatar_url && t.user_id) {
+          const profile = profilesData?.find(p => p.user_id === t.user_id);
+          if (profile?.avatar_url) {
+            return { ...t, avatar_url: profile.avatar_url };
+          }
+        }
+        return t;
+      });
+
+      return mergedTestimonials as Testimonial[];
     },
   });
 

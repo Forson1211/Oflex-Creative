@@ -20,6 +20,9 @@ import {
 import { FooterSocialProof } from "@/components/layout/footer/FooterSocialProof";
 import { FooterTrustBadges } from "@/components/layout/footer/FooterTrustBadges";
 import { TrustedPartnersSection } from "@/components/layout/footer/TrustedPartnersSection";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Mail, ArrowRight } from "lucide-react";
 
 export const Footer = () => {
   const { getSetting } = useSiteSettings();
@@ -291,39 +294,64 @@ export const Footer = () => {
           </div>
 
           {/* Right Column - Featured Projects */}
-          <div className="lg:col-span-4 xl:col-span-5 lg:pl-8 lg:border-l lg:border-white/10">
-            <h4 className="font-semibold text-white mb-4">Featured Projects</h4>
-            <div className="space-y-4">
-              {featuredProjects.length > 0 ? (
-                featuredProjects.map((project) => (
-                  <motion.div
-                    key={project.id}
-                    whileHover={{ x: 4 }}
-                    className="group flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-                  >
-                    <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-white/10">
-                      <img
-                        src={project.image_url || "/placeholder.svg"}
-                        alt={project.title}
-                        loading="lazy"
-                        decoding="async"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h5 className="text-sm font-medium text-white truncate">
-                        {project.title}
-                      </h5>
-                      <p className="text-xs text-white/60">{project.category}</p>
-                    </div>
-                    <ExternalLink className="w-4 h-4 text-white/40 group-hover:text-primary transition-colors flex-shrink-0" />
-                  </motion.div>
-                ))
-              ) : (
-                <div className="text-sm text-white/60">No featured projects</div>
-              )}
+          <div className="lg:col-span-4 xl:col-span-5 lg:pl-8 lg:border-l lg:border-white/10 space-y-10">
+            {/* Newsletter Subscription */}
+            <div>
+              <h4 className="font-semibold text-white mb-4">Stay Updated</h4>
+              <p className="text-sm text-white/60 mb-4">
+                Subscribe to our newsletter for the latest design trends and updates.
+              </p>
+              <form className="flex gap-2" onSubmit={(e) => e.preventDefault()}>
+                <div className="relative flex-1">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="email"
+                    placeholder="Enter your email"
+                    className="pl-9 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-primary focus:ring-primary h-10"
+                  />
+                </div>
+                <Button size="sm" type="submit" className="h-10 px-4">
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </form>
+            </div>
+
+            {/* Featured Projects */}
+            <div>
+              <h4 className="font-semibold text-white mb-4">Featured Projects</h4>
+              <div className="space-y-4">
+                {featuredProjects.length > 0 ? (
+                  featuredProjects.map((project) => (
+                    <motion.div
+                      key={project.id}
+                      whileHover={{ x: 4 }}
+                      className="group flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                    >
+                      <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-white/10">
+                        <img
+                          src={project.image_url || "/placeholder.svg"}
+                          alt={project.title}
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h5 className="text-sm font-medium text-white truncate">
+                          {project.title}
+                        </h5>
+                        <p className="text-xs text-white/60">{project.category}</p>
+                      </div>
+                      <ExternalLink className="w-4 h-4 text-white/40 group-hover:text-primary transition-colors flex-shrink-0" />
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="text-sm text-white/60">No featured projects</div>
+                )}
+              </div>
             </div>
           </div>
+
         </div>
 
         {/* Bottom Bar */}
