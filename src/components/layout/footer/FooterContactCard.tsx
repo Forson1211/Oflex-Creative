@@ -32,7 +32,7 @@ export function FooterContactCard({ phone, address }: Props) {
 
       <div className="mt-4 grid grid-cols-1 gap-2">
         {hasPhone ? (
-          <Button asChild size="sm" className="justify-center sm:justify-start">
+          <Button asChild size="sm" className="justify-start">
             <a href={`tel:${normalizeTel(phone!)}`} aria-label="Call phone number">
               <Phone className="w-4 h-4 mr-2" />
               Call
@@ -45,7 +45,7 @@ export function FooterContactCard({ phone, address }: Props) {
             asChild
             size="sm"
             variant="outline"
-            className="justify-center sm:justify-start"
+            className="justify-start"
           >
             <a
               href={buildMapUrl(address!)}
@@ -60,7 +60,7 @@ export function FooterContactCard({ phone, address }: Props) {
         ) : null}
 
         {hasAddress ? (
-          <div className="text-xs text-muted-foreground mt-2 text-center sm:text-left break-words">
+          <div className="text-xs text-muted-foreground mt-2 text-left break-words">
             {address}
           </div>
         ) : null}
