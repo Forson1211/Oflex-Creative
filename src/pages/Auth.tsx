@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 
@@ -23,8 +24,12 @@ const Auth = () => {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   const { signIn, signUp, user, loading } = useAuth();
+  const { getSetting, isLoading: settingsLoading } = useSiteSettings();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const logoUrl = getSetting('logo_url', '');
+  const siteName = getSetting('site_name', '');
 
   useEffect(() => {
     if (!loading && user) {
@@ -127,8 +132,17 @@ const Auth = () => {
 
         <div className="bg-card border border-border rounded-2xl p-8 shadow-lg">
           <div className="text-center mb-8">
-            <Link to="/" className="font-serif text-2xl font-bold text-foreground">
-              Cre<span className="text-primary">8</span>ive
+            <Link to="/" className="inline-flex items-center justify-center">
+              {settingsLoading ? (
+                <div className="h-10 w-24 bg-muted animate-pulse rounded" />
+              ) : (
+                <img
+                  src={logoUrl || '/placeholder.svg'}
+                  alt={siteName || 'Site logo'}
+                  className="h-10 w-auto"
+                  loading="eager"
+                />
+              )}
             </Link>
             <h1 className="text-xl font-semibold text-foreground mt-4">
               {isLogin ? 'Welcome Back' : 'Create Account'}
