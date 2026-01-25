@@ -1,73 +1,12 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Instagram, Twitter, Linkedin, Facebook, Mail, Send, ArrowUpRight } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { Instagram, Twitter, Linkedin, Facebook, Mail, ArrowUp } from 'lucide-react';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
+import { FooterLinksColumn } from '@/components/layout/footer/FooterLinksColumn';
+import { FooterNewsletter } from '@/components/layout/footer/FooterNewsletter';
+import { TrustedPartnersSection } from '@/components/layout/footer/TrustedPartnersSection';
 
-
-interface TrustedPartner {
-  id: string;
-  name: string;
-  logo_url: string;
-  website_url: string | null;
-  display_order: number;
-  is_active: boolean;
-}
-
-const TrustedPartnersSection = () => {
-  const { data: partners = [] } = useQuery({
-    queryKey: ['trusted-partners-public'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('trusted_partners')
-        .select('*')
-        .eq('is_active', true)
-        .order('display_order', { ascending: true });
-      if (error) throw error;
-      return data as TrustedPartner[];
-    },
-  });
-
-  if (partners.length === 0) return null;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: 0.35 }}
-      className="mt-12 pt-8 border-t border-border"
-    >
-      <p className="text-center text-sm text-muted-foreground mb-6">Trusted platforms I work with</p>
-      <div className="flex flex-wrap items-center justify-center gap-8">
-        {partners.map((partner) => (
-          <motion.a
-            key={partner.id}
-            href={partner.website_url || '#'}
-            target="_blank"
-            rel="noopener noreferrer"
-            whileHover={{ scale: 1.06 }}
-            className="opacity-90 hover:opacity-100 transition-opacity"
-          >
-            <img
-              src={partner.logo_url}
-              alt={partner.name}
-              className="h-8 w-auto max-w-[140px] object-contain dark:brightness-110"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
-          </motion.a>
-        ))}
-      </div>
-    </motion.div>
-  );
-};
 
 const quickLinks = [
   { name: 'Home', path: '/' },
@@ -91,9 +30,6 @@ const resourceLinks = [
 
 export const Footer = () => {
   const { getSetting } = useSiteSettings();
-  const { toast } = useToast();
-  const [email, setEmail] = useState('');
-  const [isSubscribing, setIsSubscribing] = useState(false);
 
   const socialLinks = [
     { icon: Instagram, href: getSetting('social_instagram', '#'), label: 'Instagram' },
@@ -105,18 +41,6 @@ export const Footer = () => {
   const logoUrl = getSetting('logo_url', '');
   const footerColor = getSetting('footer_color', '');
 
-  const handleSubscribe = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    
-    setIsSubscribing(true);
-    // Simulate subscription
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    toast({ title: 'Subscribed!', description: 'Thanks for subscribing to our newsletter.' });
-    setEmail('');
-    setIsSubscribing(false);
-  };
-
   // Dynamic footer background style - ensure color is applied correctly
   const hasCustomColor = footerColor && footerColor.trim() !== '' && footerColor !== 'undefined';
   
@@ -124,53 +48,17 @@ export const Footer = () => {
     ? { backgroundColor: footerColor } 
     : {};
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <footer 
       className={`border-t border-border ${!hasCustomColor ? 'bg-card' : ''}`} 
       style={footerStyle}
     >
       {/* Newsletter Section - Shows on ALL devices */}
-      <div className={`border-b border-border ${!hasCustomColor ? 'bg-gradient-to-r from-primary/5 via-transparent to-primary/5' : ''}`}>
-        <div className="container mx-auto px-4 py-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="max-w-2xl mx-auto text-center"
-          >
-            <h4 className="text-xl md:text-2xl font-bold text-foreground mb-2">Subscribe to Our Newsletter</h4>
-            <p className="text-sm md:text-base text-muted-foreground mb-6">Stay updated with our latest projects, creative insights, and exclusive offers</p>
-            <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-              <Input
-                type="email"
-                placeholder="Enter your email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 h-12"
-                required
-              />
-              <Button type="submit" size="lg" disabled={isSubscribing} className="h-12 px-6">
-                {isSubscribing ? (
-                  <span className="flex items-center gap-2">
-                    <motion.span
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    >
-                      <Send className="w-4 h-4" />
-                    </motion.span>
-                    Subscribing...
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    <Send className="w-4 h-4" />
-                    Subscribe
-                  </span>
-                )}
-              </Button>
-            </form>
-          </motion.div>
-        </div>
-      </div>
+      <FooterNewsletter hasCustomColor={hasCustomColor} />
 
       <div className="container mx-auto px-4 py-12 md:py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10">
@@ -179,7 +67,7 @@ export const Footer = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="sm:col-span-2 lg:col-span-2"
+            className="sm:col-span-2 lg:col-span-2 text-center sm:text-left"
           >
             <Link to="/" className="flex items-center gap-2 mb-4">
               <img 
@@ -192,10 +80,19 @@ export const Footer = () => {
               {getSetting('about_description', 'Crafting digital experiences that inspire. From AI prompts to stunning designs, we bring your creative visions to life.')}
             </p>
 
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 justify-center sm:justify-start mb-6">
+              <Button asChild size="sm">
+                <Link to="/contact">Start a Project</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link to="/services">View Services</Link>
+              </Button>
+            </div>
+
             {getSetting('contact_email') && (
               <a
                 href={`mailto:${getSetting('contact_email')}`}
-                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 justify-center sm:justify-start"
               >
                 <span className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
                   <Mail className="w-4 h-4" />
@@ -204,7 +101,7 @@ export const Footer = () => {
               </a>
             )}
             {socialLinks.length > 0 && (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 justify-center sm:justify-start">
                 {socialLinks.map((social) => (
                   <motion.a
                     key={social.label}
@@ -229,22 +126,13 @@ export const Footer = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.15 }}
-            className="text-left"
           >
-            <h4 className="font-semibold text-foreground mb-4">Resources</h4>
-            <ul className="space-y-3">
-              {resourceLinks.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    to={link.path}
-                    className="text-muted-foreground hover:text-primary transition-colors text-sm inline-flex items-center gap-1"
-                  >
-                    {link.name}
-                    <ArrowUpRight className="w-3.5 h-3.5" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <FooterLinksColumn
+              title="Resources"
+              links={resourceLinks}
+              align="center"
+              showExternalIcon
+            />
           </motion.div>
 
           {/* Quick Links */}
@@ -253,21 +141,8 @@ export const Footer = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-left"
           >
-            <h4 className="font-semibold text-foreground mb-4">Quick Links</h4>
-            <ul className="space-y-3">
-              {quickLinks.map((link) => (
-                <li key={link.path}>
-                  <Link
-                    to={link.path}
-                    className="text-muted-foreground hover:text-primary transition-colors text-sm"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <FooterLinksColumn title="Quick Links" links={quickLinks} align="center" />
           </motion.div>
 
           {/* Services */}
@@ -276,21 +151,8 @@ export const Footer = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="text-left"
           >
-            <h4 className="font-semibold text-foreground mb-4">Services</h4>
-            <ul className="space-y-3">
-              {serviceLinks.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    to={link.path}
-                    className="text-muted-foreground hover:text-primary transition-colors text-sm"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <FooterLinksColumn title="Services" links={serviceLinks} align="center" />
           </motion.div>
 
           {/* Contact Info */}
@@ -299,29 +161,25 @@ export const Footer = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3 }}
-            className="text-left"
+            className="text-center sm:text-left"
           >
             <h4 className="font-semibold text-foreground mb-4">Contact</h4>
-              <ul className="space-y-3 text-sm text-muted-foreground">
-                {getSetting('contact_email') && (
-                  <li className="flex items-center gap-2">
-                    <span className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
-                      <Mail className="w-4 h-4" />
-                    </span>
-                    <a
-                      href={`mailto:${getSetting('contact_email')}`}
-                      className="hover:text-primary transition-colors break-all"
-                    >
-                      {getSetting('contact_email')}
-                    </a>
-                  </li>
-                )}
-              {getSetting('phone_number') && (
-                <li>{getSetting('phone_number')}</li>
+            <ul className="space-y-3 text-sm text-muted-foreground">
+              {getSetting('contact_email') && (
+                <li className="flex items-center gap-2 justify-center sm:justify-start">
+                  <span className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
+                    <Mail className="w-4 h-4" />
+                  </span>
+                  <a
+                    href={`mailto:${getSetting('contact_email')}`}
+                    className="hover:text-primary transition-colors break-all"
+                  >
+                    {getSetting('contact_email')}
+                  </a>
+                </li>
               )}
-              {getSetting('address') && (
-                <li>{getSetting('address')}</li>
-              )}
+              {getSetting('phone_number') && <li>{getSetting('phone_number')}</li>}
+              {getSetting('address') && <li>{getSetting('address')}</li>}
             </ul>
           </motion.div>
         </div>
@@ -340,9 +198,22 @@ export const Footer = () => {
           <p className="text-muted-foreground text-sm text-center md:text-left">
             {getSetting('footer_text', `© ${new Date().getFullYear()} Oflex Creative. All rights reserved.`)}
           </p>
-          <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <Link to="#" className="hover:text-primary transition-colors">Privacy Policy</Link>
-            <Link to="#" className="hover:text-primary transition-colors">Terms of Service</Link>
+          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 text-sm text-muted-foreground">
+            <div className="flex items-center gap-6">
+              <Link to="#" className="hover:text-primary transition-colors">Privacy Policy</Link>
+              <Link to="#" className="hover:text-primary transition-colors">Terms of Service</Link>
+            </div>
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={scrollToTop}
+              className="gap-2"
+            >
+              <ArrowUp className="w-4 h-4" />
+              Back to top
+            </Button>
           </div>
         </motion.div>
       </div>
