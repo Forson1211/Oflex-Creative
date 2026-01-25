@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -21,12 +21,14 @@ import {
   Shield,
   UserCog,
   Mail,
+  Bell,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { useRealtimeOrders } from '@/hooks/useRealtimeOrders';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -58,8 +60,25 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [newOrderCount, setNewOrderCount] = useState(0);
   
   const logoUrl = getSetting('logo_url', '');
+
+  const shouldEnableRealtime = isAdmin || isModerator;
+
+  const isOnOrdersPage = location.pathname.startsWith('/admin/orders');
+  const effectiveNewOrderCount = useMemo(
+    () => (isOnOrdersPage ? 0 : newOrderCount),
+    [isOnOrdersPage, newOrderCount]
+  );
+
+  useRealtimeOrders({
+    enabled: shouldEnableRealtime,
+    onNewOrder: () => {
+      // If they're already viewing orders, don't accumulate a badge
+      setNewOrderCount((prev) => (isOnOrdersPage ? 0 : prev + 1));
+    },
+  });
 
   const handleSignOut = async () => {
     await signOut();
@@ -177,6 +196,25 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
           </Button>
           <div className="flex-1" />
           <div className="flex items-center gap-2 sm:gap-3">
+            {shouldEnableRealtime && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative flex-shrink-0"
+                onClick={() => {
+                  setNewOrderCount(0);
+                  navigate('/admin/orders');
+                }}
+                aria-label="View new orders"
+              >
+                <Bell className="w-5 h-5" />
+                {effectiveNewOrderCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[11px] leading-5 text-center font-medium">
+                    {effectiveNewOrderCount > 99 ? '99+' : effectiveNewOrderCount}
+                  </span>
+                )}
+              </Button>
+            )}
             <Badge variant="outline" className="flex items-center gap-1 text-xs sm:text-sm px-2 py-1">
               {getRoleIcon()}
               <span className="hidden xs:inline">{getRoleBadge()}</span>
