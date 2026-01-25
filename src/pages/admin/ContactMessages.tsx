@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 interface ContactMessage {
   id: string;
@@ -107,26 +108,26 @@ const ContactMessages = () => {
     <ProtectedRoute requireModerator>
       <AdminLayout>
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                <Mail className="w-6 h-6" />
+          <AdminPageHeader
+            title={
+              <span className="inline-flex items-center gap-2">
                 Contact Messages
                 {unreadCount > 0 && (
-                  <Badge variant="destructive" className="ml-2">
+                  <Badge variant="destructive" className="ml-1">
                     {unreadCount} unread
                   </Badge>
                 )}
-              </h1>
-              <p className="text-muted-foreground">
-                View and manage contact form submissions
-              </p>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => refetch()}>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Refresh
-            </Button>
-          </div>
+              </span>
+            }
+            description="View and manage contact form submissions"
+            icon={<Mail className="w-5 h-5" />}
+            actions={
+              <Button variant="outline" size="sm" onClick={() => refetch()}>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Refresh
+              </Button>
+            }
+          />
 
           <div className="flex items-center gap-4">
             <div className="relative flex-1 max-w-sm">
