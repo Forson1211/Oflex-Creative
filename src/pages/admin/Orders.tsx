@@ -114,97 +114,54 @@ const Orders = () => {
               <p className="text-muted-foreground">No orders found</p>
             </div>
           ) : (
-            <>
-              {/* Mobile cards */}
-              <div className="grid grid-cols-1 gap-3 sm:hidden">
-                {filteredOrders.map((order) => (
-                  <button
-                    key={order.id}
-                    type="button"
-                    onClick={() => setSelectedOrder(order)}
-                    className="text-left bg-card border border-border rounded-xl p-4 hover:bg-accent/40 transition-colors"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="font-mono text-sm text-foreground truncate">
-                          {order.id.slice(0, 8)}...
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {new Date(order.created_at).toLocaleString()}
-                        </p>
-                      </div>
-                      <span className={`px-2 py-1 text-xs rounded-full capitalize ${getStatusColor(order.status)}`}>
-                        {order.status}
-                      </span>
-                    </div>
-                    <div className="mt-3 flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground">
-                        {order.order_items?.length || 0} items
-                      </p>
-                      <p className="font-medium text-foreground">
-                        ${Number(order.total_amount).toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="mt-3 flex justify-end">
-                      <Button variant="outline" size="sm" className="pointer-events-none">
-                        <Eye className="w-4 h-4 mr-2" />
-                        View
-                      </Button>
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              {/* Desktop table */}
-              <div className="hidden sm:block bg-card border border-border rounded-xl overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border bg-muted/50">
-                        <th className="text-left p-4 font-medium text-foreground">Order ID</th>
-                        <th className="text-left p-4 font-medium text-foreground">Date</th>
-                        <th className="text-left p-4 font-medium text-foreground">Items</th>
-                        <th className="text-left p-4 font-medium text-foreground">Total</th>
-                        <th className="text-left p-4 font-medium text-foreground">Status</th>
-                        <th className="text-right p-4 font-medium text-foreground">Actions</th>
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[720px]">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/50">
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Order ID</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Date</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Items</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Total</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Status</th>
+                      <th className="text-right p-4 font-medium text-foreground whitespace-nowrap">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredOrders.map((order) => (
+                      <tr key={order.id} className="border-b border-border last:border-0">
+                        <td className="p-4 whitespace-nowrap">
+                          <span className="font-mono text-sm text-foreground">
+                            {order.id.slice(0, 8)}...
+                          </span>
+                        </td>
+                        <td className="p-4 text-muted-foreground whitespace-nowrap">
+                          {new Date(order.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="p-4 text-muted-foreground whitespace-nowrap">
+                          {order.order_items?.length || 0} items
+                        </td>
+                        <td className="p-4 font-medium text-foreground whitespace-nowrap">
+                          ${Number(order.total_amount).toFixed(2)}
+                        </td>
+                        <td className="p-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 text-xs rounded-full capitalize ${getStatusColor(order.status)}`}>
+                            {order.status}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)}>
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {filteredOrders.map((order) => (
-                        <tr key={order.id} className="border-b border-border last:border-0">
-                          <td className="p-4">
-                            <span className="font-mono text-sm text-foreground">
-                              {order.id.slice(0, 8)}...
-                            </span>
-                          </td>
-                          <td className="p-4 text-muted-foreground">
-                            {new Date(order.created_at).toLocaleDateString()}
-                          </td>
-                          <td className="p-4 text-muted-foreground">
-                            {order.order_items?.length || 0} items
-                          </td>
-                          <td className="p-4 font-medium text-foreground">
-                            ${Number(order.total_amount).toFixed(2)}
-                          </td>
-                          <td className="p-4">
-                            <span className={`px-2 py-1 text-xs rounded-full capitalize ${getStatusColor(order.status)}`}>
-                              {order.status}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex items-center justify-end gap-2">
-                              <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)}>
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            </>
+            </div>
           )}
 
           <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>

@@ -363,32 +363,51 @@ const Products = () => {
               <p className="text-muted-foreground">No products found</p>
             </div>
           ) : (
-            <>
-              {/* Mobile cards */}
-              <div className="grid grid-cols-1 gap-3 sm:hidden">
-                {filteredProducts.map((product) => (
-                  <div key={product.id} className="bg-card border border-border rounded-xl p-4">
-                    <div className="flex items-start gap-3">
-                      {product.image_url ? (
-                        <img
-                          src={product.image_url}
-                          alt={product.title}
-                          className="w-14 h-14 rounded-lg object-cover flex-shrink-0"
-                        />
-                      ) : (
-                        <div className="w-14 h-14 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Package className="w-6 h-6 text-muted-foreground" />
-                        </div>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-foreground truncate">{product.title}</p>
-                        <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                          {product.description}
-                        </p>
-                        <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[760px]">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/50">
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Product</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Category</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Price</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Status</th>
+                      <th className="text-right p-4 font-medium text-foreground whitespace-nowrap">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredProducts.map((product) => (
+                      <tr key={product.id} className="border-b border-border last:border-0">
+                        <td className="p-4">
+                          <div className="flex items-center gap-3 min-w-[18rem]">
+                            {product.image_url ? (
+                              <img
+                                src={product.image_url}
+                                alt={product.title}
+                                className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                                <Package className="w-6 h-6 text-muted-foreground" />
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <p className="font-medium text-foreground truncate">{product.title}</p>
+                              <p className="text-sm text-muted-foreground line-clamp-1">
+                                {product.description}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4 whitespace-nowrap">
                           <span className="px-2 py-1 text-xs rounded-full bg-accent text-accent-foreground">
                             {product.category}
                           </span>
+                        </td>
+                        <td className="p-4 font-medium text-foreground whitespace-nowrap">
+                          ${Number(product.price).toFixed(2)}
+                        </td>
+                        <td className="p-4 whitespace-nowrap">
                           <span
                             className={`px-2 py-1 text-xs rounded-full ${
                               product.is_active
@@ -398,98 +417,23 @@ const Products = () => {
                           >
                             {product.is_active ? 'Active' : 'Inactive'}
                           </span>
-                          <span className="ml-auto font-medium text-foreground">
-                            ${Number(product.price).toFixed(2)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-4 flex items-center justify-end gap-2">
-                      <Button variant="outline" size="sm" onClick={() => handleEdit(product)}>
-                        <Pencil className="w-4 h-4 mr-2" />
-                        Edit
-                      </Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleDelete(product.id)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Desktop table */}
-              <div className="hidden sm:block bg-card border border-border rounded-xl overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border bg-muted/50">
-                        <th className="text-left p-4 font-medium text-foreground">Product</th>
-                        <th className="text-left p-4 font-medium text-foreground">Category</th>
-                        <th className="text-left p-4 font-medium text-foreground">Price</th>
-                        <th className="text-left p-4 font-medium text-foreground">Status</th>
-                        <th className="text-right p-4 font-medium text-foreground">Actions</th>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center justify-end gap-2 whitespace-nowrap">
+                            <Button variant="ghost" size="icon" onClick={() => handleEdit(product)}>
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleDelete(product.id)}>
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {filteredProducts.map((product) => (
-                        <tr key={product.id} className="border-b border-border last:border-0">
-                          <td className="p-4">
-                            <div className="flex items-center gap-3">
-                              {product.image_url ? (
-                                <img
-                                  src={product.image_url}
-                                  alt={product.title}
-                                  className="w-12 h-12 rounded-lg object-cover"
-                                />
-                              ) : (
-                                <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
-                                  <Package className="w-6 h-6 text-muted-foreground" />
-                                </div>
-                              )}
-                              <div>
-                                <p className="font-medium text-foreground">{product.title}</p>
-                                <p className="text-sm text-muted-foreground line-clamp-1">
-                                  {product.description}
-                                </p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <span className="px-2 py-1 text-xs rounded-full bg-accent text-accent-foreground">
-                              {product.category}
-                            </span>
-                          </td>
-                          <td className="p-4 font-medium text-foreground">
-                            ${Number(product.price).toFixed(2)}
-                          </td>
-                          <td className="p-4">
-                            <span
-                              className={`px-2 py-1 text-xs rounded-full ${
-                                product.is_active
-                                  ? 'bg-chart-3/20 text-chart-3'
-                                  : 'bg-muted text-muted-foreground'
-                              }`}
-                            >
-                              {product.is_active ? 'Active' : 'Inactive'}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex items-center justify-end gap-2">
-                              <Button variant="ghost" size="icon" onClick={() => handleEdit(product)}>
-                                <Pencil className="w-4 h-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" onClick={() => handleDelete(product.id)}>
-                                <Trash2 className="w-4 h-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            </>
+            </div>
           )}
         </div>
       </AdminLayout>
