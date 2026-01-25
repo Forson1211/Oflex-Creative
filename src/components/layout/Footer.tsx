@@ -1,235 +1,330 @@
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Instagram, Twitter, Linkedin, Facebook, Mail, ArrowUp } from 'lucide-react';
-import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { Button } from '@/components/ui/button';
-import { FooterLinksColumn } from '@/components/layout/footer/FooterLinksColumn';
-import { FooterContactCard } from '@/components/layout/footer/FooterContactCard';
-import { FooterNewsletter } from '@/components/layout/footer/FooterNewsletter';
-import { FooterSocialProof } from '@/components/layout/footer/FooterSocialProof';
-import { TrustedPartnersSection } from '@/components/layout/footer/TrustedPartnersSection';
-
-
-const quickLinks = [
-  { name: 'Home', path: '/' },
-  { name: 'About', path: '/about' },
-  { name: 'Portfolio', path: '/portfolio' },
-  { name: 'Contact', path: '/contact' },
-];
-
-const serviceLinks = [
-  { name: 'Prompt Engineering', path: '/services' },
-  { name: 'Digital Design', path: '/services' },
-  { name: 'Branding', path: '/services' },
-  { name: 'UI/UX Design', path: '/services' },
-];
-
-const resourceLinks = [
-  { name: 'Store', path: '/store' },
-  { name: 'Services', path: '/services' },
-  { name: 'FAQs', path: '/services' },
-];
+ import { Link } from "react-router-dom";
+ import { motion } from "framer-motion";
+ import { useQuery } from "@tanstack/react-query";
+ import {
+   Instagram,
+   Twitter,
+   Linkedin,
+   Facebook,
+   Youtube,
+   ExternalLink,
+ } from "lucide-react";
+ import { useSiteSettings } from "@/hooks/useSiteSettings";
+ import { supabase } from "@/integrations/supabase/client";
+ import {
+   Accordion,
+   AccordionContent,
+   AccordionItem,
+   AccordionTrigger,
+ } from "@/components/ui/accordion";
+ import { FooterSocialProof } from "@/components/layout/footer/FooterSocialProof";
 
 export const Footer = () => {
   const { getSetting } = useSiteSettings();
 
+   // Fetch featured projects
+   const { data: featuredProjects = [] } = useQuery({
+     queryKey: ["featured-projects-footer"],
+     queryFn: async () => {
+       const { data, error } = await supabase
+         .from("featured_projects")
+         .select("*")
+         .eq("is_featured", true)
+         .order("display_order", { ascending: true })
+         .limit(2);
+       if (error) throw error;
+       return data || [];
+     },
+   });
+ 
   const socialLinks = [
     { icon: Instagram, href: getSetting('social_instagram', '#'), label: 'Instagram' },
     { icon: Twitter, href: getSetting('social_twitter', '#'), label: 'Twitter' },
     { icon: Linkedin, href: getSetting('social_linkedin', '#'), label: 'LinkedIn' },
     { icon: Facebook, href: getSetting('social_facebook', '#'), label: 'Facebook' },
+     { icon: Youtube, href: getSetting('social_youtube', '#'), label: 'Youtube' },
   ].filter(link => link.href && link.href !== '#');
 
   const logoUrl = getSetting('logo_url', '');
-  const footerColor = getSetting('footer_color', '');
-
-  // Dynamic footer background style - ensure color is applied correctly
-  const hasCustomColor = footerColor && footerColor.trim() !== '' && footerColor !== 'undefined';
-  
-  const footerStyle: React.CSSProperties = hasCustomColor 
-    ? { backgroundColor: footerColor } 
-    : {};
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+   const siteName = getSetting('site_name', 'Oflex Creative');
 
   return (
-    <footer 
-      className={`border-t border-border ${!hasCustomColor ? 'bg-card' : ''}`} 
-      style={footerStyle}
-    >
-      {/* Newsletter Section - Shows on ALL devices */}
-      <FooterNewsletter hasCustomColor={hasCustomColor} />
-
+     <footer className="bg-[hsl(220,30%,8%)] text-white border-t border-white/10">
       {/* Social Proof Stats */}
       <FooterSocialProof />
 
-      <div className="container mx-auto px-4 py-12 md:py-16">
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-x-8 gap-y-10">
-          {/* Brand */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="col-span-2 lg:col-span-2 text-left"
-          >
-            <Link to="/" className="flex items-center justify-center sm:justify-start gap-2 mb-4">
-              <img 
-                src={logoUrl || '/placeholder.svg'} 
-                alt={getSetting('site_name', 'Oflex Creative')} 
-                className="h-10 w-auto"
-              />
-            </Link>
-            <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-              {getSetting('about_description', 'Crafting digital experiences that inspire. From AI prompts to stunning designs, we bring your creative visions to life.')}
-            </p>
+       <div className="container mx-auto px-4 py-10">
+         {/* Social Icons Row */}
+         {socialLinks.length > 0 && (
+           <div className="flex items-center justify-center md:justify-start gap-3 mb-8">
+             {socialLinks.map((social) => (
+               <motion.a
+                 key={social.label}
+                 href={social.href}
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 whileHover={{ scale: 1.1 }}
+                 whileTap={{ scale: 0.95 }}
+                 className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-primary hover:text-primary-foreground transition-colors"
+                 aria-label={social.label}
+               >
+                 <social.icon className="w-4 h-4" />
+               </motion.a>
+             ))}
+           </div>
+         )}
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 justify-start mb-6">
-              <Button asChild size="sm">
-                <Link to="/contact">Start a Project</Link>
-              </Button>
-              <Button asChild size="sm" variant="outline">
-                <Link to="/services">View Services</Link>
-              </Button>
-            </div>
+         {/* Main Footer Content */}
+         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+           {/* Left Column - Logo & Navigation Accordions */}
+           <div className="md:col-span-7 space-y-6">
+             {/* Logo */}
+             <Link to="/" className="inline-block mb-4">
+               <img
+                 src={logoUrl || "/placeholder.svg"}
+                 alt={siteName}
+                 className="h-10 w-auto"
+               />
+             </Link>
 
-            {getSetting('contact_email') && (
-              <a
-                href={`mailto:${getSetting('contact_email')}`}
-                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 justify-start"
-              >
-                <span className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
-                  <Mail className="w-4 h-4" />
-                </span>
-                <span className="truncate">{getSetting('contact_email')}</span>
-              </a>
-            )}
-            {socialLinks.length > 0 && (
-              <div className="flex items-center gap-3 justify-start">
-                {socialLinks.map((social) => (
-                  <motion.a
-                    key={social.label}
-                    href={social.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    whileHover={{ scale: 1.1, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
-                    aria-label={social.label}
-                  >
-                    <social.icon className="w-4 h-4" />
-                  </motion.a>
-                ))}
-              </div>
-            )}
-          </motion.div>
+             {/* Accordion Navigation - Mobile */}
+             <div className="md:hidden">
+               <Accordion type="single" collapsible className="w-full">
+                 <AccordionItem value="about" className="border-white/10">
+                   <AccordionTrigger className="text-white hover:text-primary">
+                     About
+                   </AccordionTrigger>
+                   <AccordionContent>
+                     <div className="flex flex-col gap-3 pl-2">
+                       <Link
+                         to="/about"
+                         className="text-sm text-white/70 hover:text-primary transition-colors"
+                       >
+                         Our Story
+                       </Link>
+                       <Link
+                         to="/about"
+                         className="text-sm text-white/70 hover:text-primary transition-colors"
+                       >
+                         Team
+                       </Link>
+                       <Link
+                         to="/contact"
+                         className="text-sm text-white/70 hover:text-primary transition-colors"
+                       >
+                         Contact
+                       </Link>
+                     </div>
+                   </AccordionContent>
+                 </AccordionItem>
 
-          {/* Resources */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.15 }}
-          >
-            <FooterLinksColumn
-              title="Resources"
-              links={resourceLinks}
-              align="left"
-              showExternalIcon
-            />
-          </motion.div>
+                 <AccordionItem value="discover" className="border-white/10">
+                   <AccordionTrigger className="text-white hover:text-primary">
+                     Discover
+                   </AccordionTrigger>
+                   <AccordionContent>
+                     <div className="flex flex-col gap-3 pl-2">
+                       <Link
+                         to="/portfolio"
+                         className="text-sm text-white/70 hover:text-primary transition-colors"
+                       >
+                         Portfolio
+                       </Link>
+                       <Link
+                         to="/store"
+                         className="text-sm text-white/70 hover:text-primary transition-colors"
+                       >
+                         Store
+                       </Link>
+                     </div>
+                   </AccordionContent>
+                 </AccordionItem>
 
-          {/* Quick Links */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-          >
-            <FooterLinksColumn title="Quick Links" links={quickLinks} align="left" />
-          </motion.div>
+                 <AccordionItem value="services" className="border-white/10">
+                   <AccordionTrigger className="text-white hover:text-primary">
+                     Services
+                   </AccordionTrigger>
+                   <AccordionContent>
+                     <div className="flex flex-col gap-3 pl-2">
+                       <Link
+                         to="/services"
+                         className="text-sm text-white/70 hover:text-primary transition-colors"
+                       >
+                         Prompt Engineering
+                       </Link>
+                       <Link
+                         to="/services"
+                         className="text-sm text-white/70 hover:text-primary transition-colors"
+                       >
+                         Digital Design
+                       </Link>
+                       <Link
+                         to="/services"
+                         className="text-sm text-white/70 hover:text-primary transition-colors"
+                       >
+                         Branding
+                       </Link>
+                     </div>
+                   </AccordionContent>
+                 </AccordionItem>
 
-          {/* Services */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-          >
-            <FooterLinksColumn title="Services" links={serviceLinks} align="left" />
-          </motion.div>
+                 <AccordionItem value="support" className="border-white/10">
+                   <AccordionTrigger className="text-white hover:text-primary">
+                     Support
+                   </AccordionTrigger>
+                   <AccordionContent>
+                     <div className="flex flex-col gap-3 pl-2">
+                       <Link
+                         to="#"
+                         className="text-sm text-white/70 hover:text-primary transition-colors"
+                       >
+                         Privacy Policy
+                       </Link>
+                       <Link
+                         to="#"
+                         className="text-sm text-white/70 hover:text-primary transition-colors"
+                       >
+                         Terms of Service
+                       </Link>
+                     </div>
+                   </AccordionContent>
+                 </AccordionItem>
+               </Accordion>
+             </div>
 
-          {/* Contact Info */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.3 }}
-            className="col-span-2 sm:col-span-1 text-left"
-          >
-            <h4 className="font-semibold text-foreground mb-4">Contact</h4>
+             {/* Desktop Navigation Grid */}
+             <div className="hidden md:grid md:grid-cols-4 gap-8">
+               <div>
+                 <h4 className="font-semibold text-white mb-4">About</h4>
+                 <div className="flex flex-col gap-3">
+                   <Link
+                     to="/about"
+                     className="text-sm text-white/70 hover:text-primary transition-colors"
+                   >
+                     Our Story
+                   </Link>
+                   <Link
+                     to="/about"
+                     className="text-sm text-white/70 hover:text-primary transition-colors"
+                   >
+                     Team
+                   </Link>
+                   <Link
+                     to="/contact"
+                     className="text-sm text-white/70 hover:text-primary transition-colors"
+                   >
+                     Contact
+                   </Link>
+                 </div>
+               </div>
 
-            <div className="mb-4 flex justify-start">
-              <div className="w-full max-w-sm">
-                <FooterContactCard
-                  phone={getSetting('phone_number')}
-                  address={getSetting('address')}
-                />
-              </div>
-            </div>
+               <div>
+                 <h4 className="font-semibold text-white mb-4">Discover</h4>
+                 <div className="flex flex-col gap-3">
+                   <Link
+                     to="/portfolio"
+                     className="text-sm text-white/70 hover:text-primary transition-colors"
+                   >
+                     Portfolio
+                   </Link>
+                   <Link
+                     to="/store"
+                     className="text-sm text-white/70 hover:text-primary transition-colors"
+                   >
+                     Store
+                   </Link>
+                 </div>
+               </div>
 
-            <ul className="space-y-3 text-sm text-muted-foreground">
-              {getSetting('contact_email') && (
-                <li className="flex items-center gap-2 justify-start">
-                  <span className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
-                    <Mail className="w-4 h-4" />
-                  </span>
-                  <a
-                    href={`mailto:${getSetting('contact_email')}`}
-                    className="hover:text-primary transition-colors break-all"
-                  >
-                    {getSetting('contact_email')}
-                  </a>
-                </li>
-              )}
-            </ul>
-          </motion.div>
-        </div>
+               <div>
+                 <h4 className="font-semibold text-white mb-4">Services</h4>
+                 <div className="flex flex-col gap-3">
+                   <Link
+                     to="/services"
+                     className="text-sm text-white/70 hover:text-primary transition-colors"
+                   >
+                     Prompt Engineering
+                   </Link>
+                   <Link
+                     to="/services"
+                     className="text-sm text-white/70 hover:text-primary transition-colors"
+                   >
+                     Digital Design
+                   </Link>
+                   <Link
+                     to="/services"
+                     className="text-sm text-white/70 hover:text-primary transition-colors"
+                   >
+                     Branding
+                   </Link>
+                 </div>
+               </div>
 
-        {/* Trusted Partners Section - Dynamic from Database */}
-        <TrustedPartnersSection />
+               <div>
+                 <h4 className="font-semibold text-white mb-4">Support</h4>
+                 <div className="flex flex-col gap-3">
+                   <Link
+                     to="#"
+                     className="text-sm text-white/70 hover:text-primary transition-colors"
+                   >
+                     Privacy Policy
+                   </Link>
+                   <Link
+                     to="#"
+                     className="text-sm text-white/70 hover:text-primary transition-colors"
+                   >
+                     Terms of Service
+                   </Link>
+                 </div>
+               </div>
+             </div>
+           </div>
 
-        {/* Bottom Bar */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.4 }}
-          className="mt-8 pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4"
-        >
-          <p className="text-muted-foreground text-sm text-left">
-            {getSetting('footer_text', `© ${new Date().getFullYear()} Oflex Creative. All rights reserved.`)}
-          </p>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6 text-sm text-muted-foreground">
-            <div className="flex items-center gap-6">
-              <Link to="#" className="hover:text-primary transition-colors">Privacy Policy</Link>
-              <Link to="#" className="hover:text-primary transition-colors">Terms of Service</Link>
-            </div>
+           {/* Right Column - Featured Projects */}
+           <div className="md:col-span-5">
+             <h4 className="font-semibold text-white mb-4">Featured Projects</h4>
+             <div className="space-y-4">
+               {featuredProjects.length > 0 ? (
+                 featuredProjects.map((project) => (
+                   <motion.div
+                     key={project.id}
+                     whileHover={{ x: 4 }}
+                     className="group flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                   >
+                     <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-white/10">
+                       <img
+                         src={project.image_url || "/placeholder.svg"}
+                         alt={project.title}
+                         className="w-full h-full object-cover"
+                       />
+                     </div>
+                     <div className="flex-1 min-w-0">
+                       <h5 className="text-sm font-medium text-white truncate">
+                         {project.title}
+                       </h5>
+                       <p className="text-xs text-white/60">{project.category}</p>
+                     </div>
+                     <ExternalLink className="w-4 h-4 text-white/40 group-hover:text-primary transition-colors flex-shrink-0" />
+                   </motion.div>
+                 ))
+               ) : (
+                 <div className="text-sm text-white/60">No featured projects</div>
+               )}
+             </div>
+           </div>
+         </div>
 
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={scrollToTop}
-              className="gap-2"
-            >
-              <ArrowUp className="w-4 h-4" />
-              Back to top
-            </Button>
-          </div>
-        </motion.div>
+         {/* Bottom Bar */}
+         <div className="mt-10 pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
+           <p className="text-sm text-white/60 text-center md:text-left">
+             {getSetting(
+               "footer_text",
+               `© ${new Date().getFullYear()} ${siteName}. All rights reserved.`
+             )}
+           </p>
+           <p className="text-sm text-white/40">www.oflexcreative.com</p>
+         </div>
       </div>
     </footer>
   );
-};
+ };
