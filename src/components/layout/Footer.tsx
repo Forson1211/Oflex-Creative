@@ -18,6 +18,7 @@
    AccordionTrigger,
  } from "@/components/ui/accordion";
  import { FooterSocialProof } from "@/components/layout/footer/FooterSocialProof";
+import { FooterTrustBadges } from "@/components/layout/footer/FooterTrustBadges";
 
 export const Footer = () => {
   const { getSetting } = useSiteSettings();
@@ -315,14 +316,20 @@ export const Footer = () => {
          </div>
 
          {/* Bottom Bar */}
-         <div className="mt-10 pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
-           <p className="text-sm text-white/60 text-center md:text-left">
-             {getSetting(
-               "footer_text",
-               `© ${new Date().getFullYear()} ${siteName}. All rights reserved.`
-             )}
-           </p>
-           <p className="text-sm text-white/40">www.oflexcreative.com</p>
+         <div className="mt-10 pt-6 border-t border-white/10 space-y-6">
+           {/* Trust Badges */}
+           <FooterTrustBadges />
+           
+           {/* Copyright and Domain */}
+           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+             <p className="text-sm text-white/60 text-center md:text-left">
+               {getSetting(
+                 "footer_text",
+                 `© ${new Date().getFullYear()} ${siteName}. All rights reserved.`
+               )}
+             </p>
+             <p className="text-sm text-white/40">www.oflexcreative.com</p>
+           </div>
          </div>
       </div>
     </footer>
