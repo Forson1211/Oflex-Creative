@@ -66,8 +66,9 @@ export const Navbar = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('id, title, price, image_url')
+        .select('*')
         .eq('is_active', true);
+
       if (error) throw error;
       return data as Product[];
     },
@@ -80,15 +81,16 @@ export const Navbar = () => {
       if (!user) return [];
       const { data, error } = await supabase
         .from('cart_items')
-        .select('*')
+        .select(`
+          *,
+          product:products(*)
+        `)
         .eq('user_id', user.id);
+
       if (error) throw error;
-      return data.map((item) => ({
-        ...item,
-        product: products.find((p) => p.id === item.product_id),
-      })) as CartItem[];
+      return data as CartItem[];
     },
-    enabled: !!user && products.length > 0,
+    enabled: !!user,
   });
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -100,12 +102,11 @@ export const Navbar = () => {
   // Update quantity mutation
   const updateQuantityMutation = useMutation({
     mutationFn: async ({ itemId, quantity }: { itemId: string; quantity: number }) => {
+      if (!user) return;
       if (quantity <= 0) {
-        const { error } = await supabase.from('cart_items').delete().eq('id', itemId);
-        if (error) throw error;
+        await supabase.from('cart_items').delete().eq('id', itemId);
       } else {
-        const { error } = await supabase.from('cart_items').update({ quantity }).eq('id', itemId);
-        if (error) throw error;
+        await supabase.from('cart_items').update({ quantity }).eq('id', itemId);
       }
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cart'] }),
@@ -114,8 +115,8 @@ export const Navbar = () => {
   // Remove from cart
   const removeFromCartMutation = useMutation({
     mutationFn: async (itemId: string) => {
-      const { error } = await supabase.from('cart_items').delete().eq('id', itemId);
-      if (error) throw error;
+      if (!user) return;
+      await supabase.from('cart_items').delete().eq('id', itemId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
@@ -125,9 +126,14 @@ export const Navbar = () => {
 
 
   const handleSignOut = async () => {
-    await signOut();
-    toast({ title: 'Signed out successfully' });
-    navigate('/');
+    try {
+      await signOut();
+      toast({ title: 'Signed out successfully' });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      navigate('/auth');
+    }
   };
 
   const userInitials = user?.email?.slice(0, 2).toUpperCase() || 'U';
@@ -159,11 +165,10 @@ export const Navbar = () => {
           <div className="hidden lg:flex items-center gap-8">
             {navLinks.map((link) => (
               <Link key={link.path} to={link.path} className="relative group">
-                <span className={`text-sm font-medium transition-colors ${
-                  location.pathname === link.path 
-                    ? 'text-primary' 
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}>
+                <span className={`text-sm font-medium transition-colors ${location.pathname === link.path
+                  ? 'text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+                  }`}>
                   {link.name}
                 </span>
                 {location.pathname === link.path && (
@@ -302,7 +307,7 @@ export const Navbar = () => {
                 </Button>
               </SheetTrigger>
             </Sheet>
-            
+
             <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full">
               {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
             </Button>
@@ -333,11 +338,10 @@ export const Navbar = () => {
                   <Link
                     to={link.path}
                     onClick={() => setIsOpen(false)}
-                    className={`block py-3 px-4 rounded-lg transition-colors ${
-                      location.pathname === link.path
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                    }`}
+                    className={`block py-3 px-4 rounded-lg transition-colors ${location.pathname === link.path
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      }`}
                   >
                     {link.name}
                   </Link>

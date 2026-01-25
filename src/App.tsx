@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/hooks/useAuth";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
+import { SecurityCheck } from "@/components/auth/SecurityCheck";
 
 // Lazy load pages for faster initial load
 const Index = lazy(() => import("./pages/Index"));
@@ -19,6 +20,7 @@ const Auth = lazy(() => import("./pages/Auth"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
+const OrderDetail = lazy(() => import("./pages/OrderDetails"));
 const Dashboard = lazy(() => import("./pages/admin/Dashboard"));
 const Products = lazy(() => import("./pages/admin/Products"));
 const FeaturedProjects = lazy(() => import("./pages/admin/FeaturedProjects"));
@@ -55,11 +57,11 @@ const AppContent = () => {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // Mark ready ASAP; only keep the loading screen for a very short moment
+    // Mark ready ASAP
     const timer = setTimeout(() => {
       setIsReady(true);
       setIsInitialLoad(false);
-    }, 120);
+    }, 40); // Standard human perception threshold for "instant"
 
     // Prefetch common routes in idle time to make navigation feel instant
     const prefetch = () => {
@@ -80,7 +82,7 @@ const AppContent = () => {
     if (typeof w.requestIdleCallback === "function") {
       idleId = w.requestIdleCallback(prefetch, { timeout: 1500 });
     } else {
-      idleId = setTimeout(prefetch, 600) as unknown as number;
+      idleId = setTimeout(prefetch, 2500) as unknown as number;
     }
 
     return () => {
@@ -111,6 +113,7 @@ const AppContent = () => {
         <Route path="/auth" element={<Auth />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/order/:id" element={<OrderDetail />} />
         <Route path="/admin" element={<Dashboard />} />
         <Route path="/admin/hero-slides" element={<HeroSlides />} />
         <Route path="/admin/store-slides" element={<StoreSlides />} />
@@ -137,15 +140,17 @@ const AppContent = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <ThemeProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppContent />
-          </BrowserRouter>
-        </TooltipProvider>
-      </ThemeProvider>
+      <SecurityCheck>
+        <ThemeProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppContent />
+            </BrowserRouter>
+          </TooltipProvider>
+        </ThemeProvider>
+      </SecurityCheck>
     </AuthProvider>
   </QueryClientProvider>
 );

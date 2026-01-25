@@ -57,14 +57,15 @@ export const useImageUpload = ({ bucket, onSuccess }: UseImageUploadOptions) => 
       const publicUrl = urlData.publicUrl;
       onSuccess?.(publicUrl);
       toast({ title: 'Image uploaded successfully' });
-      
+
       return publicUrl;
-    } catch (error: any) {
-      console.error('Upload error:', error);
-      toast({ 
-        title: 'Upload failed', 
-        description: error.message || 'Failed to upload image', 
-        variant: 'destructive' 
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('Upload error:', err);
+      toast({
+        title: 'Upload failed',
+        description: err.message || 'Failed to upload image',
+        variant: 'destructive'
       });
       return null;
     } finally {
@@ -78,22 +79,23 @@ export const useImageUpload = ({ bucket, onSuccess }: UseImageUploadOptions) => 
       // Extract file path from URL
       const urlParts = url.split(`/${bucket}/`);
       if (urlParts.length < 2) return false;
-      
+
       const filePath = urlParts[1];
-      
+
       const { error } = await supabase.storage
         .from(bucket)
         .remove([filePath]);
 
       if (error) throw error;
-      
+
       return true;
-    } catch (error: any) {
-      console.error('Delete error:', error);
-      toast({ 
-        title: 'Delete failed', 
-        description: error.message || 'Failed to delete image', 
-        variant: 'destructive' 
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('Delete error:', err);
+      toast({
+        title: 'Delete failed',
+        description: err.message || 'Failed to delete image',
+        variant: 'destructive'
       });
       return false;
     }

@@ -61,7 +61,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [newOrderCount, setNewOrderCount] = useState(0);
-  
+
   const logoUrl = getSetting('logo_url', '');
 
   const shouldEnableRealtime = isAdmin || isModerator;
@@ -80,9 +80,15 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
     },
   });
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
+  const handleSignOut = async (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Logout failed", error);
+    } finally {
+      navigate('/auth');
+    }
   };
 
   // Filter nav items based on user role
@@ -116,9 +122,8 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transform transition-transform duration-200 ease-in-out ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
+        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transform transition-transform duration-200 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
@@ -146,11 +151,10 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                  }`}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                    }`}
                 >
                   <item.icon className="w-5 h-5" />
                   <span className="flex-1">{item.label}</span>
@@ -172,7 +176,8 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
               Back to Site
             </Link>
             <button
-              onClick={handleSignOut}
+              type="button"
+              onClick={(e) => handleSignOut(e)}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition-colors"
             >
               <LogOut className="w-5 h-5" />

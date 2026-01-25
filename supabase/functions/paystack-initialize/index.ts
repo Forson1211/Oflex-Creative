@@ -1,138 +1,120 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+// File: supabase/functions/paystack-initialize/index.ts
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface InitializePaymentRequest {
-  orderId: string;
-  email: string;
-  amount: number; // in dollars
-  callbackUrl: string;
-}
-
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const paystackSecretKey = Deno.env.get('PAYSTACK_SECRET_KEY');
-    if (!paystackSecretKey) {
-      console.error('PAYSTACK_SECRET_KEY not configured');
-      throw new Error('Payment service not configured');
+    const REQUEST_headers = { ...corsHeaders, 'Content-Type': 'application/json' };
+
+    // Check for Paystack key
+    const PAYSTACK_KEY = Deno.env.get('PAYSTACK_SECRET_KEY');
+    if (!PAYSTACK_KEY) {
+      console.error('PAYSTACK_SECRET_KEY is missing from environment variables');
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Configuration Error: Paystack secret key is missing. Please check your Supabase secrets.'
+        }),
+        { headers: REQUEST_headers, status: 200 }
+      );
     }
 
-    // Get auth header for user verification
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('Authorization header required');
+    const body = await req.json();
+    const { orderId, email, amount, callbackUrl } = body;
+
+    if (!orderId || !email || !amount) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Missing required fields: orderId, email, or amount' }),
+        { headers: REQUEST_headers, status: 400 }
+      );
     }
 
-    // Initialize Supabase client with service role for database operations
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // ===== GET REAL-TIME EXCHANGE RATE =====
+    let usdToGhsRate = 15.5; // Fallback rate
 
-    // Verify the user
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
-    
-    const { data: { user }, error: authError } = await userClient.auth.getUser();
-    if (authError || !user) {
-      console.error('Auth error:', authError);
-      throw new Error('Unauthorized');
+    try {
+      // Using free exchangerate-api.com (no API key needed for basic usage)
+      const exchangeRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+      if (exchangeRes.ok) {
+        const exchangeData = await exchangeRes.json();
+        if (exchangeData.rates && exchangeData.rates.GHS) {
+          usdToGhsRate = exchangeData.rates.GHS;
+          console.log(`Using live rate: 1 USD = ${usdToGhsRate} GHS`);
+        }
+      }
+    } catch (exchangeError) {
+      console.error('Exchange API error, using fallback rate:', exchangeError);
     }
 
-    const { orderId, email, amount, callbackUrl }: InitializePaymentRequest = await req.json();
-
-    console.log('Initializing Paystack payment:', { orderId, email, amount, userId: user.id });
-
-    // Verify the order belongs to the user and is pending
-    const { data: order, error: orderError } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('id', orderId)
-      .eq('user_id', user.id)
-      .eq('status', 'pending')
-      .single();
-
-    if (orderError || !order) {
-      console.error('Order not found or not pending:', orderError);
-      throw new Error('Order not found or already processed');
-    }
-
-    // Convert USD to GHS (Paystack Ghana uses pesewas - smallest unit)
-    // Exchange rate: 1 USD = 15.5 GHS
-    const USD_TO_GHS_RATE = 15.5;
-    const amountInGHS = amount * USD_TO_GHS_RATE;
+    // Calculate amount in GHS, then convert to pesewas (smallest unit)
+    const amountInGHS = amount * usdToGhsRate;
     const amountInPesewas = Math.round(amountInGHS * 100);
 
-    // Initialize Paystack transaction
-    const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
+    console.log(`Initializing Payment for Order ${orderId}: $${amount} USD → ${amountInGHS.toFixed(2)} GHS → ${amountInPesewas} pesewas`);
+
+    // Call Paystack
+    const paystackRes = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${paystackSecretKey}`,
+        'Authorization': `Bearer ${PAYSTACK_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        email,
+        email: email,
         amount: amountInPesewas,
         currency: 'GHS',
         reference: `order_${orderId}_${Date.now()}`,
         callback_url: callbackUrl,
         metadata: {
           order_id: orderId,
-          user_id: user.id,
+          usd_amount: amount,
+          exchange_rate: usdToGhsRate,
+          ghs_amount: amountInGHS,
+          site_url: req.headers.get('origin') || 'unknown'
         },
       }),
     });
 
-    const paystackData = await paystackResponse.json();
+    const paystackData = await paystackRes.json();
 
-    if (!paystackData.status) {
-      console.error('Paystack initialization failed:', paystackData);
-      throw new Error(paystackData.message || 'Failed to initialize payment');
+    if (!paystackRes.ok || !paystackData.status) {
+      console.error('Paystack API Error:', paystackData);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: paystackData.message || 'Payment provider rejected the request',
+          details: paystackData
+        }),
+        { headers: REQUEST_headers, status: 200 }
+      );
     }
-
-    console.log('Paystack payment initialized:', paystackData.data.reference);
-
-    // Update order with payment reference
-    await supabase
-      .from('orders')
-      .update({ 
-        payment_reference: paystackData.data.reference,
-        payment_provider: 'paystack'
-      })
-      .eq('id', orderId);
 
     return new Response(
       JSON.stringify({
         success: true,
         authorizationUrl: paystackData.data.authorization_url,
         reference: paystackData.data.reference,
+        exchangeRate: usdToGhsRate,
       }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      }
+      { headers: REQUEST_headers, status: 200 }
     );
 
   } catch (error) {
-    console.error('Error in paystack-initialize:', error);
+    console.error('Exception in paystack-initialize:', error);
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : 'Internal Server Error'
       }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });

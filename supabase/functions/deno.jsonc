@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "lib": [
+            "deno.window",
+            "deno.unstable"
+        ],
+        "types": [
+            "./deno.d.ts"
+        ],
+        "strict": true,
+        "allowJs": true,
+        "checkJs": false
+    },
+    "importMap": "./import_map.json"
+}

@@ -40,13 +40,14 @@ const ProductDetail = () => {
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', id],
     queryFn: async () => {
+      if (!id) return null;
       const { data, error } = await supabase
         .from('products')
         .select('*')
         .eq('id', id)
         .eq('is_active', true)
         .single();
-      
+
       if (error) throw error;
       return data as Product;
     },
@@ -57,16 +58,16 @@ const ProductDetail = () => {
   const { data: purchase } = useQuery({
     queryKey: ['purchase', id, user?.id],
     queryFn: async () => {
-      if (!user) return null;
+      if (!user || !id) return null;
       const { data, error } = await supabase
         .from('purchases')
         .select('*')
         .eq('user_id', user.id)
         .eq('product_id', id)
-        .maybeSingle();
-      
-      if (error) throw error;
-      return data as Purchase | null;
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      return data as Purchase;
     },
     enabled: !!user && !!id,
   });
@@ -77,26 +78,32 @@ const ProductDetail = () => {
       if (!user) throw new Error('Please login to add items to cart');
       if (!product) throw new Error('Product not found');
 
-      const { data: existing } = await supabase
+      const { data: existingItem, error: fetchError } = await supabase
         .from('cart_items')
         .select('*')
         .eq('user_id', user.id)
         .eq('product_id', product.id)
-        .maybeSingle();
+        .single();
 
-      if (existing) {
-        const { error } = await supabase
+      if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
+
+      if (existingItem) {
+        const { error: updateError } = await supabase
           .from('cart_items')
-          .update({ quantity: existing.quantity + 1 })
-          .eq('id', existing.id);
-        if (error) throw error;
+          .update({ quantity: (existingItem.quantity || 0) + 1 })
+          .eq('id', existingItem.id);
+
+        if (updateError) throw updateError;
       } else {
-        const { error } = await supabase.from('cart_items').insert({
-          user_id: user.id,
-          product_id: product.id,
-          quantity: 1,
-        });
-        if (error) throw error;
+        const { error: insertError } = await supabase
+          .from('cart_items')
+          .insert({
+            user_id: user.id,
+            product_id: product.id,
+            quantity: 1
+          });
+
+        if (insertError) throw insertError;
       }
     },
     onSuccess: () => {
@@ -105,8 +112,8 @@ const ProductDetail = () => {
     },
     onError: (error: Error) => {
       if (error.message.includes('login')) {
-        toast({ 
-          title: 'Please login', 
+        toast({
+          title: 'Please login',
           description: 'You need to login to add items to cart',
           action: <Button variant="outline" size="sm" onClick={() => navigate('/auth')}>Login</Button>
         });
@@ -145,8 +152,8 @@ const ProductDetail = () => {
     <Layout>
       <section className="py-20">
         <div className="container mx-auto px-4">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             className="mb-6"
             onClick={() => navigate('/store')}
           >
@@ -181,7 +188,7 @@ const ProductDetail = () => {
               <Badge variant="secondary" className="w-fit mb-4">
                 {product.category}
               </Badge>
-              
+
               <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
                 {product.title}
               </h1>
@@ -231,8 +238,8 @@ const ProductDetail = () => {
                 {hasPurchased ? (
                   <div className="space-y-4">
                     {purchase?.template_link ? (
-                      <Button 
-                        size="lg" 
+                      <Button
+                        size="lg"
                         className="w-full"
                         asChild
                       >
@@ -253,8 +260,8 @@ const ProductDetail = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <Button 
-                      size="lg" 
+                    <Button
+                      size="lg"
                       className="w-full"
                       onClick={() => addToCartMutation.mutate()}
                       disabled={addToCartMutation.isPending}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Lock, CheckCircle, ArrowLeft, Package, Wallet, Smartphone, Loader2, DollarSign } from 'lucide-react';
@@ -42,19 +42,9 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('paystack');
   const [verifyingPayment, setVerifyingPayment] = useState(false);
 
-  // Check for payment callback
-  useEffect(() => {
-    const reference = searchParams.get('reference');
-    const trxref = searchParams.get('trxref');
-    
-    if (reference || trxref) {
-      verifyPayment(reference || trxref!);
-    }
-  }, [searchParams]);
-
-  const verifyPayment = async (reference: string) => {
+  const verifyPayment = useCallback(async (reference: string) => {
     if (!user) return;
-    
+
     setVerifyingPayment(true);
     try {
       const { data, error } = await supabase.functions.invoke('paystack-verify', {
@@ -69,31 +59,53 @@ const Checkout = () => {
         setOrderComplete(true);
         toast({ title: 'Payment successful!', description: 'Your order has been completed.' });
       } else {
-        toast({ 
-          title: 'Payment not completed', 
-          description: 'Please try again or contact support.',
+        toast({
+          title: 'Payment not completed',
+          description: data.message || 'Please try again or contact support.',
           variant: 'destructive'
         });
       }
     } catch (error) {
       console.error('Payment verification error:', error);
-      toast({ 
-        title: 'Verification failed', 
-        description: 'Please contact support if payment was deducted.',
+
+      let failMessage = 'Please contact support if payment was deducted.';
+      if (error instanceof Error) {
+        // Handle FunctionsHttpError or simple Error
+        const msg = error.message;
+        if (msg.includes('Payment service not configured')) {
+          failMessage = 'Configuration Error: Payment service not set up properly.';
+        } else if (msg.length < 100) {
+          failMessage = msg;
+        }
+      }
+
+      toast({
+        title: 'Verification Failed',
+        description: failMessage,
         variant: 'destructive'
       });
     } finally {
       setVerifyingPayment(false);
     }
-  };
+  }, [user, queryClient, toast]);
 
-  // Fetch products from secure public view
+  // Check for payment callback
+  useEffect(() => {
+    const reference = searchParams.get('reference');
+    const trxref = searchParams.get('trxref');
+
+    if (reference || trxref) {
+      verifyPayment(reference || trxref!);
+    }
+  }, [searchParams, verifyPayment]);
+
+  // Fetch products
   const { data: products = [] } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('products_public')
-        .select('id, title, price, image_url');
+        .from('products')
+        .select('*');
       if (error) throw error;
       return data as Product[];
     },
@@ -106,15 +118,16 @@ const Checkout = () => {
       if (!user) return [];
       const { data, error } = await supabase
         .from('cart_items')
-        .select('*')
+        .select(`
+          *,
+          product:products(*)
+        `)
         .eq('user_id', user.id);
+
       if (error) throw error;
-      return data.map((item) => ({
-        ...item,
-        product: products.find((p) => p.id === item.product_id),
-      })) as CartItem[];
+      return data as CartItem[];
     },
-    enabled: !!user && products.length > 0,
+    enabled: !!user,
   });
 
   const cartTotal = cartItems.reduce(
@@ -127,59 +140,71 @@ const Checkout = () => {
     mutationFn: async () => {
       if (!user || cartItems.length === 0) throw new Error('Cart is empty');
       if (!user.email) throw new Error('Email is required');
-      
+
       setIsProcessing(true);
-      
-      // Create order with PENDING status
+
+      // Create order in Supabase
       const { data: order, error: orderError } = await supabase
         .from('orders')
-        .insert({ 
-          user_id: user.id, 
-          total_amount: cartTotal, 
+        .insert({
+          user_id: user.id,
+          total_amount: cartTotal,
           status: 'pending',
           payment_provider: paymentMethod
         })
         .select()
         .single();
-      
+
       if (orderError) throw orderError;
 
       // Create order items
-      const orderItems = cartItems.map((item) => ({
+      const orderItems = cartItems.map(item => ({
         order_id: order.id,
         product_id: item.product_id,
         product_title: item.product?.title || 'Unknown',
         product_price: item.product?.price || 0,
-        quantity: item.quantity,
+        quantity: item.quantity
       }));
-      
-      const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
       if (itemsError) throw itemsError;
 
       if (paymentMethod === 'paystack') {
-        // Initialize Paystack payment
         const callbackUrl = `${window.location.origin}/checkout`;
-        
-        const { data, error } = await supabase.functions.invoke('paystack-initialize', {
-          body: {
-            orderId: order.id,
-            email: user.email,
-            amount: cartTotal,
-            callbackUrl
+
+        try {
+          const { data, error: functionError } = await supabase.functions.invoke('paystack-initialize', {
+            body: {
+              orderId: order.id,
+              email: user.email,
+              amount: cartTotal,
+              callbackUrl
+            }
+          });
+
+          if (functionError) {
+            console.error('Edge Function Error details:', functionError);
+            throw functionError;
           }
-        });
 
-        if (error || !data.success) {
-          throw new Error(data?.error || 'Failed to initialize payment');
+          if (!data?.success) {
+            throw new Error(data?.error || 'Failed to initialize payment');
+          }
+
+          // Redirect to Paystack
+          window.location.href = data.authorizationUrl;
+          return { redirecting: true };
+        } catch (err: unknown) {
+          console.error('Call to paystack-initialize failed:', err);
+          const errorMessage = err instanceof Error ? err.message : 'Payment service is currently unavailable';
+          throw new Error(errorMessage);
         }
-
-        // Redirect to Paystack
-        window.location.href = data.authorizationUrl;
-        return { redirecting: true };
       } else {
-        // PayPal - show instructions for now
-        toast({ 
-          title: 'PayPal Coming Soon', 
+        toast({
+          title: 'PayPal Coming Soon',
           description: 'PayPal integration is being set up. Please use Paystack for now.',
           variant: 'destructive'
         });
@@ -192,10 +217,33 @@ const Checkout = () => {
       }
     },
     onError: (error: Error) => {
-      toast({ 
-        title: 'Checkout failed', 
-        description: error.message, 
-        variant: 'destructive' 
+      console.error('Checkout error details:', error);
+
+      // Try to extract a specific error message
+      let errorMessage = error.message || 'Unknown error occurred';
+
+      // Check for Supabase Edge Function specific error structures
+      if (errorMessage.includes('FunctionsHttpError')) {
+        try {
+          const errorBody = JSON.parse(errorMessage);
+          if (errorBody && errorBody.error) {
+            errorMessage = errorBody.error;
+          }
+        } catch (e) {
+          // Keep original message if parsing fails
+        }
+      }
+
+      const errorWithContext = error as { context?: { message?: string } };
+      if (errorWithContext.context?.message) {
+        errorMessage = errorWithContext.context.message;
+      }
+
+      toast({
+        title: 'Checkout Failed',
+        description: errorMessage,
+        variant: 'destructive',
+        duration: 5000,
       });
       setIsProcessing(false);
     },
@@ -295,8 +343,8 @@ const Checkout = () => {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-20 min-h-screen">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           className="mb-6"
           onClick={() => navigate('/store')}
         >
@@ -319,8 +367,8 @@ const Checkout = () => {
                   <div key={item.id} className="flex gap-4">
                     <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                       {item.product?.image_url ? (
-                        <img 
-                          src={item.product.image_url} 
+                        <img
+                          src={item.product.image_url}
                           alt={item.product.title}
                           className="w-full h-full object-cover"
                           onError={(e) => {
@@ -338,15 +386,15 @@ const Checkout = () => {
                       <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                     </div>
                     <div className="text-right">
-                    <p className="font-medium text-foreground">
+                      <p className="font-medium text-foreground">
                         ${((item.product?.price || 0) * item.quantity).toFixed(2)}
                       </p>
                     </div>
                   </div>
                 ))}
-                
+
                 <Separator />
-                
+
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal (USD)</span>
@@ -397,7 +445,7 @@ const Checkout = () => {
                       </div>
                     </Label>
                   </div>
-                  
+
                   <div className={`flex items-center space-x-3 p-4 rounded-lg border transition-colors ${paymentMethod === 'paypal' ? 'border-primary bg-primary/5' : 'border-border'} opacity-50`}>
                     <RadioGroupItem value="paypal" id="paypal" disabled />
                     <Label htmlFor="paypal" className="flex items-center gap-3 cursor-pointer flex-1">
@@ -437,19 +485,19 @@ const Checkout = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="email">Email for receipt</Label>
-                    <Input 
-                      id="email" 
-                      type="email" 
-                      defaultValue={user.email || ''} 
+                    <Input
+                      id="email"
+                      type="email"
+                      defaultValue={user.email || ''}
                       disabled
                       className="bg-muted"
                     />
                     <p className="text-xs text-muted-foreground">Your receipt will be sent to this email</p>
                   </div>
-                  
+
                   <div className="pt-4">
-                    <Button 
-                      className="w-full" 
+                    <Button
+                      className="w-full"
                       size="lg"
                       onClick={() => checkoutMutation.mutate()}
                       disabled={isProcessing || checkoutMutation.isPending}
@@ -467,7 +515,7 @@ const Checkout = () => {
                       )}
                     </Button>
                   </div>
-                  
+
                   <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                     <Lock className="w-3 h-3" />
                     <span>Secured by Paystack - Your payment information is safe</span>

@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-  ShoppingCart, 
-  ArrowRight, 
-  Eye, 
-  Plus, 
-  Minus, 
-  Trash2, 
-  Search, 
-  SlidersHorizontal, 
-  Grid3X3, 
+import {
+  ShoppingCart,
+  ArrowRight,
+  Eye,
+  Plus,
+  Minus,
+  Trash2,
+  Search,
+  SlidersHorizontal,
+  Grid3X3,
   LayoutList,
   Star,
   Heart,
@@ -28,12 +28,12 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { 
-  Sheet, 
-  SheetContent, 
-  SheetHeader, 
-  SheetTitle, 
-  SheetTrigger 
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger
 } from '@/components/ui/sheet';
 import {
   Select,
@@ -74,12 +74,12 @@ const Store = () => {
   const queryClient = useQueryClient();
   const { getSetting } = useSiteSettings();
 
-  // Fetch products from secure public view (excludes sensitive columns like template_link)
+  // Fetch products
   const { data: products = [], isLoading: productsLoading } = useQuery({
-    queryKey: ['products', searchQuery],
+    queryKey: ['products'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('products_public')
+        .from('products')
         .select('*')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
@@ -96,20 +96,17 @@ const Store = () => {
       if (!user) return [];
       const { data, error } = await supabase
         .from('cart_items')
-        .select('*')
+        .select(`
+          *,
+          product:products(*)
+        `)
         .eq('user_id', user.id);
 
       if (error) throw error;
 
-      // Attach product data
-      const itemsWithProducts = data.map((item) => {
-        const product = products.find((p) => p.id === item.product_id);
-        return { ...item, product };
-      });
-
-      return itemsWithProducts as CartItem[];
+      return data as CartItem[];
     },
-    enabled: !!user && products.length > 0,
+    enabled: !!user,
   });
 
   // Get unique categories
@@ -122,8 +119,8 @@ const Store = () => {
       const matchesCategory = activeCategory === 'All' || p.category === activeCategory;
       const searchLower = searchQuery.toLowerCase().trim();
       if (!searchLower) return matchesCategory;
-      
-      const matchesSearch = 
+
+      const matchesSearch =
         p.title.toLowerCase().includes(searchLower) ||
         (p.description && p.description.toLowerCase().includes(searchLower)) ||
         p.category.toLowerCase().includes(searchLower);
@@ -147,27 +144,32 @@ const Store = () => {
     mutationFn: async (productId: string) => {
       if (!user) throw new Error('Please login to add items to cart');
 
-      // Check if item already in cart
-      const { data: existing } = await supabase
+      const { data: existingItem, error: fetchError } = await supabase
         .from('cart_items')
         .select('*')
         .eq('user_id', user.id)
         .eq('product_id', productId)
-        .maybeSingle();
+        .single();
 
-      if (existing) {
-        const { error } = await supabase
+      if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
+
+      if (existingItem) {
+        const { error: updateError } = await supabase
           .from('cart_items')
-          .update({ quantity: existing.quantity + 1 })
-          .eq('id', existing.id);
-        if (error) throw error;
+          .update({ quantity: (existingItem.quantity || 0) + 1 })
+          .eq('id', existingItem.id);
+
+        if (updateError) throw updateError;
       } else {
-        const { error } = await supabase.from('cart_items').insert({
-          user_id: user.id,
-          product_id: productId,
-          quantity: 1,
-        });
-        if (error) throw error;
+        const { error: insertError } = await supabase
+          .from('cart_items')
+          .insert({
+            user_id: user.id,
+            product_id: productId,
+            quantity: 1
+          });
+
+        if (insertError) throw insertError;
       }
     },
     onSuccess: () => {
@@ -176,8 +178,8 @@ const Store = () => {
     },
     onError: (error: Error) => {
       if (error.message.includes('login')) {
-        toast({ 
-          title: 'Please login', 
+        toast({
+          title: 'Please login',
           description: 'You need to login to add items to cart',
           action: <Button variant="outline" size="sm" onClick={() => navigate('/auth')}>Login</Button>
         });
@@ -190,8 +192,13 @@ const Store = () => {
   // Update cart quantity mutation
   const updateQuantityMutation = useMutation({
     mutationFn: async ({ itemId, quantity }: { itemId: string; quantity: number }) => {
+      if (!user) return;
+
       if (quantity <= 0) {
-        const { error } = await supabase.from('cart_items').delete().eq('id', itemId);
+        const { error } = await supabase
+          .from('cart_items')
+          .delete()
+          .eq('id', itemId);
         if (error) throw error;
       } else {
         const { error } = await supabase
@@ -209,7 +216,11 @@ const Store = () => {
   // Remove from cart mutation
   const removeFromCartMutation = useMutation({
     mutationFn: async (itemId: string) => {
-      const { error } = await supabase.from('cart_items').delete().eq('id', itemId);
+      if (!user) return;
+      const { error } = await supabase
+        .from('cart_items')
+        .delete()
+        .eq('id', itemId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -230,6 +241,7 @@ const Store = () => {
     navigate('/checkout');
   };
 
+
   return (
     <Layout>
       {/* Store Hero Slider */}
@@ -242,7 +254,7 @@ const Store = () => {
           <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 w-72 h-72 bg-accent/10 rounded-full blur-3xl" />
         </div>
-        
+
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -258,8 +270,8 @@ const Store = () => {
               <Sparkles className="w-4 h-4" />
               Premium Digital Products
             </motion.div>
-            
-            <motion.h1 
+
+            <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
@@ -267,8 +279,8 @@ const Store = () => {
             >
               {getSetting('store_title', 'Canva Templates & Digital Assets')}
             </motion.h1>
-            
-            <motion.p 
+
+            <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
@@ -276,7 +288,7 @@ const Store = () => {
             >
               {getSetting('store_description', 'Professional Canva templates, social media kits, and digital assets to elevate your brand and boost your creativity.')}
             </motion.p>
-            
+
             {/* Search and Cart */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -293,7 +305,7 @@ const Store = () => {
                   className="pl-12 pr-4 h-12 rounded-full border-border bg-background backdrop-blur-sm"
                 />
               </div>
-              
+
               <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
                 <SheetTrigger asChild>
                   <Button size="lg" className="relative rounded-full h-12 px-6">
@@ -451,14 +463,14 @@ const Store = () => {
                 </Button>
               ))}
             </div>
-            
+
             {/* Sort and View controls */}
             <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-card border border-border">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Tag className="w-4 h-4" />
                 <span>{filteredProducts.length} products found</span>
               </div>
-              
+
               <div className="flex items-center gap-3">
                 <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
                   <SelectTrigger className="w-40">
@@ -472,7 +484,7 @@ const Store = () => {
                     <SelectItem value="name">Name A-Z</SelectItem>
                   </SelectContent>
                 </Select>
-                
+
                 <div className="hidden sm:flex items-center border border-border rounded-lg overflow-hidden">
                   <Button
                     variant={viewMode === 'grid' ? 'default' : 'ghost'}
@@ -511,7 +523,7 @@ const Store = () => {
               ))}
             </div>
           ) : filteredProducts.length === 0 ? (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="text-center py-16"
@@ -521,13 +533,13 @@ const Store = () => {
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-2">No products found</h3>
               <p className="text-muted-foreground text-lg">
-                {products.length === 0 
-                  ? 'No products available yet. Check back soon!' 
+                {products.length === 0
+                  ? 'No products available yet. Check back soon!'
                   : 'Try adjusting your search or filter criteria'}
               </p>
               {searchQuery && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="mt-4"
                   onClick={() => { setSearchQuery(''); setActiveCategory('All'); }}
                 >
@@ -538,11 +550,10 @@ const Store = () => {
           ) : (
             <motion.div
               layout
-              className={`grid gap-6 ${
-                viewMode === 'grid' 
-                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-                  : 'grid-cols-1'
-              }`}
+              className={`grid gap-6 ${viewMode === 'grid'
+                ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                : 'grid-cols-1'
+                }`}
             >
               <AnimatePresence mode="popLayout">
                 {filteredProducts.map((product, index) => (
@@ -572,7 +583,7 @@ const Store = () => {
                             >
                               <Eye className="w-4 h-4" />
                             </Button>
-                            <Button 
+                            <Button
                               size="icon"
                               className="rounded-full shadow-lg"
                               onClick={() => addToCartMutation.mutate(product.id)}
@@ -592,8 +603,8 @@ const Store = () => {
                           <h3 className="font-semibold text-foreground mb-2 line-clamp-1">{product.title}</h3>
                           <p className="text-sm text-muted-foreground line-clamp-2 flex-1">{product.description}</p>
                           <div className="flex gap-2 mt-4">
-                            <Button 
-                              className="flex-1" 
+                            <Button
+                              className="flex-1"
                               size="sm"
                               onClick={() => addToCartMutation.mutate(product.id)}
                               disabled={addToCartMutation.isPending}
@@ -601,7 +612,7 @@ const Store = () => {
                               <ShoppingCart className="w-4 h-4 mr-2" />
                               Add to Cart
                             </Button>
-                            <Button 
+                            <Button
                               variant="outline"
                               size="sm"
                               onClick={() => navigate(`/product/${product.id}`)}
@@ -635,14 +646,14 @@ const Store = () => {
                               </div>
                             </div>
                             <div className="flex gap-3 mt-auto">
-                              <Button 
+                              <Button
                                 onClick={() => addToCartMutation.mutate(product.id)}
                                 disabled={addToCartMutation.isPending}
                               >
                                 <ShoppingCart className="w-4 h-4 mr-2" />
                                 Add to Cart
                               </Button>
-                              <Button 
+                              <Button
                                 variant="outline"
                                 onClick={() => navigate(`/product/${product.id}`)}
                               >

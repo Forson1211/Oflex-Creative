@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ProtectedRoute } from '@/components/admin/ProtectedRoute';
 import { Button } from '@/components/ui/button';
@@ -7,19 +8,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ImageUpload } from '@/components/ui/ImageUpload';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useImageUpload } from '@/hooks/useImageUpload';
-import { 
-  Palette, 
-  Type, 
-  Layout, 
-  Save, 
-  Loader2, 
-  Image, 
-  Mail, 
-  Phone, 
-  MapPin, 
+import {
+  Palette,
+  Type,
+  Layout,
+  Save,
+  Loader2,
+  Image,
+  Mail,
+  Phone,
+  MapPin,
   Share2,
   Instagram,
   Twitter,
@@ -51,10 +51,18 @@ const SiteCustomization = () => {
     onSuccess: (url) => updateSetting('hero_background_url', url),
   });
 
+  const { uploadImage: uploadAboutImg, isUploading: isUploadingAboutImg } = useImageUpload({
+    bucket: 'site-assets',
+    onSuccess: (url) => updateSetting('about_image_url', url),
+  });
+
   const { data: siteSettings = [], isLoading } = useQuery({
     queryKey: ['site-settings-admin'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('site_settings').select('*');
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('*');
+
       if (error) throw error;
       return data as SiteSetting[];
     },
@@ -72,33 +80,30 @@ const SiteCustomization = () => {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const updates = Object.entries(settings).map(([key, value]) => ({
-        setting_key: key,
-        setting_value: value,
-      }));
+      const updates = Object.entries(settings).map(([key, value]) => {
+        const original = siteSettings.find(s => s.setting_key === key);
+        return {
+          setting_key: key,
+          setting_value: value,
+          setting_type: original?.setting_type || 'text',
+          updated_at: new Date().toISOString()
+        };
+      });
 
-      for (const update of updates) {
-        // Use upsert to handle both new and existing settings
-        const { error } = await supabase
-          .from('site_settings')
-          .upsert(
-            { 
-              setting_key: update.setting_key, 
-              setting_value: update.setting_value,
-              setting_type: 'text'
-            },
-            { onConflict: 'setting_key' }
-          );
-        if (error) throw error;
-      }
+      const { error } = await supabase
+        .from('site_settings')
+        .upsert(updates, { onConflict: 'setting_key' });
+
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['site-settings-admin'] });
       queryClient.invalidateQueries({ queryKey: ['site-settings'] });
+      localStorage.removeItem('site_settings');
       toast({ title: 'Settings saved successfully!' });
     },
-    onError: () => {
-      toast({ title: 'Error saving settings', variant: 'destructive' });
+    onError: (error: Error) => {
+      toast({ title: 'Error saving settings', description: error.message, variant: 'destructive' });
     },
   });
 
@@ -231,9 +236,9 @@ const SiteCustomization = () => {
                     {settings.logo_url && (
                       <div className="p-4 bg-muted/50 rounded-lg">
                         <p className="text-xs text-muted-foreground mb-2">Preview:</p>
-                        <img 
-                          src={settings.logo_url} 
-                          alt="Logo preview" 
+                        <img
+                          src={settings.logo_url}
+                          alt="Logo preview"
                           className="h-12 w-auto"
                           onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
                         />
@@ -361,9 +366,9 @@ const SiteCustomization = () => {
                     {settings.hero_background_url && (
                       <div className="p-4 bg-muted/50 rounded-lg">
                         <p className="text-xs text-muted-foreground mb-2">Preview:</p>
-                        <img 
-                          src={settings.hero_background_url} 
-                          alt="Hero background preview" 
+                        <img
+                          src={settings.hero_background_url}
+                          alt="Hero background preview"
                           className="w-full h-24 object-cover rounded-lg"
                           onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
                         />
@@ -512,6 +517,70 @@ const SiteCustomization = () => {
                       rows={4}
                       placeholder="Oflex Creative is a digital design studio..."
                     />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="about_story_title">Story Section Title</Label>
+                        <Input
+                          id="about_story_title"
+                          value={settings.about_story_title || ''}
+                          onChange={(e) => updateSetting('about_story_title', e.target.value)}
+                          placeholder="The Journey So Far"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="about_story">Our Story (Use double new-line for paragraphs)</Label>
+                        <Textarea
+                          id="about_story"
+                          value={settings.about_story || ''}
+                          onChange={(e) => updateSetting('about_story', e.target.value)}
+                          rows={6}
+                          placeholder="What started as a passion..."
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="about_years_experience">Years Experience</Label>
+                          <Input
+                            id="about_years_experience"
+                            value={settings.about_years_experience || ''}
+                            onChange={(e) => updateSetting('about_years_experience', e.target.value)}
+                            placeholder="5+"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="about_projects_completed">Projects Completed</Label>
+                          <Input
+                            id="about_projects_completed"
+                            value={settings.about_projects_completed || ''}
+                            onChange={(e) => updateSetting('about_projects_completed', e.target.value)}
+                            placeholder="200+"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>About Page Image</Label>
+                        <ImageUpload
+                          value={settings.about_image_url || ''}
+                          onChange={(url) => updateSetting('about_image_url', url)}
+                          onUpload={uploadAboutImg}
+                          isUploading={isUploadingAboutImg}
+                          aspectRatio="video"
+                        />
+                        <Input
+                          value={settings.about_image_url || ''}
+                          onChange={(e) => updateSetting('about_image_url', e.target.value)}
+                          placeholder="https://... (or upload above)"
+                          className="mt-2"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

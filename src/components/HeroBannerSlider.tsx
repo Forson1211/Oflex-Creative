@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { getOptimizedImageUrl, generateSrcSet } from '@/lib/image-optimizer';
 
 interface HeroSlide {
   id: string;
@@ -63,67 +64,68 @@ export const HeroBannerSlider = () => {
         <div className="mx-auto w-full max-w-6xl">
           {/* Banner Slider - responsive height */}
           <div className="group relative h-[250px] sm:h-[350px] md:h-[450px] lg:h-[520px] overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentIndex}
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.02 }}
-            transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="absolute inset-0"
-          >
-            <motion.img
-              src={slides[currentIndex]?.image_url}
-              alt="Banner slide"
-              className={`w-full h-full ${imgFitClass} object-center`}
-              initial={{ scale: 1 }}
-              animate={{ scale: 1.05 }}
-              transition={{ duration: 8, ease: "linear" }}
-            />
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Navigation Buttons - sleek design */}
-        {slides.length > 1 && (
-          <>
-            <motion.button
-              onClick={prevSlide}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-background/20 backdrop-blur-md border border-border/30 flex items-center justify-center text-foreground hover:bg-background/40 transition-all duration-300 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
-              aria-label="Previous slide"
-            >
-              <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
-            </motion.button>
-            <motion.button
-              onClick={nextSlide}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-background/20 backdrop-blur-md border border-border/30 flex items-center justify-center text-foreground hover:bg-background/40 transition-all duration-300 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
-              aria-label="Next slide"
-            >
-              <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
-            </motion.button>
-
-            {/* Dots Indicator - modern pill style */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3 py-2 rounded-full bg-background/20 backdrop-blur-md border border-border/20">
-              {slides.map((_, index) => (
-                <motion.button
-                  key={index}
-                  onClick={() => setCurrentIndex(index)}
-                  whileHover={{ scale: 1.2 }}
-                  whileTap={{ scale: 0.9 }}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    index === currentIndex
-                      ? 'bg-primary w-6'
-                      : 'bg-foreground/40 w-2 hover:bg-foreground/60'
-                  }`}
-                  aria-label={`Go to slide ${index + 1}`}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentIndex}
+                initial={{ opacity: 0, scale: 1.05 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.02 }}
+                transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className="absolute inset-0"
+              >
+                <motion.img
+                  src={slides[currentIndex]?.image_url}
+                  alt="Banner slide"
+                  loading="lazy"
+                  decoding="async"
+                  className={`w-full h-full ${imgFitClass} object-center`}
+                  initial={{ scale: 1 }}
+                  animate={{ scale: 1.05 }}
+                  transition={{ duration: 8, ease: "linear" }}
                 />
-              ))}
-            </div>
-          </>
-        )}
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Navigation Buttons - sleek design */}
+            {slides.length > 1 && (
+              <>
+                <motion.button
+                  onClick={prevSlide}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-background/20 backdrop-blur-md border border-border/30 flex items-center justify-center text-foreground hover:bg-background/40 transition-all duration-300 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
+                  aria-label="Previous slide"
+                >
+                  <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+                </motion.button>
+                <motion.button
+                  onClick={nextSlide}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-background/20 backdrop-blur-md border border-border/30 flex items-center justify-center text-foreground hover:bg-background/40 transition-all duration-300 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
+                  aria-label="Next slide"
+                >
+                  <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+                </motion.button>
+
+                {/* Dots Indicator - modern pill style */}
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3 py-2 rounded-full bg-background/20 backdrop-blur-md border border-border/20">
+                  {slides.map((_, index) => (
+                    <motion.button
+                      key={index}
+                      onClick={() => setCurrentIndex(index)}
+                      whileHover={{ scale: 1.2 }}
+                      whileTap={{ scale: 0.9 }}
+                      className={`h-2 rounded-full transition-all duration-300 ${index === currentIndex
+                        ? 'bg-primary w-6'
+                        : 'bg-foreground/40 w-2 hover:bg-foreground/60'
+                        }`}
+                      aria-label={`Go to slide ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

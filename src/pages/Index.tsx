@@ -12,7 +12,7 @@ import { SectionHeading } from '@/components/ui/SectionHeading';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/badge';
 import { HeroBannerSlider } from '@/components/HeroBannerSlider';
-
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
 
 interface FeaturedProject {
   id: string;
@@ -56,20 +56,20 @@ const Index = () => {
   const { data: siteStats } = useQuery({
     queryKey: ['site-stats'],
     queryFn: async () => {
-      const [productsRes, usersRes, projectsRes] = await Promise.all([
-        supabase.from('products').select('id', { count: 'exact', head: true }).eq('is_active', true),
-        supabase.from('profiles').select('id', { count: 'exact', head: true }),
-        supabase.from('featured_projects').select('id', { count: 'exact', head: true }),
+      const [{ count: productsCount }, { count: usersCount }, { count: projectsCount }] = await Promise.all([
+        supabase.from('products').select('*', { count: 'exact', head: true }).eq('is_active', true),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('featured_projects').select('*', { count: 'exact', head: true }),
       ]);
       return {
-        productCount: productsRes.count || 0,
-        userCount: usersRes.count || 0,
-        projectCount: projectsRes.count || 0,
+        productCount: productsCount || 0,
+        userCount: usersCount || 0,
+        projectCount: projectsCount || 0,
       } as SiteStats;
     },
   });
 
-  // Fetch featured projects from database
+  // Fetch featured projects
   const { data: featuredProjects = [] } = useQuery({
     queryKey: ['featured-projects'],
     queryFn: async () => {
@@ -79,26 +79,29 @@ const Index = () => {
         .eq('is_featured', true)
         .order('display_order', { ascending: true })
         .limit(4);
+
       if (error) throw error;
       return data as FeaturedProject[];
     },
   });
 
-  // Fetch featured products from secure public view (excludes sensitive columns like template_link)
+  // Fetch featured products
   const { data: featuredProducts = [] } = useQuery({
     queryKey: ['featured-products'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('products_public')
+        .from('products')
         .select('*')
+        .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(4);
+
       if (error) throw error;
       return data;
     },
   });
 
-  // Fetch testimonials from database
+  // Fetch testimonials
   const { data: testimonials = [] } = useQuery({
     queryKey: ['testimonials'],
     queryFn: async () => {
@@ -107,6 +110,7 @@ const Index = () => {
         .select('*')
         .eq('is_active', true)
         .order('display_order', { ascending: true });
+
       if (error) throw error;
       return data as Testimonial[];
     },
@@ -116,36 +120,43 @@ const Index = () => {
   const addToCartMutation = useMutation({
     mutationFn: async (productId: string) => {
       if (!user) throw new Error('Please login to add items to cart');
-      const { data: existing } = await supabase
+
+      const { data: existingItem, error: fetchError } = await supabase
         .from('cart_items')
         .select('*')
         .eq('user_id', user.id)
         .eq('product_id', productId)
-        .maybeSingle();
+        .single();
 
-      if (existing) {
-        const { error } = await supabase
+      if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
+
+      if (existingItem) {
+        const { error: updateError } = await supabase
           .from('cart_items')
-          .update({ quantity: existing.quantity + 1 })
-          .eq('id', existing.id);
-        if (error) throw error;
+          .update({ quantity: (existingItem.quantity || 0) + 1 })
+          .eq('id', existingItem.id);
+
+        if (updateError) throw updateError;
       } else {
-        const { error } = await supabase.from('cart_items').insert({
-          user_id: user.id,
-          product_id: productId,
-          quantity: 1,
-        });
-        if (error) throw error;
+        const { error: insertError } = await supabase
+          .from('cart_items')
+          .insert({
+            user_id: user.id,
+            product_id: productId,
+            quantity: 1
+          });
+
+        if (insertError) throw insertError;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
       toast({ title: 'Added to cart!' });
     },
-    onError: () => {
-      toast({ 
-        title: 'Please login', 
-        description: 'You need to login to add items to cart',
+    onError: (error: Error) => {
+      toast({
+        title: error.message === 'Please login to add items to cart' ? 'Please login' : 'Error',
+        description: error.message,
         variant: 'destructive'
       });
     },
@@ -157,7 +168,7 @@ const Index = () => {
       <section className="relative min-h-[85vh] md:min-h-[90vh] flex flex-col justify-center overflow-hidden pt-16 md:pt-20">
         {/* Animated Background */}
         <div className="absolute inset-0">
-          <motion.div 
+          <motion.div
             initial={{ scale: 1.1, opacity: 0 }}
             animate={{ scale: 1, opacity: 0.6 }}
             transition={{ duration: 1.5, ease: "easeOut" }}
@@ -167,10 +178,10 @@ const Index = () => {
           {/* Gradient overlay that shows background but ensures text readability */}
           <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/80 to-background" />
         </div>
-        
+
         {/* Gradient Orbs - Subtle background effects */}
         <motion.div
-          animate={{ 
+          animate={{
             scale: [1, 1.2, 1],
             opacity: [0.1, 0.2, 0.1],
           }}
@@ -178,14 +189,14 @@ const Index = () => {
           className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-primary/20 blur-[100px]"
         />
         <motion.div
-          animate={{ 
+          animate={{
             scale: [1.1, 1, 1.1],
             opacity: [0.08, 0.15, 0.08],
           }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
           className="absolute bottom-1/4 -right-32 w-[500px] h-[500px] rounded-full bg-primary/15 blur-[120px]"
         />
-        
+
         {/* Main Hero Content */}
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-5xl mx-auto">
@@ -196,7 +207,7 @@ const Index = () => {
               transition={{ duration: 0.5 }}
               className="flex justify-center mb-6 md:mb-8"
             >
-              <motion.span 
+              <motion.span
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium"
                 whileHover={{ scale: 1.02 }}
               >
@@ -204,7 +215,7 @@ const Index = () => {
                 {getSetting('hero_badge', 'Welcome to Oflex Creative')}
               </motion.span>
             </motion.div>
-            
+
             {/* Main Title */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -219,7 +230,7 @@ const Index = () => {
                 </span>
               </h1>
             </motion.div>
-            
+
             {/* Description */}
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -229,7 +240,7 @@ const Index = () => {
             >
               {getSetting('hero_description', 'From AI prompts to stunning designs, we bring your creative visions to life. Explore our portfolio and discover premium digital products.')}
             </motion.p>
-            
+
             {/* CTA Buttons */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -273,7 +284,7 @@ const Index = () => {
                       <p className="text-xs sm:text-sm text-muted-foreground mt-1">Products</p>
                     </div>
                   </div>
-                  
+
                   <div className="group relative bg-card/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-border/50 hover:border-chart-2/30 transition-all duration-300">
                     <div className="flex flex-col items-center text-center">
                       <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-chart-2/10 flex items-center justify-center mb-2 sm:mb-3 group-hover:bg-chart-2/20 transition-colors">
@@ -283,7 +294,7 @@ const Index = () => {
                       <p className="text-xs sm:text-sm text-muted-foreground mt-1">Clients</p>
                     </div>
                   </div>
-                  
+
                   <div className="group relative bg-card/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-border/50 hover:border-chart-3/30 transition-all duration-300">
                     <div className="flex flex-col items-center text-center">
                       <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-chart-3/10 flex items-center justify-center mb-2 sm:mb-3 group-hover:bg-chart-3/20 transition-colors">
@@ -313,7 +324,7 @@ const Index = () => {
             title="Our Services"
             description="Comprehensive creative solutions tailored to your needs"
           />
-          
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {services.map((service, index) => (
               <motion.div
@@ -344,7 +355,7 @@ const Index = () => {
             title="Featured Projects"
             description="A glimpse into our creative portfolio"
           />
-          
+
           {/* Grid: 1 column on mobile (vertical), 3 columns on desktop (larger) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredProjects.map((project, index) => (
@@ -358,12 +369,15 @@ const Index = () => {
                 <Link to="/portfolio">
                   <GlassCard className="overflow-hidden p-0 group">
                     <div className="relative aspect-[4/3] overflow-hidden">
-                      <img
+                      <OptimizedImage
                         src={project.image_url}
                         alt={project.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        width={600}
+                        className="w-full h-full"
+                        imageClassName="object-cover transition-transform duration-500 group-hover:scale-110"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=300&h=300&fit=crop';
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=300&h=300&fit=crop';
                         }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -404,7 +418,7 @@ const Index = () => {
             title="Featured Products"
             description="Premium digital assets for your creative projects"
           />
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {featuredProducts.map((product, index) => (
               <motion.div
@@ -417,15 +431,14 @@ const Index = () => {
               >
                 <div className="bg-card rounded-2xl border border-border overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300">
                   <div className="relative aspect-square overflow-hidden">
-                    <img
+                    <OptimizedImage
                       src={product.image_url || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=400&fit=crop'}
                       alt={product.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=400&fit=crop';
-                      }}
+                      width={400}
+                      className="w-full h-full"
+                      imageClassName="object-cover transition-transform duration-500 group-hover:scale-110"
                     />
-                    
+
                     {/* Overlay on hover */}
                     <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end justify-center pb-6">
                       <motion.button
@@ -442,7 +455,7 @@ const Index = () => {
                       </motion.button>
                     </div>
                   </div>
-                  
+
                   <div className="p-5">
                     <p className="text-xs uppercase tracking-wider text-primary font-medium mb-2">
                       {product.category}
@@ -489,7 +502,7 @@ const Index = () => {
             title="What Clients Say"
             description="Hear from those who've experienced our work"
           />
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {testimonials.map((testimonial, index) => (
               <motion.div
@@ -509,10 +522,12 @@ const Index = () => {
                     "{testimonial.content}"
                   </p>
                   <div className="flex items-center gap-3">
-                    <img
+                    <OptimizedImage
                       src={testimonial.avatar_url || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop'}
                       alt={testimonial.name}
-                      className="w-12 h-12 rounded-full object-cover"
+                      width={100}
+                      className="w-12 h-12 rounded-full"
+                      imageClassName="object-cover"
                     />
                     <div>
                       <p className="font-semibold text-foreground">{testimonial.name}</p>
@@ -532,7 +547,7 @@ const Index = () => {
           <div className="absolute top-0 left-1/4 w-64 h-64 rounded-full bg-primary-foreground blur-3xl" />
           <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-primary-foreground blur-3xl" />
         </div>
-        
+
         <div className="container mx-auto px-4 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -544,7 +559,7 @@ const Index = () => {
               Ready to Start Your Project?
             </h2>
             <p className="text-primary-foreground/80 text-lg mb-8">
-              Let's collaborate and bring your creative vision to life. 
+              Let's collaborate and bring your creative vision to life.
               Get in touch today!
             </p>
             <Button size="lg" variant="secondary" asChild>

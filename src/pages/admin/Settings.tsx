@@ -66,6 +66,7 @@ const Settings = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-settings'] });
       queryClient.invalidateQueries({ queryKey: ['site-settings'] });
+      localStorage.removeItem('site_settings');
       toast({ title: 'Settings saved successfully!' });
     },
     onError: () => {
@@ -180,7 +181,7 @@ const Settings = () => {
                   <p className="text-sm text-muted-foreground">Configure payment methods</p>
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 rounded-lg border border-border">
                   <div>
@@ -268,7 +269,7 @@ const Settings = () => {
                   <p className="text-sm text-muted-foreground">Configure email notifications</p>
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 rounded-lg border border-border">
                   <div>
@@ -304,7 +305,7 @@ const Settings = () => {
                   <p className="text-sm text-muted-foreground">Manage security settings</p>
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 rounded-lg border border-border">
                   <div>

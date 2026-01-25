@@ -1,9 +1,17 @@
-import { useEffect, useState } from 'react';
-import { Search, Eye, ShoppingCart } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { Search, Eye, ShoppingCart, Loader2 } from 'lucide-react';
+import { Label } from '@/components/ui/label';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ProtectedRoute } from '@/components/admin/ProtectedRoute';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -12,12 +20,25 @@ import {
 } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import type { Tables } from '@/integrations/supabase/types';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminTable, ADMIN_TABLE_HEADER_CLASS } from '@/components/admin/AdminTable';
 
-type Order = Tables<'orders'>;
-type OrderItem = Tables<'order_items'>;
+interface Order {
+  id: string;
+  user_id: string;
+  total_amount: number;
+  status: string;
+  payment_provider: string | null;
+  created_at: string;
+}
+
+interface OrderItem {
+  id: string;
+  product_id: string;
+  product_title: string;
+  product_price: number;
+  quantity: number;
+}
 
 interface OrderWithItems extends Order {
   order_items?: OrderItem[];
@@ -28,33 +49,64 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<OrderWithItems | null>(null);
+  const [updating, setUpdating] = useState(false);
   const { toast } = useToast();
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('orders')
-      .select(`
-        *,
-        order_items (*)
-      `)
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (*)
+        `)
+        .order('created_at', { ascending: false });
 
-    if (error) {
+      if (error) throw error;
+      setOrders(data || []);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
       toast({
         title: 'Error',
         description: 'Failed to fetch orders',
         variant: 'destructive',
       });
-    } else {
-      setOrders(data || []);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+  }, [toast]);
+
+  const handleStatusChange = async (newStatus: string) => {
+    if (!selectedOrder) return;
+
+    setUpdating(true);
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: newStatus })
+        .eq('id', selectedOrder.id);
+
+      if (error) throw error;
+
+      toast({ title: 'Order status updated' });
+      setSelectedOrder({ ...selectedOrder, status: newStatus });
+      fetchOrders();
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update order status',
+        variant: 'destructive'
+      });
+    } finally {
+      setUpdating(false);
+    }
   };
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [fetchOrders]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -116,48 +168,48 @@ const Orders = () => {
             </div>
           ) : (
             <AdminTable minWidthClassName="min-w-[720px]">
-                <thead className={ADMIN_TABLE_HEADER_CLASS}>
-                    <tr className="border-b border-border bg-muted/50">
-                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Order ID</th>
-                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Date</th>
-                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Items</th>
-                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Total</th>
-                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Status</th>
-                      <th className="text-right p-4 font-medium text-foreground whitespace-nowrap">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredOrders.map((order) => (
-                      <tr key={order.id} className="border-b border-border last:border-0">
-                        <td className="p-4 whitespace-nowrap">
-                          <span className="font-mono text-sm text-foreground">
-                            {order.id.slice(0, 8)}...
-                          </span>
-                        </td>
-                        <td className="p-4 text-muted-foreground whitespace-nowrap">
-                          {new Date(order.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="p-4 text-muted-foreground whitespace-nowrap">
-                          {order.order_items?.length || 0} items
-                        </td>
-                        <td className="p-4 font-medium text-foreground whitespace-nowrap">
-                          ${Number(order.total_amount).toFixed(2)}
-                        </td>
-                        <td className="p-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-xs rounded-full capitalize ${getStatusColor(order.status)}`}>
-                            {order.status}
-                          </span>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)}>
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
+              <thead className={ADMIN_TABLE_HEADER_CLASS}>
+                <tr className="border-b border-border bg-muted/50">
+                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Order ID</th>
+                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Date</th>
+                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Items</th>
+                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Total</th>
+                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Status</th>
+                  <th className="text-right p-4 font-medium text-foreground whitespace-nowrap">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredOrders.map((order) => (
+                  <tr key={order.id} className="border-b border-border last:border-0">
+                    <td className="p-4 whitespace-nowrap">
+                      <span className="font-mono text-sm text-foreground">
+                        {order.id.slice(0, 8)}...
+                      </span>
+                    </td>
+                    <td className="p-4 text-muted-foreground whitespace-nowrap">
+                      {new Date(order.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="p-4 text-muted-foreground whitespace-nowrap">
+                      {order.order_items?.length || 0} items
+                    </td>
+                    <td className="p-4 font-medium text-foreground whitespace-nowrap">
+                      ${Number(order.total_amount).toFixed(2)}
+                    </td>
+                    <td className="p-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs rounded-full capitalize ${getStatusColor(order.status)}`}>
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)}>
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
             </AdminTable>
           )}
 
@@ -214,6 +266,29 @@ const Orders = () => {
                       </div>
                     </div>
                   )}
+                  <div className="pt-4 border-t border-border">
+                    <p className="text-sm font-medium mb-3">Manage Order</p>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <Label className="text-xs text-muted-foreground mb-1 block">Change Status</Label>
+                        <Select
+                          defaultValue={selectedOrder.status}
+                          onValueChange={handleStatusChange}
+                          disabled={updating}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Update status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {updating && <Loader2 className="w-5 h-5 animate-spin text-primary mt-5" />}
+                    </div>
+                  </div>
                 </div>
               )}
             </DialogContent>

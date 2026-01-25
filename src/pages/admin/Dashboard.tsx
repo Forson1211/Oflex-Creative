@@ -1,5 +1,16 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Package, ShoppingCart, DollarSign, Users, TrendingUp, Clock, CheckCircle2, XCircle, AlertCircle, RefreshCw, Bell } from 'lucide-react';
+import { Package, ShoppingCart, DollarSign, Users, TrendingUp, Clock, CheckCircle2, XCircle, AlertCircle, RefreshCw, Bell, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ProtectedRoute } from '@/components/admin/ProtectedRoute';
 import { AnalyticsCharts } from '@/components/admin/AnalyticsCharts';
@@ -26,6 +37,16 @@ interface RecentOrder {
   payment_provider: string | null;
 }
 
+interface AdminStatsResponse {
+  total_products: number;
+  total_orders: number;
+  total_revenue: number;
+  total_users: number;
+  completed_orders: number;
+  pending_orders: number;
+  recent_orders: RecentOrder[];
+}
+
 const Dashboard = () => {
   const [stats, setStats] = useState<Stats>({
     totalProducts: 0,
@@ -38,55 +59,49 @@ const Dashboard = () => {
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const { toast } = useToast();
 
   const fetchStats = useCallback(async () => {
     setLoading(true);
     try {
-      const [productsRes, ordersRes, usersRes, recentOrdersRes] = await Promise.all([
-        supabase.from('products').select('id', { count: 'exact', head: true }).eq('is_active', true),
-        supabase.from('orders').select('id, total_amount, status'),
-        supabase.from('profiles').select('id', { count: 'exact', head: true }),
-        supabase.from('orders').select('id, status, total_amount, created_at, payment_provider').order('created_at', { ascending: false }).limit(5),
-      ]);
+      const { data, error } = await supabase.rpc('get_admin_stats');
 
-      const orders = ordersRes.data || [];
-      const completedOrders = orders.filter(o => o.status === 'completed');
-      const pendingOrders = orders.filter(o => o.status === 'pending');
-      const totalRevenue = completedOrders.reduce(
-        (sum, order) => sum + Number(order.total_amount),
-        0
-      );
+      if (error) throw error;
 
-      setStats({
-        totalProducts: productsRes.count || 0,
-        totalOrders: orders.length,
-        totalRevenue,
-        totalUsers: usersRes.count || 0,
-        completedOrders: completedOrders.length,
-        pendingOrders: pendingOrders.length,
-      });
+      if (data) {
+        const statsData = data as unknown as AdminStatsResponse;
+        setStats({
+          totalProducts: statsData.total_products || 0,
+          totalOrders: statsData.total_orders || 0,
+          totalRevenue: Number(statsData.total_revenue) || 0,
+          totalUsers: statsData.total_users || 0,
+          completedOrders: statsData.completed_orders || 0,
+          pendingOrders: statsData.pending_orders || 0,
+        });
 
-      setRecentOrders(recentOrdersRes.data || []);
+        setRecentOrders(statsData.recent_orders || []);
+      }
     } catch (error) {
       console.error('Error fetching stats:', error);
+      toast({ title: 'Error fetching stats', variant: 'destructive' });
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [toast]);
 
   // Fetch stats on mount and when page becomes visible (for refresh)
   useEffect(() => {
     fetchStats();
-    
+
     // Re-fetch when page becomes visible (e.g., after tab switch or browser refresh)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         fetchStats();
       }
     };
-    
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [fetchStats]);
@@ -95,6 +110,27 @@ const Dashboard = () => {
     setRefreshing(true);
     fetchStats();
     toast({ title: 'Dashboard refreshed!' });
+  };
+
+  const handleResetStats = async () => {
+    setResetting(true);
+    try {
+      const { error } = await supabase.rpc('admin_reset_site_analytics');
+      if (error) throw error;
+
+      toast({ title: 'Analytics reset successfully' });
+      // Refresh the data on the screen
+      fetchStats();
+    } catch (error) {
+      console.error('Error resetting analytics:', error);
+      toast({
+        title: 'Reset failed',
+        description: error instanceof Error ? error.message : 'You may need to run the database migration script first.',
+        variant: 'destructive'
+      });
+    } finally {
+      setResetting(false);
+    }
   };
 
   const statCards = [
@@ -167,6 +203,40 @@ const Dashboard = () => {
                   <Bell className="w-4 h-4 text-primary animate-pulse" />
                   <span>Real-time updates</span>
                 </div>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      disabled={resetting || loading}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Reset Stats
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Reset Dashboard Statistics?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will clear all chart history, daily analytics data, AND delete all PENDING orders.
+                        Completed orders and user accounts will NOT be deleted.
+                        This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleResetStats}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        {resetting ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : null}
+                        Reset Analytics
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
                 <Button
                   variant="outline"
                   size="sm"

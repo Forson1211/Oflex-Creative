@@ -50,6 +50,8 @@ export function TrustedPartnersSection() {
             <img
               src={partner.logo_url}
               alt={partner.name}
+              loading="lazy"
+              decoding="async"
               className="h-8 w-auto max-w-[140px] object-contain dark:brightness-110"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = "none";

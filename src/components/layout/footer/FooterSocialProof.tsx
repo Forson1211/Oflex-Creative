@@ -24,8 +24,8 @@ function StatCard({ icon: Icon, value, label, delay = 0 }: StatCardProps) {
         <Icon className="w-5 h-5 text-primary" />
       </div>
       <div className="text-center">
-        <div className="text-2xl font-bold text-foreground">{value}</div>
-        <div className="text-xs text-muted-foreground">{label}</div>
+        <div className="text-2xl font-bold">{value}</div>
+        <div className="text-xs opacity-80">{label}</div>
       </div>
     </motion.div>
   );
@@ -89,7 +89,7 @@ export function FooterSocialProof() {
   }
 
   return (
-    <div className="border-t border-border bg-muted/30">
+    <div className="border-b border-white/10 bg-black/10">
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto">
           {testimonialsCount > 0 && (

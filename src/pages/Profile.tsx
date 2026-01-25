@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { User, Package, Settings, LogOut, ShoppingBag, Download, ExternalLink, Edit2, Camera, Shield, Trash2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useImageUpload } from '@/hooks/useImageUpload';
+import { ImageUpload } from '@/components/ui/ImageUpload';
 import { Layout } from '@/components/layout/Layout';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/button';
@@ -51,7 +52,7 @@ interface Profile {
 }
 
 const ProfilePage = () => {
-  const { user, signOut, isAdmin, isModerator, userRole } = useAuth();
+  const { user, signOut, isAdmin, isModerator, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -66,12 +67,6 @@ const ProfilePage = () => {
     onSuccess: (url) => setEditForm((prev) => ({ ...prev, avatar_url: url })),
   });
 
-  // Redirect if not logged in
-  if (!user) {
-    navigate('/auth');
-    return null;
-  }
-
   // Fetch user profile
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
@@ -82,7 +77,7 @@ const ProfilePage = () => {
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
-      
+
       if (error) throw error;
       return data as Profile | null;
     },
@@ -99,7 +94,7 @@ const ProfilePage = () => {
         .select('*, order_items(*)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
       return data;
     },
@@ -116,7 +111,7 @@ const ProfilePage = () => {
         .select('*')
         .eq('user_id', user.id)
         .order('purchased_at', { ascending: false });
-      
+
       if (error) throw error;
       return data as Purchase[];
     },
@@ -127,7 +122,7 @@ const ProfilePage = () => {
   const updateProfileMutation = useMutation({
     mutationFn: async (data: { full_name: string; avatar_url: string }) => {
       if (!user) throw new Error('Not authenticated');
-      
+
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -135,7 +130,7 @@ const ProfilePage = () => {
           avatar_url: data.avatar_url,
         })
         .eq('user_id', user.id);
-      
+
       if (error) throw error;
     },
     onSuccess: () => {
@@ -156,7 +151,7 @@ const ProfilePage = () => {
         .delete()
         .eq('id', purchaseId)
         .eq('user_id', user!.id);
-      
+
       if (error) throw error;
     },
     onSuccess: () => {
@@ -169,9 +164,14 @@ const ProfilePage = () => {
   });
 
   const handleSignOut = async () => {
-    await signOut();
-    toast({ title: 'Signed out successfully' });
-    navigate('/');
+    try {
+      await signOut();
+      toast({ title: 'Signed out successfully' });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      navigate('/auth');
+    }
   };
 
   const handleEditProfile = () => {
@@ -186,6 +186,20 @@ const ProfilePage = () => {
     updateProfileMutation.mutate(editForm);
   };
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Redirect if not authenticated
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
   const displayName = profile?.full_name || user.email?.split('@')[0] || 'User';
   const initials = displayName.slice(0, 2).toUpperCase();
 
@@ -194,44 +208,6 @@ const ProfilePage = () => {
     if (userRole === 'moderator') return <Badge className="bg-primary text-primary-foreground">Moderator</Badge>;
     return <Badge variant="secondary">User</Badge>;
   };
-
-  const bootstrapAdminMutation = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('bootstrap-admin', { body: {} });
-      if (error) throw error;
-      return data as { success: boolean; reason?: string; error?: string };
-    },
-    onSuccess: (data) => {
-      if (data?.success) {
-        toast({ title: 'Admin enabled', description: 'Your account is now an admin.' });
-        // Refresh role-dependent UI
-        setTimeout(() => window.location.reload(), 600);
-        return;
-      }
-
-      if (data?.reason === 'admin_exists') {
-        toast({
-          title: 'Admin already exists',
-          description: 'An admin account is already set up for this app.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      toast({
-        title: 'Could not enable admin',
-        description: data?.error || 'Please try again.',
-        variant: 'destructive',
-      });
-    },
-    onError: (err) => {
-      toast({
-        title: 'Could not enable admin',
-        description: err instanceof Error ? err.message : 'Please try again.',
-        variant: 'destructive',
-      });
-    },
-  });
 
   return (
     <Layout>
@@ -268,35 +244,6 @@ const ProfilePage = () => {
                 {getRoleBadge()}
               </div>
 
-              {!isAdmin && (
-                <div className="mt-4 flex justify-center">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={bootstrapAdminMutation.isPending}
-                      >
-                        Make me admin
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Make this account an admin?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This is a one-time setup button: it will only work if there are currently no admins.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => bootstrapAdminMutation.mutate()}>
-                          Continue
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              )}
             </div>
 
             {/* Quick Actions */}
@@ -306,13 +253,13 @@ const ProfilePage = () => {
                 <h3 className="font-semibold text-foreground mb-1">Browse Store</h3>
                 <p className="text-sm text-muted-foreground">Explore our digital products</p>
               </GlassCard>
-              
+
               <GlassCard className="p-6 text-center hover:border-primary transition-colors cursor-pointer" onClick={() => navigate('/contact')}>
                 <Settings className="w-10 h-10 mx-auto mb-3 text-primary" />
                 <h3 className="font-semibold text-foreground mb-1">Support</h3>
                 <p className="text-sm text-muted-foreground">Get help with your orders</p>
               </GlassCard>
-              
+
               {(isAdmin || isModerator) && (
                 <GlassCard className="p-6 text-center hover:border-primary transition-colors cursor-pointer" onClick={() => navigate('/admin')}>
                   <Shield className="w-10 h-10 mx-auto mb-3 text-primary" />
@@ -434,7 +381,8 @@ const ProfilePage = () => {
                       {orders.map((order) => (
                         <div
                           key={order.id}
-                          className="flex items-center justify-between p-4 rounded-lg border border-border bg-card"
+                          className="flex items-center justify-between p-4 rounded-lg border border-border bg-card cursor-pointer hover:border-primary transition-colors"
+                          onClick={() => navigate(`/order/${order.id}`)}
                         >
                           <div>
                             <p className="font-medium text-foreground">
@@ -513,16 +461,28 @@ const ProfilePage = () => {
                               />
                             </div>
                             <div className="space-y-2">
-                              <Label htmlFor="avatar_url">Avatar URL</Label>
-                              <Input
-                                id="avatar_url"
-                                value={editForm.avatar_url}
-                                onChange={(e) => setEditForm({ ...editForm, avatar_url: e.target.value })}
-                                placeholder="https://..."
-                              />
-                              <p className="text-xs text-muted-foreground">
-                                Enter a URL to your profile picture
-                              </p>
+                              <Label>Profile Picture</Label>
+                              <div className="flex flex-col gap-4">
+                                <div className="flex justify-center">
+                                  <ImageUpload
+                                    value={editForm.avatar_url}
+                                    onChange={(url) => setEditForm(prev => ({ ...prev, avatar_url: url }))}
+                                    onUpload={uploadImage}
+                                    isUploading={isUploading}
+                                    aspectRatio="square"
+                                    className="w-32 h-32"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label htmlFor="avatar_url" className="text-xs text-muted-foreground">Or enter URL manually</Label>
+                                  <Input
+                                    id="avatar_url"
+                                    value={editForm.avatar_url}
+                                    onChange={(e) => setEditForm({ ...editForm, avatar_url: e.target.value })}
+                                    placeholder="https://..."
+                                  />
+                                </div>
+                              </div>
                             </div>
                             <div className="flex justify-end gap-3 pt-4">
                               <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>

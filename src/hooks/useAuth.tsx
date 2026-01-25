@@ -1,140 +1,219 @@
+
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 type AppRole = 'admin' | 'moderator' | 'user';
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
   loading: boolean;
   isAdmin: boolean;
   isModerator: boolean;
   userRole: AppRole | null;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | { message: string; status?: number } | null }>;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null }>;
   resendSignupConfirmation: (email: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  resetPasswordForEmail: (email: string) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isModerator, setIsModerator] = useState(false);
   const [userRole, setUserRole] = useState<AppRole | null>(null);
+  const queryClient = useQueryClient();
 
   const checkUserRole = async (userId: string) => {
-    // Get all roles for user and select the highest one
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId);
-    
-    if (!error && data && data.length > 0) {
-      // Priority: admin > moderator > user
-      const roles = data.map(r => r.role);
-      let highestRole: AppRole = 'user';
-      
-      if (roles.includes('admin')) {
-        highestRole = 'admin';
-      } else if (roles.includes('moderator')) {
-        highestRole = 'moderator';
+    console.log("Checking role for user:", userId);
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error checking user role:", error);
+        setUserRole('user');
+        setIsAdmin(false);
+        setIsModerator(false);
+        return;
       }
-      
-      setUserRole(highestRole);
-      setIsAdmin(highestRole === 'admin');
-      setIsModerator(highestRole === 'admin' || highestRole === 'moderator');
-    } else {
+
+      if (data) {
+        const role = data.role as AppRole;
+        setUserRole(role);
+        setIsAdmin(role === 'admin');
+        setIsModerator(role === 'admin' || role === 'moderator');
+        console.log("Role found:", role);
+      } else {
+        console.log("No role found, defaulting to 'user'");
+        setUserRole('user');
+        setIsAdmin(false);
+        setIsModerator(false);
+      }
+    } catch (error) {
+      console.error("Critical error in checkUserRole:", error);
       setUserRole('user');
-      setIsAdmin(false);
-      setIsModerator(false);
     }
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
+    // Check active sessions and sets the user
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user ?? null);
-        setLoading(false);
-        
-        // Defer Supabase calls with setTimeout
         if (session?.user) {
-          setTimeout(() => {
-            checkUserRole(session.user.id);
-          }, 0);
-        } else {
-          setIsAdmin(false);
-          setIsModerator(false);
-          setUserRole(null);
+          await checkUserRole(session.user.id);
+        }
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initAuth();
+
+    // Listen for changes on auth state
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log(`Auth event: ${event}`);
+      setLoading(true); // Set loading while we verify new state
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+        await checkUserRole(session.user.id);
+      } else {
+        setIsAdmin(false);
+        setIsModerator(false);
+        setUserRole(null);
+        if (event === 'SIGNED_OUT') {
+          queryClient.clear();
         }
       }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
       setLoading(false);
-      
-      if (session?.user) {
-        checkUserRole(session.user.id);
-      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [queryClient]);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+    console.log("Attempting sign in for:", email);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.error("Sign in error:", error);
+        return { error };
+      }
+
+      // Successful auth, now check profile for security status
+      if (data.user) {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('account_locked, locked_reason, force_password_reset')
+          .eq('user_id', data.user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error("Error fetching profile during sign in:", profileError);
+        }
+
+        if (profile?.account_locked) {
+          console.warn("Account is locked for user:", data.user.id);
+          // Sign them out immediately locally and on server
+          await supabase.auth.signOut();
+          setUser(null);
+          return {
+            error: {
+              message: profile.locked_reason || "Your account has been locked. Please contact support.",
+              status: 403
+            }
+          };
+        }
+
+        // Track last login activity via RPC
+        try {
+          await supabase.rpc('update_last_login', {
+            p_user_id: data.user.id
+          });
+        } catch (rpcErr) {
+          console.warn("Could not log activity:", rpcErr);
+        }
+
+        console.log("Sign in successful for:", data.user?.email);
+      }
+
+      return { error: null };
+    } catch (err: unknown) {
+      const error = err as Error;
+      console.error("Unexpected error during sign in:", error);
+      return { error: { message: error.message || "An unexpected error occurred during sign in" } };
+    }
   };
 
   const signUp = async (email: string, password: string, fullName?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl,
         data: {
           full_name: fullName,
         },
       },
     });
+
+    if (!error && data.user) {
+      // Create profile record if needed, but usually handled by triggers
+    }
+
     return { error };
   };
 
   const resendSignupConfirmation = async (email: string) => {
-    const redirectUrl = `${window.location.origin}/`;
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email,
-      options: {
-        emailRedirectTo: redirectUrl,
-      },
     });
     return { error };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setIsAdmin(false);
-    setIsModerator(false);
-    setUserRole(null);
+    try {
+      await supabase.auth.signOut();
+      // Reset local state
+      setUser(null);
+      setIsAdmin(false);
+      setIsModerator(false);
+      setUserRole(null);
+      // Clear all queries from the cache
+      queryClient.clear();
+      // Clear site settings from localStorage
+      localStorage.removeItem('site_settings');
+    } catch (error) {
+      console.error("Error during sign out:", error);
+    }
+  };
+
+  const resetPasswordForEmail = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth?update_password=true`,
+    });
+    return { error };
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, isModerator, userRole, signIn, signUp, resendSignupConfirmation, signOut }}>
+    <AuthContext.Provider value={{ user, loading, isAdmin, isModerator, userRole, signIn, signUp, resendSignupConfirmation, signOut, resetPasswordForEmail }}>
       {children}
     </AuthContext.Provider>
   );

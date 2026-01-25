@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Package } from 'lucide-react';
 import { Plus, Pencil, Trash2, Search } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
@@ -50,13 +50,13 @@ const Products = () => {
     is_active: true,
   });
   const { toast } = useToast();
-  
+
   const { uploadImage, isUploading } = useImageUpload({
     bucket: 'product-images',
     onSuccess: (url) => setFormData((prev) => ({ ...prev, image_url: url })),
   });
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('products')
@@ -73,11 +73,11 @@ const Products = () => {
       setProducts(data || []);
     }
     setLoading(false);
-  };
+  }, [toast]);
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [fetchProducts]);
 
   const resetForm = () => {
     setFormData({
@@ -214,123 +214,123 @@ const Products = () => {
                 </DialogTrigger>
               }
             />
-              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingProduct ? 'Edit Product' : 'Add New Product'}
-                  </DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingProduct ? 'Edit Product' : 'Add New Product'}
+                </DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="title">Title</Label>
+                    <Label htmlFor="price">Price ($)</Label>
                     <Input
-                      id="title"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      id="price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.price}
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      rows={3}
-                    />
+                    <Label htmlFor="category">Category</Label>
+                    <Select
+                      value={formData.category}
+                      onValueChange={(value) => setFormData({ ...formData, category: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((cat) => (
+                          <SelectItem key={cat} value={cat}>
+                            {cat}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="price">Price ($)</Label>
-                      <Input
-                        id="price"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={formData.price}
-                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="category">Category</Label>
-                      <Select
-                        value={formData.category}
-                        onValueChange={(value) => setFormData({ ...formData, category: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map((cat) => (
-                            <SelectItem key={cat} value={cat}>
-                              {cat}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Product Image</Label>
-                    <ImageUpload
-                      value={formData.image_url}
-                      onChange={(url) => setFormData({ ...formData, image_url: url })}
-                      onUpload={uploadImage}
-                      isUploading={isUploading}
-                      aspectRatio="video"
-                    />
-                    <p className="text-xs text-muted-foreground">Or enter URL manually:</p>
-                    <Input
-                      type="url"
-                      value={formData.image_url}
-                      onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                      placeholder="https://..."
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="file_url">File URL (Download Link)</Label>
-                    <Input
-                      id="file_url"
-                      type="url"
-                      value={formData.file_url}
-                      onChange={(e) => setFormData({ ...formData, file_url: e.target.value })}
-                      placeholder="https://..."
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="template_link">Canva Template Link</Label>
-                    <Input
-                      id="template_link"
-                      type="url"
-                      value={formData.template_link}
-                      onChange={(e) => setFormData({ ...formData, template_link: e.target.value })}
-                      placeholder="https://www.canva.com/design/..."
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Canva template URL that buyers can access after purchase
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="is_active"
-                      checked={formData.is_active}
-                      onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                      className="rounded"
-                    />
-                    <Label htmlFor="is_active">Active (visible in store)</Label>
-                  </div>
-                  <div className="flex justify-end gap-3 pt-4">
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button type="submit">
-                      {editingProduct ? 'Update' : 'Create'} Product
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
+                </div>
+                <div className="space-y-2">
+                  <Label>Product Image</Label>
+                  <ImageUpload
+                    value={formData.image_url}
+                    onChange={(url) => setFormData({ ...formData, image_url: url })}
+                    onUpload={uploadImage}
+                    isUploading={isUploading}
+                    aspectRatio="video"
+                  />
+                  <p className="text-xs text-muted-foreground">Or enter URL manually:</p>
+                  <Input
+                    type="url"
+                    value={formData.image_url}
+                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                    placeholder="https://..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="file_url">File URL (Download Link)</Label>
+                  <Input
+                    id="file_url"
+                    type="url"
+                    value={formData.file_url}
+                    onChange={(e) => setFormData({ ...formData, file_url: e.target.value })}
+                    placeholder="https://..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="template_link">Canva Template Link</Label>
+                  <Input
+                    id="template_link"
+                    type="url"
+                    value={formData.template_link}
+                    onChange={(e) => setFormData({ ...formData, template_link: e.target.value })}
+                    placeholder="https://www.canva.com/design/..."
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Canva template URL that buyers can access after purchase
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="is_active"
+                    checked={formData.is_active}
+                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                    className="rounded"
+                  />
+                  <Label htmlFor="is_active">Active (visible in store)</Label>
+                </div>
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">
+                    {editingProduct ? 'Update' : 'Create'} Product
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
           </Dialog>
 
           <div className="relative">
@@ -365,71 +365,70 @@ const Products = () => {
             </div>
           ) : (
             <AdminTable minWidthClassName="min-w-[760px]">
-                <thead className={ADMIN_TABLE_HEADER_CLASS}>
-                    <tr className="border-b border-border bg-muted/50">
-                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Product</th>
-                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Category</th>
-                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Price</th>
-                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Status</th>
-                      <th className="text-right p-4 font-medium text-foreground whitespace-nowrap">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredProducts.map((product) => (
-                      <tr key={product.id} className="border-b border-border last:border-0">
-                        <td className="p-4">
-                          <div className="flex items-center gap-3 min-w-[18rem]">
-                            {product.image_url ? (
-                              <img
-                                src={product.image_url}
-                                alt={product.title}
-                                className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
-                                <Package className="w-6 h-6 text-muted-foreground" />
-                              </div>
-                            )}
-                            <div className="min-w-0">
-                              <p className="font-medium text-foreground truncate">{product.title}</p>
-                              <p className="text-sm text-muted-foreground line-clamp-1">
-                                {product.description}
-                              </p>
-                            </div>
+              <thead className={ADMIN_TABLE_HEADER_CLASS}>
+                <tr className="border-b border-border bg-muted/50">
+                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Product</th>
+                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Category</th>
+                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Price</th>
+                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Status</th>
+                  <th className="text-right p-4 font-medium text-foreground whitespace-nowrap">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredProducts.map((product) => (
+                  <tr key={product.id} className="border-b border-border last:border-0">
+                    <td className="p-4">
+                      <div className="flex items-center gap-3 min-w-[18rem]">
+                        {product.image_url ? (
+                          <img
+                            src={product.image_url}
+                            alt={product.title}
+                            className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Package className="w-6 h-6 text-muted-foreground" />
                           </div>
-                        </td>
-                        <td className="p-4 whitespace-nowrap">
-                          <span className="px-2 py-1 text-xs rounded-full bg-accent text-accent-foreground">
-                            {product.category}
-                          </span>
-                        </td>
-                        <td className="p-4 font-medium text-foreground whitespace-nowrap">
-                          ${Number(product.price).toFixed(2)}
-                        </td>
-                        <td className="p-4 whitespace-nowrap">
-                          <span
-                            className={`px-2 py-1 text-xs rounded-full ${
-                              product.is_active
-                                ? 'bg-chart-3/20 text-chart-3'
-                                : 'bg-muted text-muted-foreground'
-                            }`}
-                          >
-                            {product.is_active ? 'Active' : 'Inactive'}
-                          </span>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center justify-end gap-2 whitespace-nowrap">
-                            <Button variant="ghost" size="icon" onClick={() => handleEdit(product)}>
-                              <Pencil className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleDelete(product.id)}>
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
+                        )}
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground truncate">{product.title}</p>
+                          <p className="text-sm text-muted-foreground line-clamp-1">
+                            {product.description}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4 whitespace-nowrap">
+                      <span className="px-2 py-1 text-xs rounded-full bg-accent text-accent-foreground">
+                        {product.category}
+                      </span>
+                    </td>
+                    <td className="p-4 font-medium text-foreground whitespace-nowrap">
+                      ${Number(product.price).toFixed(2)}
+                    </td>
+                    <td className="p-4 whitespace-nowrap">
+                      <span
+                        className={`px-2 py-1 text-xs rounded-full ${product.is_active
+                          ? 'bg-chart-3/20 text-chart-3'
+                          : 'bg-muted text-muted-foreground'
+                          }`}
+                      >
+                        {product.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center justify-end gap-2 whitespace-nowrap">
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(product)}>
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(product.id)}>
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
             </AdminTable>
           )}
         </div>
