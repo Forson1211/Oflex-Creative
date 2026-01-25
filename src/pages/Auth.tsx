@@ -1,31 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, User, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useToast } from '@/hooks/use-toast';
-import { z } from 'zod';
 
-const emailSchema = z.string().email('Please enter a valid email address');
-const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
+const isGoogleUser = (u: { app_metadata?: any; identities?: Array<{ provider?: string }> } | null) => {
+  if (!u) return false;
+  const provider = u.app_metadata?.provider;
+  const identitiesProvider = u.identities?.[0]?.provider;
+  return provider === 'google' || identitiesProvider === 'google';
+};
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-  const [pendingEmailConfirmation, setPendingEmailConfirmation] = useState<string | null>(null);
-  const [showResend, setShowResend] = useState(false);
+  const [googleBlocked, setGoogleBlocked] = useState(false);
 
-  const { signIn, signUp, resendSignupConfirmation, user, loading } = useAuth();
+  const { signInWithGoogle, signOut, user, loading } = useAuth();
   const { getSetting, isLoading: settingsLoading } = useSiteSettings();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -35,109 +29,32 @@ const Auth = () => {
 
   useEffect(() => {
     if (!loading && user) {
+      if (!isGoogleUser(user)) {
+        setGoogleBlocked(true);
+        // Must be deferred to avoid auth deadlocks
+        setTimeout(() => {
+          void signOut();
+        }, 0);
+        return;
+      }
+
       navigate('/');
     }
   }, [user, loading, navigate]);
 
-  const validateForm = () => {
-    const newErrors: { email?: string; password?: string } = {};
-    
-    const emailResult = emailSchema.safeParse(email);
-    if (!emailResult.success) {
-      newErrors.email = emailResult.error.errors[0].message;
-    }
-    
-    const passwordResult = passwordSchema.safeParse(password);
-    if (!passwordResult.success) {
-      newErrors.password = passwordResult.error.errors[0].message;
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) return;
-    
+  const handleGoogle = async () => {
     setIsSubmitting(true);
-    
     try {
-      if (isLogin) {
-        const { error } = await signIn(email, password);
-        if (error) {
-          const msg = error.message || '';
-          const isUnconfirmed = /confirm|confirmed/i.test(msg);
-          if (isUnconfirmed) {
-            setShowResend(true);
-            setPendingEmailConfirmation(email);
-          }
-          toast({
-            title: 'Login Failed',
-            description: error.message === 'Invalid login credentials' 
-              ? 'Invalid email or password. Please try again.'
-              : error.message,
-            variant: 'destructive',
-          });
-        } else {
-          toast({
-            title: 'Welcome back!',
-            description: 'You have successfully logged in.',
-          });
-          navigate('/');
-        }
-      } else {
-        const { error } = await signUp(email, password, fullName);
-        if (error) {
-          if (error.message.includes('already registered')) {
-            toast({
-              title: 'Account Exists',
-              description: 'This email is already registered. Please login instead.',
-              variant: 'destructive',
-            });
-          } else {
-            toast({
-              title: 'Sign Up Failed',
-              description: error.message,
-              variant: 'destructive',
-            });
-          }
-        } else {
-          toast({
-            title: 'Check your email',
-            description: 'We sent you a verification link. Please verify your email to continue.',
-          });
-          setPendingEmailConfirmation(email);
-          setShowResend(true);
-          setIsLogin(true);
-          setPassword('');
-        }
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleResend = async () => {
-    if (!pendingEmailConfirmation) return;
-    setIsSubmitting(true);
-
-    try {
-      const { error } = await resendSignupConfirmation(pendingEmailConfirmation);
+      const { error } = await signInWithGoogle();
       if (error) {
         toast({
-          title: 'Could not resend email',
+          title: 'Google sign-in failed',
           description: error.message,
           variant: 'destructive',
         });
         return;
       }
-
-      toast({
-        title: 'Verification email sent',
-        description: 'Please check your inbox (and spam folder).',
-      });
+      // OAuth redirect happens automatically on success
     } finally {
       setIsSubmitting(false);
     }
@@ -179,127 +96,29 @@ const Auth = () => {
                 />
               )}
             </Link>
-            <h1 className="text-xl font-semibold text-foreground mt-4">
-              {isLogin ? 'Welcome Back' : 'Create Account'}
-            </h1>
+            <h1 className="text-xl font-semibold text-foreground mt-4">Continue with Google</h1>
             <p className="text-muted-foreground text-sm mt-2">
-              {isLogin ? 'Sign in to your account' : 'Sign up to get started'}
+              Only verified Google accounts can create an account or log in.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="fullName"
-                    type="text"
-                    placeholder="John Doe"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-            )}
+           <div className="space-y-4">
+             <p className="text-muted-foreground text-sm">
+               Sign in with a verified Google account to continue.
+             </p>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (errors.email) setErrors({ ...errors, email: undefined });
-                  }}
-                  className="pl-10"
-                />
-              </div>
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email}</p>
-              )}
-            </div>
+             {googleBlocked && (
+               <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm">
+                 <p className="text-foreground">
+                   Only Google accounts are allowed. Please sign in with Google.
+                 </p>
+               </div>
+             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    if (errors.password) setErrors({ ...errors, password: undefined });
-                  }}
-                  className="pl-10 pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="text-sm text-destructive">{errors.password}</p>
-              )}
-            </div>
-
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? 'Please wait...' : isLogin ? 'Sign In' : 'Create Account'}
-            </Button>
-
-            {showResend && pendingEmailConfirmation && (
-              <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm">
-                <p className="text-foreground">
-                  Email verification required. Please verify{' '}
-                  <span className="font-medium">{pendingEmailConfirmation}</span> to sign in.
-                </p>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <Button type="button" variant="secondary" onClick={handleResend} disabled={isSubmitting}>
-                    Resend verification email
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => {
-                      setShowResend(false);
-                      setPendingEmailConfirmation(null);
-                    }}
-                  >
-                    Dismiss
-                  </Button>
-                </div>
-              </div>
-            )}
-          </form>
-
-          <div className="mt-6 text-center text-sm">
-            <span className="text-muted-foreground">
-              {isLogin ? "Don't have an account? " : 'Already have an account? '}
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setErrors({});
-                setShowResend(false);
-                setPendingEmailConfirmation(null);
-              }}
-              className="text-primary hover:underline font-medium"
-            >
-              {isLogin ? 'Sign Up' : 'Sign In'}
-            </button>
-          </div>
+             <Button className="w-full" onClick={handleGoogle} disabled={isSubmitting}>
+               {isSubmitting ? 'Please wait...' : 'Continue with Google'}
+             </Button>
+           </div>
         </div>
       </motion.div>
     </div>
