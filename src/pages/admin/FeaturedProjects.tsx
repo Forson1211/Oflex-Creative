@@ -189,7 +189,7 @@ const FeaturedProjects = () => {
                 <p className="text-muted-foreground">No projects yet. Add your first project!</p>
               </div>
             ) : (
-              <Table>
+              <Table className="min-w-[820px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12"></TableHead>

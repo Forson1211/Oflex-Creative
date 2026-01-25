@@ -199,14 +199,14 @@ const Users = () => {
           ) : (
             <div className="bg-card border border-border rounded-xl overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full min-w-[760px]">
                   <thead>
                     <tr className="border-b border-border bg-muted/50">
-                      <th className="text-left p-4 font-medium text-foreground">User</th>
-                      <th className="text-left p-4 font-medium text-foreground">Email</th>
-                      <th className="text-left p-4 font-medium text-foreground">Role</th>
-                      <th className="text-left p-4 font-medium text-foreground">Joined</th>
-                      <th className="text-right p-4 font-medium text-foreground">Actions</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">User</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Email</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Role</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Joined</th>
+                      <th className="text-right p-4 font-medium text-foreground whitespace-nowrap">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -222,7 +222,7 @@ const Users = () => {
                             </p>
                           </div>
                         </td>
-                        <td className="p-4 text-muted-foreground">{user.email}</td>
+                        <td className="p-4 text-muted-foreground whitespace-nowrap">{user.email}</td>
                         <td className="p-4">
                           <span
                             className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full capitalize ${getRoleColor(user.role || 'user')}`}
@@ -231,7 +231,7 @@ const Users = () => {
                             {user.role}
                           </span>
                         </td>
-                        <td className="p-4 text-muted-foreground">
+                        <td className="p-4 text-muted-foreground whitespace-nowrap">
                           {new Date(user.created_at).toLocaleDateString()}
                         </td>
                         <td className="p-4 text-right">
