@@ -88,10 +88,10 @@ export const Footer = () => {
             )}
           </div>
 
-         {/* Main Footer Content */}
-         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+          {/* Main Footer Content */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
            {/* Left Column - Logo & Navigation Accordions */}
-           <div className="md:col-span-7 space-y-6">
+            <div className="lg:col-span-8 space-y-6">
              {/* Accordion Navigation - Mobile */}
              <div className="md:hidden">
                <Accordion type="single" collapsible className="w-full">
@@ -197,8 +197,8 @@ export const Footer = () => {
                </Accordion>
              </div>
 
-             {/* Desktop Navigation Grid */}
-             <div className="hidden md:grid md:grid-cols-4 gap-8">
+              {/* Desktop Navigation Grid */}
+              <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                <div>
                  <h4 className="font-semibold text-white mb-4">About</h4>
                  <div className="flex flex-col gap-3">
@@ -286,7 +286,7 @@ export const Footer = () => {
            </div>
 
            {/* Right Column - Featured Projects */}
-           <div className="md:col-span-5">
+            <div className="lg:col-span-4">
              <h4 className="font-semibold text-white mb-4">Featured Projects</h4>
              <div className="space-y-4">
                {featuredProjects.length > 0 ? (
