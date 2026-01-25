@@ -19,11 +19,12 @@ You have already done this! Your code is on `main`.
 2.  Find `oflex-creative-studio` in the Import Git Repository list.
 3.  Click **"Import"**.
 
-### 4. Configure Project
-*   **Framework Preset:** Vercel should auto-detect "Vite". If not, select it.
-*   **Root Directory:** `./` (Default)
-*   **Build Command:** `npm run build` (Default)
-*   **Output Directory:** `dist` (Default)
+### 4.  **Configure Project**:
+    *   **Framework Preset:** Vercel should auto-detect "Vite". If not, select it.
+    *   **Root Directory:** `./` (Default)
+    *   **Build Command:** `npm run build` (Default)
+    *   **Output Directory:** `dist` (Default)
+    *   _Note: I have included a `vercel.json` file to ensure page refreshes work correctly (fixes 404 errors)._
 
 ### 5. Setup Environment Variables (CRITICAL)
 Expand the **"Environment Variables"** section and add these EXACTLY as they appear in your local `.env` file:
