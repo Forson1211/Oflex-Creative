@@ -19,6 +19,7 @@
  } from "@/components/ui/accordion";
  import { FooterSocialProof } from "@/components/layout/footer/FooterSocialProof";
 import { FooterTrustBadges } from "@/components/layout/footer/FooterTrustBadges";
+import { TrustedPartnersSection } from "@/components/layout/footer/TrustedPartnersSection";
 
 export const Footer = () => {
   const { getSetting } = useSiteSettings();
@@ -320,6 +321,9 @@ export const Footer = () => {
            {/* Trust Badges */}
            <FooterTrustBadges />
            
+          {/* Trusted Partners */}
+          <TrustedPartnersSection />
+          
            {/* Copyright and Domain */}
            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
              <p className="text-sm text-white/60 text-center md:text-left">
