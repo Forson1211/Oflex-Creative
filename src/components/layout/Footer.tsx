@@ -56,39 +56,42 @@ export const Footer = () => {
       <FooterSocialProof />
 
        <div className="container mx-auto px-4 py-10">
-         {/* Social Icons Row */}
-         {socialLinks.length > 0 && (
-           <div className="flex items-center justify-center md:justify-start gap-3 mb-8">
-             {socialLinks.map((social) => (
-               <motion.a
-                 key={social.label}
-                 href={social.href}
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 whileHover={{ scale: 1.1 }}
-                 whileTap={{ scale: 0.95 }}
-                 className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-primary hover:text-primary-foreground transition-colors"
-                 aria-label={social.label}
-               >
-                 <social.icon className="w-4 h-4" />
-               </motion.a>
-             ))}
-           </div>
-         )}
+          {/* Logo and Social Icons Row */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mb-8">
+            {/* Logo */}
+            <Link to="/" className="inline-block">
+              <img
+                src={logoUrl || "/placeholder.svg"}
+                alt={siteName}
+                className="h-10 w-auto"
+              />
+            </Link>
+            
+            {/* Social Icons */}
+            {socialLinks.length > 0 && (
+              <div className="flex items-center gap-3">
+                {socialLinks.map((social) => (
+                  <motion.a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-primary hover:text-primary-foreground transition-colors"
+                    aria-label={social.label}
+                  >
+                    <social.icon className="w-4 h-4" />
+                  </motion.a>
+                ))}
+              </div>
+            )}
+          </div>
 
          {/* Main Footer Content */}
          <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
            {/* Left Column - Logo & Navigation Accordions */}
            <div className="md:col-span-7 space-y-6">
-             {/* Logo */}
-             <Link to="/" className="inline-block mb-4">
-               <img
-                 src={logoUrl || "/placeholder.svg"}
-                 alt={siteName}
-                 className="h-10 w-auto"
-               />
-             </Link>
-
              {/* Accordion Navigation - Mobile */}
              <div className="md:hidden">
                <Accordion type="single" collapsible className="w-full">
