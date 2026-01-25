@@ -13,6 +13,7 @@ interface AuthContextType {
   userRole: AppRole | null;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null }>;
+  signInWithGoogle: () => Promise<{ error: Error | null }>;
   resendSignupConfirmation: (email: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
@@ -90,6 +91,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const signInWithGoogle = async () => {
+    const redirectTo = `${window.location.origin}/`;
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo,
+      },
+    });
+
+    return { error };
+  };
+
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -134,7 +147,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, isModerator, userRole, signIn, signUp, resendSignupConfirmation, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isAdmin, isModerator, userRole, signIn, signUp, signInWithGoogle, resendSignupConfirmation, signOut }}>
       {children}
     </AuthContext.Provider>
   );
