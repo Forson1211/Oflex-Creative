@@ -45,7 +45,7 @@ export const Footer = () => {
     { icon: Linkedin, href: getSetting('social_linkedin', '#'), label: 'LinkedIn' },
     { icon: Facebook, href: getSetting('social_facebook', '#'), label: 'Facebook' },
      { icon: Youtube, href: getSetting('social_youtube', '#'), label: 'Youtube' },
-  ].filter(link => link.href && link.href !== '#');
+  ];
 
   const logoUrl = getSetting('logo_url', '');
    const siteName = getSetting('site_name', 'Oflex Creative');
