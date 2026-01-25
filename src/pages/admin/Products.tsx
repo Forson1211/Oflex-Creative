@@ -27,6 +27,7 @@ import { useImageUpload } from '@/hooks/useImageUpload';
 import { ImageUpload } from '@/components/ui/ImageUpload';
 import type { Tables } from '@/integrations/supabase/types';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { AdminTable, ADMIN_TABLE_HEADER_CLASS } from '@/components/admin/AdminTable';
 
 type Product = Tables<'products'>;
 
@@ -363,10 +364,8 @@ const Products = () => {
               <p className="text-muted-foreground">No products found</p>
             </div>
           ) : (
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[760px]">
-                  <thead>
+            <AdminTable minWidthClassName="min-w-[760px]">
+                <thead className={ADMIN_TABLE_HEADER_CLASS}>
                     <tr className="border-b border-border bg-muted/50">
                       <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Product</th>
                       <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Category</th>
@@ -431,9 +430,7 @@ const Products = () => {
                       </tr>
                     ))}
                   </tbody>
-                </table>
-              </div>
-            </div>
+            </AdminTable>
           )}
         </div>
       </AdminLayout>

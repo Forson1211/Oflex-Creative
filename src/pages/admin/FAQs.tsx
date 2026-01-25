@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/table';
 import { Plus, Edit, Trash2, Loader2, HelpCircle } from 'lucide-react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { AdminTableContainer, ADMIN_TABLE_HEADER_CLASS } from '@/components/admin/AdminTable';
 
 interface FAQ {
   id: string;
@@ -224,94 +225,56 @@ const FAQs = () => {
               <p className="text-muted-foreground mb-4">Add your first FAQ to help your visitors.</p>
             </div>
           ) : (
-            <>
-              {/* Mobile cards */}
-              <div className="grid grid-cols-1 gap-3 sm:hidden">
-                {faqs.map((faq) => (
-                  <div key={faq.id} className="bg-card border border-border rounded-xl p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="font-medium text-foreground line-clamp-2">{faq.question}</p>
-                        <p className="text-sm text-muted-foreground line-clamp-3 mt-2">{faq.answer}</p>
-                      </div>
-                      <span className="text-xs text-muted-foreground flex-shrink-0">#{faq.display_order}</span>
-                    </div>
-                    <div className="mt-3 flex items-center gap-2">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          faq.is_active ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
-                        }`}
-                      >
-                        {faq.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                      <div className="ml-auto flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={() => handleEdit(faq)}>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => deleteMutation.mutate(faq.id)}
+            <AdminTableContainer>
+              <Table className="min-w-[900px]">
+                <TableHeader className={ADMIN_TABLE_HEADER_CLASS}>
+                  <TableRow>
+                    <TableHead className="whitespace-nowrap">Order</TableHead>
+                    <TableHead className="w-[40%]">Question</TableHead>
+                    <TableHead className="w-[35%]">Answer</TableHead>
+                    <TableHead className="whitespace-nowrap">Status</TableHead>
+                    <TableHead className="text-right whitespace-nowrap">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {faqs.map((faq) => (
+                    <TableRow key={faq.id}>
+                      <TableCell className="whitespace-nowrap">{faq.display_order}</TableCell>
+                      <TableCell className="font-medium min-w-[18rem]">{faq.question}</TableCell>
+                      <TableCell className="text-muted-foreground min-w-[18rem]">
+                        <div className="line-clamp-2">{faq.answer}</div>
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            faq.is_active
+                              ? 'bg-primary/10 text-primary'
+                              : 'bg-muted text-muted-foreground'
+                          }`}
                         >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Desktop table */}
-              <div className="hidden sm:block bg-card border border-border rounded-xl overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Order</TableHead>
-                      <TableHead className="w-[40%]">Question</TableHead>
-                      <TableHead className="w-[35%]">Answer</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {faqs.map((faq) => (
-                      <TableRow key={faq.id}>
-                        <TableCell>{faq.display_order}</TableCell>
-                        <TableCell className="font-medium">{faq.question}</TableCell>
-                        <TableCell className="text-muted-foreground line-clamp-2">{faq.answer}</TableCell>
-                        <TableCell>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              faq.is_active
-                                ? 'bg-primary/10 text-primary'
-                                : 'bg-muted text-muted-foreground'
-                            }`}
+                          {faq.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right whitespace-nowrap">
+                        <div className="flex justify-end gap-2">
+                          <Button size="icon" variant="ghost" onClick={() => handleEdit(faq)}>
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => deleteMutation.mutate(faq.id)}
                           >
-                            {faq.is_active ? 'Active' : 'Inactive'}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button size="icon" variant="ghost" onClick={() => handleEdit(faq)}>
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => deleteMutation.mutate(faq.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </AdminTableContainer>
           )}
         </div>
       </AdminLayout>

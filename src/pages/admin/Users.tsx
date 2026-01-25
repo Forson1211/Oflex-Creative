@@ -21,6 +21,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
+import { AdminTable, ADMIN_TABLE_HEADER_CLASS } from '@/components/admin/AdminTable';
 
 type Profile = Tables<'profiles'>;
 type UserRole = Tables<'user_roles'>;
@@ -197,10 +198,8 @@ const Users = () => {
               <p className="text-muted-foreground">No users found</p>
             </div>
           ) : (
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[760px]">
-                  <thead>
+            <AdminTable minWidthClassName="min-w-[760px]">
+                  <thead className={ADMIN_TABLE_HEADER_CLASS}>
                     <tr className="border-b border-border bg-muted/50">
                       <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">User</th>
                       <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Email</th>
@@ -250,9 +249,7 @@ const Users = () => {
                       </tr>
                     ))}
                   </tbody>
-                </table>
-              </div>
-            </div>
+            </AdminTable>
           )}
 
           {/* Role Change Dialog */}

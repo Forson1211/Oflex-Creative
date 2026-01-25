@@ -26,6 +26,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Pencil, Trash2, Image as ImageIcon, GripVertical } from 'lucide-react';
+import { AdminTableContainer, ADMIN_TABLE_HEADER_CLASS } from '@/components/admin/AdminTable';
 
 interface HeroSlide {
   id: string;
@@ -185,7 +186,7 @@ const HeroSlides = () => {
             </Button>
           </div>
 
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <AdminTableContainer>
             {isLoading ? (
               <div className="p-6 space-y-4">
                 {[...Array(3)].map((_, i) => (
@@ -198,8 +199,8 @@ const HeroSlides = () => {
                 <p className="text-muted-foreground">No slides yet. Add your first slide!</p>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
+              <Table className="min-w-[760px]">
+                <TableHeader className={ADMIN_TABLE_HEADER_CLASS}>
                   <TableRow>
                     <TableHead className="w-12"></TableHead>
                     <TableHead>Image</TableHead>
@@ -255,7 +256,7 @@ const HeroSlides = () => {
                 </TableBody>
               </Table>
             )}
-          </div>
+          </AdminTableContainer>
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
