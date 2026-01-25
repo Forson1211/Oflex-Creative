@@ -53,16 +53,7 @@ const queryClient = new QueryClient({
 
 // Component to handle initial load vs navigation
 const AppContent = () => {
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [isReady, setIsReady] = useState(false);
-
   useEffect(() => {
-    // Mark ready ASAP
-    const timer = setTimeout(() => {
-      setIsReady(true);
-      setIsInitialLoad(false);
-    }, 40); // Standard human perception threshold for "instant"
-
     // Prefetch common routes in idle time to make navigation feel instant
     const prefetch = () => {
       void import("./pages/Store");
@@ -86,7 +77,6 @@ const AppContent = () => {
     }
 
     return () => {
-      clearTimeout(timer);
       if (typeof w.cancelIdleCallback === "function") {
         w.cancelIdleCallback(idleId);
       } else {
@@ -95,13 +85,8 @@ const AppContent = () => {
     };
   }, []);
 
-  // Show loading screen only on initial page load (refresh)
-  if (isInitialLoad && !isReady) {
-    return <LoadingScreen />;
-  }
-
   return (
-    <Suspense fallback={isInitialLoad ? <LoadingScreen /> : null}>
+    <Suspense fallback={<LoadingScreen />}>
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/about" element={<About />} />
