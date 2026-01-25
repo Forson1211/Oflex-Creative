@@ -58,7 +58,7 @@ export const StoreHeroSlider = () => {
   return (
     <section className="w-full">
       <div className="container mx-auto px-4">
-        <div className="mx-auto w-full max-w-6xl">
+        <div className="mx-auto w-full max-w-5xl">
           <div className="group relative h-[200px] sm:h-[280px] md:h-[350px] lg:h-[400px] overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
       <AnimatePresence mode="wait">
         <motion.div
