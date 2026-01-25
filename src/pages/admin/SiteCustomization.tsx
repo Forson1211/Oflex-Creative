@@ -127,12 +127,12 @@ const SiteCustomization = () => {
     <ProtectedRoute requireAdmin>
       <AdminLayout>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground">Site Customization</h1>
               <p className="text-muted-foreground">Customize your website content and appearance</p>
             </div>
-            <Button type="submit" disabled={saveMutation.isPending}>
+            <Button type="submit" disabled={saveMutation.isPending} className="sm:self-auto self-start">
               {saveMutation.isPending ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
@@ -143,12 +143,22 @@ const SiteCustomization = () => {
           </div>
 
           <Tabs defaultValue="general" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="general">General</TabsTrigger>
-              <TabsTrigger value="hero">Hero Section</TabsTrigger>
-              <TabsTrigger value="pages">Pages</TabsTrigger>
-              <TabsTrigger value="contact">Contact</TabsTrigger>
-              <TabsTrigger value="social">Social & Footer</TabsTrigger>
+            <TabsList className="flex w-full justify-start gap-1 overflow-x-auto sm:grid sm:grid-cols-5">
+              <TabsTrigger value="general" className="whitespace-nowrap">
+                General
+              </TabsTrigger>
+              <TabsTrigger value="hero" className="whitespace-nowrap">
+                Hero Section
+              </TabsTrigger>
+              <TabsTrigger value="pages" className="whitespace-nowrap">
+                Pages
+              </TabsTrigger>
+              <TabsTrigger value="contact" className="whitespace-nowrap">
+                Contact
+              </TabsTrigger>
+              <TabsTrigger value="social" className="whitespace-nowrap">
+                Social & Footer
+              </TabsTrigger>
             </TabsList>
 
             {/* General Settings Tab */}
@@ -248,7 +258,7 @@ const SiteCustomization = () => {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="primary_color">Primary Color</Label>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <Input
                         id="primary_color"
                         type="color"
@@ -686,7 +696,7 @@ const SiteCustomization = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="footer_color">Footer Background Color</Label>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <Input
                         id="footer_color"
                         type="color"
