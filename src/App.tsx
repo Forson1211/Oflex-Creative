@@ -37,7 +37,17 @@ const Settings = lazy(() => import("./pages/admin/Settings"));
 const ContactMessages = lazy(() => import("./pages/admin/ContactMessages"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Improves perceived speed when navigating back/forth
+      staleTime: 30_000,
+      gcTime: 5 * 60_000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 // Component to handle initial load vs navigation
 const AppContent = () => {
@@ -45,13 +55,42 @@ const AppContent = () => {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // Mark initial load complete after first render
+    // Mark ready ASAP; only keep the loading screen for a very short moment
     const timer = setTimeout(() => {
       setIsReady(true);
-      // Small delay before removing loading screen
-      setTimeout(() => setIsInitialLoad(false), 100);
-    }, 500);
-    return () => clearTimeout(timer);
+      setIsInitialLoad(false);
+    }, 120);
+
+    // Prefetch common routes in idle time to make navigation feel instant
+    const prefetch = () => {
+      void import("./pages/Store");
+      void import("./pages/Portfolio");
+      void import("./pages/Contact");
+      void import("./pages/About");
+      void import("./pages/Services");
+      void import("./pages/Profile");
+    };
+
+    const w = globalThis as unknown as {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout?: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+
+    let idleId: number;
+    if (typeof w.requestIdleCallback === "function") {
+      idleId = w.requestIdleCallback(prefetch, { timeout: 1500 });
+    } else {
+      idleId = setTimeout(prefetch, 600) as unknown as number;
+    }
+
+    return () => {
+      clearTimeout(timer);
+      if (typeof w.cancelIdleCallback === "function") {
+        w.cancelIdleCallback(idleId);
+      } else {
+        clearTimeout(idleId);
+      }
+    };
   }, []);
 
   // Show loading screen only on initial page load (refresh)
