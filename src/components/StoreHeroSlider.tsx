@@ -56,7 +56,10 @@ export const StoreHeroSlider = () => {
   const currentSlide = slides[currentIndex];
 
   return (
-    <section className="relative w-full h-[200px] sm:h-[280px] md:h-[350px] lg:h-[400px] overflow-hidden">
+    <section className="w-full">
+      <div className="container mx-auto px-4">
+        <div className="mx-auto w-full max-w-6xl">
+          <div className="group relative h-[200px] sm:h-[280px] md:h-[350px] lg:h-[400px] overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
       <AnimatePresence mode="wait">
         <motion.div
           key={currentIndex}
@@ -120,7 +123,7 @@ export const StoreHeroSlider = () => {
             onClick={prevSlide}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
-            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-background/20 backdrop-blur-md border border-border/30 flex items-center justify-center text-foreground hover:bg-background/40 transition-all duration-300"
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-background/20 backdrop-blur-md border border-border/30 flex items-center justify-center text-foreground hover:bg-background/40 transition-all duration-300 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
             aria-label="Previous slide"
           >
             <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
@@ -129,14 +132,14 @@ export const StoreHeroSlider = () => {
             onClick={nextSlide}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
-            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-background/20 backdrop-blur-md border border-border/30 flex items-center justify-center text-foreground hover:bg-background/40 transition-all duration-300"
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-background/20 backdrop-blur-md border border-border/30 flex items-center justify-center text-foreground hover:bg-background/40 transition-all duration-300 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
             aria-label="Next slide"
           >
             <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
           </motion.button>
 
           {/* Dots Indicator */}
-          <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3 py-2 rounded-full bg-background/20 backdrop-blur-md">
+          <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3 py-2 rounded-full bg-background/20 backdrop-blur-md border border-border/20">
             {slides.map((_, index) => (
               <motion.button
                 key={index}
@@ -154,6 +157,9 @@ export const StoreHeroSlider = () => {
           </div>
         </>
       )}
+          </div>
+        </div>
+      </div>
     </section>
   );
 };
