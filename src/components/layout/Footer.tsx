@@ -62,13 +62,13 @@ export const Footer = () => {
       <FooterNewsletter hasCustomColor={hasCustomColor} />
 
       <div className="container mx-auto px-4 py-12 md:py-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-x-8 gap-y-10">
           {/* Brand */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="sm:col-span-2 lg:col-span-2 text-center sm:text-left"
+            className="col-span-2 lg:col-span-2 text-left"
           >
             <Link to="/" className="flex items-center justify-center sm:justify-start gap-2 mb-4">
               <img 
@@ -81,7 +81,7 @@ export const Footer = () => {
               {getSetting('about_description', 'Crafting digital experiences that inspire. From AI prompts to stunning designs, we bring your creative visions to life.')}
             </p>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 justify-center sm:justify-start mb-6">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 justify-start mb-6">
               <Button asChild size="sm">
                 <Link to="/contact">Start a Project</Link>
               </Button>
@@ -93,7 +93,7 @@ export const Footer = () => {
             {getSetting('contact_email') && (
               <a
                 href={`mailto:${getSetting('contact_email')}`}
-                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 justify-center sm:justify-start"
+                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 justify-start"
               >
                 <span className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
                   <Mail className="w-4 h-4" />
@@ -102,7 +102,7 @@ export const Footer = () => {
               </a>
             )}
             {socialLinks.length > 0 && (
-              <div className="flex items-center gap-3 justify-center sm:justify-start">
+              <div className="flex items-center gap-3 justify-start">
                 {socialLinks.map((social) => (
                   <motion.a
                     key={social.label}
@@ -131,7 +131,7 @@ export const Footer = () => {
             <FooterLinksColumn
               title="Resources"
               links={resourceLinks}
-              align="center"
+              align="left"
               showExternalIcon
             />
           </motion.div>
@@ -143,7 +143,7 @@ export const Footer = () => {
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
           >
-            <FooterLinksColumn title="Quick Links" links={quickLinks} align="center" />
+            <FooterLinksColumn title="Quick Links" links={quickLinks} align="left" />
           </motion.div>
 
           {/* Services */}
@@ -153,7 +153,7 @@ export const Footer = () => {
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
           >
-            <FooterLinksColumn title="Services" links={serviceLinks} align="center" />
+            <FooterLinksColumn title="Services" links={serviceLinks} align="left" />
           </motion.div>
 
           {/* Contact Info */}
@@ -162,11 +162,11 @@ export const Footer = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3 }}
-            className="text-center sm:text-left"
+            className="col-span-2 sm:col-span-1 text-left"
           >
             <h4 className="font-semibold text-foreground mb-4">Contact</h4>
 
-            <div className="mb-4 flex justify-center sm:justify-start">
+            <div className="mb-4 flex justify-start">
               <div className="w-full max-w-sm">
                 <FooterContactCard
                   phone={getSetting('phone_number')}
@@ -177,7 +177,7 @@ export const Footer = () => {
 
             <ul className="space-y-3 text-sm text-muted-foreground">
               {getSetting('contact_email') && (
-                <li className="flex items-center gap-2 justify-center sm:justify-start">
+                <li className="flex items-center gap-2 justify-start">
                   <span className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
                     <Mail className="w-4 h-4" />
                   </span>
@@ -204,10 +204,10 @@ export const Footer = () => {
           transition={{ delay: 0.4 }}
           className="mt-8 pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4"
         >
-          <p className="text-muted-foreground text-sm text-center md:text-left">
+          <p className="text-muted-foreground text-sm text-left">
             {getSetting('footer_text', `© ${new Date().getFullYear()} Oflex Creative. All rights reserved.`)}
           </p>
-          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 text-sm text-muted-foreground">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-6">
               <Link to="#" className="hover:text-primary transition-colors">Privacy Policy</Link>
               <Link to="#" className="hover:text-primary transition-colors">Terms of Service</Link>

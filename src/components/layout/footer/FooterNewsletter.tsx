@@ -39,7 +39,7 @@ export function FooterNewsletter({ hasCustomColor }: Props) {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-2xl mx-auto text-center"
+          className="max-w-2xl mx-auto text-left sm:text-center"
         >
           <h4 className="text-xl md:text-2xl font-bold text-foreground mb-2">
             Subscribe to Our Newsletter
@@ -50,7 +50,7 @@ export function FooterNewsletter({ hasCustomColor }: Props) {
 
           <form
             onSubmit={handleSubscribe}
-            className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+            className="flex flex-col sm:flex-row gap-3 max-w-md sm:mx-auto"
           >
             <Input
               type="email"
