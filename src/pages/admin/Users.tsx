@@ -33,6 +33,7 @@ interface UserWithRole extends Profile {
 const Users = () => {
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
@@ -77,6 +78,30 @@ const Users = () => {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const handleSyncUsers = async () => {
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-users-profiles');
+      if (error) throw error;
+
+      toast({
+        title: 'Users synced',
+        description: `Synced ${data?.inserted_or_updated ?? 0} user profile(s).`,
+      });
+
+      await fetchUsers();
+    } catch (error) {
+      console.error('Error syncing users:', error);
+      toast({
+        title: 'Sync failed',
+        description: error instanceof Error ? error.message : 'Unable to sync users right now.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const handleRoleChange = async (newRole: string) => {
     if (!selectedUser) return;
@@ -162,9 +187,21 @@ const Users = () => {
     <ProtectedRoute requireAdmin>
       <AdminLayout>
         <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">User Management</h1>
-            <p className="text-muted-foreground">Manage users and assign roles (Admin, Moderator, User)</p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">User Management</h1>
+              <p className="text-muted-foreground">Manage users and assign roles (Admin, Moderator, User)</p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleSyncUsers}
+              disabled={syncing || loading}
+              className="self-start"
+            >
+              {syncing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Sync Users
+            </Button>
           </div>
 
           <div className="relative">
@@ -196,6 +233,12 @@ const Users = () => {
           ) : filteredUsers.length === 0 ? (
             <div className="bg-card border border-border rounded-xl p-12 text-center">
               <p className="text-muted-foreground">No users found</p>
+              <div className="mt-4">
+                <Button type="button" variant="outline" onClick={handleSyncUsers} disabled={syncing}>
+                  {syncing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                  Sync Users
+                </Button>
+              </div>
             </div>
           ) : (
             <AdminTable minWidthClassName="min-w-[760px]">
