@@ -70,7 +70,7 @@ export const Footer = () => {
             viewport={{ once: true }}
             className="sm:col-span-2 lg:col-span-2 text-center sm:text-left"
           >
-            <Link to="/" className="flex items-center gap-2 mb-4">
+            <Link to="/" className="flex items-center justify-center sm:justify-start gap-2 mb-4">
               <img 
                 src={logoUrl || '/placeholder.svg'} 
                 alt={getSetting('site_name', 'Oflex Creative')} 

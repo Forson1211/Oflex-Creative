@@ -195,6 +195,44 @@ const ProfilePage = () => {
     return <Badge variant="secondary">User</Badge>;
   };
 
+  const bootstrapAdminMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('bootstrap-admin', { body: {} });
+      if (error) throw error;
+      return data as { success: boolean; reason?: string; error?: string };
+    },
+    onSuccess: (data) => {
+      if (data?.success) {
+        toast({ title: 'Admin enabled', description: 'Your account is now an admin.' });
+        // Refresh role-dependent UI
+        setTimeout(() => window.location.reload(), 600);
+        return;
+      }
+
+      if (data?.reason === 'admin_exists') {
+        toast({
+          title: 'Admin already exists',
+          description: 'An admin account is already set up for this app.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      toast({
+        title: 'Could not enable admin',
+        description: data?.error || 'Please try again.',
+        variant: 'destructive',
+      });
+    },
+    onError: (err) => {
+      toast({
+        title: 'Could not enable admin',
+        description: err instanceof Error ? err.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
   return (
     <Layout>
       <section className="py-20 md:py-32">
@@ -229,6 +267,36 @@ const ProfilePage = () => {
               <div className="flex items-center justify-center gap-2">
                 {getRoleBadge()}
               </div>
+
+              {!isAdmin && (
+                <div className="mt-4 flex justify-center">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={bootstrapAdminMutation.isPending}
+                      >
+                        Make me admin
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Make this account an admin?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This is a one-time setup button: it will only work if there are currently no admins.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => bootstrapAdminMutation.mutate()}>
+                          Continue
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              )}
             </div>
 
             {/* Quick Actions */}
