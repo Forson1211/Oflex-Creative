@@ -6,6 +6,7 @@ import { ProtectedRoute } from '@/components/admin/ProtectedRoute';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { AdminTable, ADMIN_TABLE_HEADER_CLASS } from '@/components/admin/AdminTable';
 import {
   Dialog,
   DialogContent,
@@ -167,84 +168,99 @@ const ContactMessages = () => {
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {filteredMessages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`bg-card border rounded-xl p-4 transition-colors ${
-                    message.is_read
-                      ? 'border-border'
-                      : 'border-primary/50 bg-primary/5'
-                  }`}
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+            <AdminTable minWidthClassName="min-w-[900px]">
+              <thead className={ADMIN_TABLE_HEADER_CLASS}>
+                <tr className="border-b border-border bg-muted/50">
+                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Status</th>
+                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Name</th>
+                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Email</th>
+                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Subject</th>
+                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Preview</th>
+                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Received</th>
+                  <th className="text-right p-4 font-medium text-foreground whitespace-nowrap">Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredMessages.map((message) => (
+                  <tr
+                    key={message.id}
+                    className={`border-b border-border last:border-0 ${
+                      message.is_read ? '' : 'bg-primary/5'
+                    }`}
+                  >
+                    <td className="p-4 whitespace-nowrap">
+                      <span className="inline-flex items-center gap-2">
                         {message.is_read ? (
                           <CheckCircle className="w-4 h-4 text-muted-foreground" />
                         ) : (
                           <Clock className="w-4 h-4 text-primary" />
                         )}
-                        <h3 className="font-semibold text-foreground truncate">
-                          {message.name}
-                        </h3>
-                        {!message.is_read && (
-                          <Badge variant="default" className="text-xs">
-                            New
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {message.email}
-                      </p>
-                      <p className="text-sm font-medium text-foreground mt-2 truncate">
-                        {message.subject}
-                      </p>
-                      <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                        <Badge
+                          variant={message.is_read ? 'secondary' : 'default'}
+                          className="text-xs"
+                        >
+                          {message.is_read ? 'Read' : 'New'}
+                        </Badge>
+                      </span>
+                    </td>
+                    <td className="p-4 font-medium text-foreground whitespace-nowrap">
+                      {message.name}
+                    </td>
+                    <td className="p-4 text-muted-foreground whitespace-nowrap">
+                      {message.email}
+                    </td>
+                    <td className="p-4 text-foreground whitespace-nowrap">
+                      {message.subject}
+                    </td>
+                    <td className="p-4 text-muted-foreground">
+                      <span className="line-clamp-2 max-w-[36rem]">
                         {message.message}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {new Date(message.created_at).toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewMessage(message)}
-                      >
-                        <Eye className="w-4 h-4 mr-1" />
-                        View
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Message</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete this message from{' '}
-                              {message.name}? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => deleteMutation.mutate(message.id)}
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                      </span>
+                    </td>
+                    <td className="p-4 text-muted-foreground whitespace-nowrap">
+                      {new Date(message.created_at).toLocaleString()}
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center justify-end gap-2 whitespace-nowrap">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewMessage(message)}
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          View
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Message</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete this message from{' '}
+                                {message.name}? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteMutation.mutate(message.id)}
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </AdminTable>
           )}
         </div>
 
