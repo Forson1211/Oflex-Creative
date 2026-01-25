@@ -22,8 +22,10 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [pendingEmailConfirmation, setPendingEmailConfirmation] = useState<string | null>(null);
+  const [showResend, setShowResend] = useState(false);
 
-  const { signIn, signUp, user, loading } = useAuth();
+  const { signIn, signUp, resendSignupConfirmation, user, loading } = useAuth();
   const { getSetting, isLoading: settingsLoading } = useSiteSettings();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -65,6 +67,12 @@ const Auth = () => {
       if (isLogin) {
         const { error } = await signIn(email, password);
         if (error) {
+          const msg = error.message || '';
+          const isUnconfirmed = /confirm|confirmed/i.test(msg);
+          if (isUnconfirmed) {
+            setShowResend(true);
+            setPendingEmailConfirmation(email);
+          }
           toast({
             title: 'Login Failed',
             description: error.message === 'Invalid login credentials' 
@@ -97,12 +105,39 @@ const Auth = () => {
           }
         } else {
           toast({
-            title: 'Account Created!',
-            description: 'You have been logged in automatically.',
+            title: 'Check your email',
+            description: 'We sent you a verification link. Please verify your email to continue.',
           });
-          navigate('/');
+          setPendingEmailConfirmation(email);
+          setShowResend(true);
+          setIsLogin(true);
+          setPassword('');
         }
       }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!pendingEmailConfirmation) return;
+    setIsSubmitting(true);
+
+    try {
+      const { error } = await resendSignupConfirmation(pendingEmailConfirmation);
+      if (error) {
+        toast({
+          title: 'Could not resend email',
+          description: error.message,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      toast({
+        title: 'Verification email sent',
+        description: 'Please check your inbox (and spam folder).',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -222,6 +257,30 @@ const Auth = () => {
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? 'Please wait...' : isLogin ? 'Sign In' : 'Create Account'}
             </Button>
+
+            {showResend && pendingEmailConfirmation && (
+              <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm">
+                <p className="text-foreground">
+                  Email verification required. Please verify{' '}
+                  <span className="font-medium">{pendingEmailConfirmation}</span> to sign in.
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Button type="button" variant="secondary" onClick={handleResend} disabled={isSubmitting}>
+                    Resend verification email
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => {
+                      setShowResend(false);
+                      setPendingEmailConfirmation(null);
+                    }}
+                  >
+                    Dismiss
+                  </Button>
+                </div>
+              </div>
+            )}
           </form>
 
           <div className="mt-6 text-center text-sm">
@@ -233,6 +292,8 @@ const Auth = () => {
               onClick={() => {
                 setIsLogin(!isLogin);
                 setErrors({});
+                setShowResend(false);
+                setPendingEmailConfirmation(null);
               }}
               className="text-primary hover:underline font-medium"
             >
