@@ -40,8 +40,6 @@ const Settings = lazy(() => import("./pages/admin/Settings"));
 const ContactMessages = lazy(() => import("./pages/admin/ContactMessages"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-
-
 // Component to handle initial load vs navigation
 const AppContent = () => {
   useEffect(() => {
@@ -121,7 +119,12 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <BrowserRouter>
+            <BrowserRouter
+              future={{
+                v7_startTransition: true,
+                v7_relativeSplatPath: true,
+              }}
+            >
               <AppContent />
             </BrowserRouter>
           </TooltipProvider>

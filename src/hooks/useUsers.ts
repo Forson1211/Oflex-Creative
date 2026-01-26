@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
-import { getInitialData } from '@/lib/query-client';
+
 import { useAuth } from '@/hooks/useAuth';
 
 export type Profile = Tables<'profiles'>;
@@ -15,7 +15,7 @@ export interface UserWithRole extends Profile {
 export const USER_KEYS = {
     all: ['users'] as const,
     lists: () => [...USER_KEYS.all, 'list'] as const,
-    list: (filters: any) => [...USER_KEYS.lists(), filters] as const,
+    list: (filters: Record<string, string | number | boolean | null>) => [...USER_KEYS.lists(), filters] as const,
     profile: (userId: string) => ['profile', userId] as const,
     security: (userId: string) => ['user-security', userId] as const,
 };
@@ -55,7 +55,6 @@ export function useUserSecurityInfo(userId: string | undefined) {
             if (error) throw error;
             return data as unknown as UserSecurityInfo;
         },
-        initialData: () => getInitialData(USER_KEYS.security(userId || '')),
         staleTime: 1000 * 60 * 10, // 10 minutes
         enabled: isAuthReady && !!userId && !!currentUser,
     });
@@ -76,7 +75,6 @@ export function useProfile(userId: string | undefined) {
             if (error) throw error;
             return data as Profile | null;
         },
-        initialData: () => getInitialData(USER_KEYS.profile(userId || '')),
         staleTime: 1000 * 60 * 30, // 30 minutes (profile changes rarely)
         enabled: isAuthReady && !!userId,
     });
@@ -108,7 +106,6 @@ export function useUsers() {
                 role: roles?.find((r) => r.user_id === profile.user_id)?.role || 'user',
             })) as UserWithRole[];
         },
-        initialData: () => getInitialData('users'),
         staleTime: 1000 * 60 * 15, // 15 minutes
         enabled: isAuthReady && !!user,
     });
@@ -131,7 +128,7 @@ export function useUserMutations() {
             queryClient.invalidateQueries({ queryKey: USER_KEYS.all });
             toast({ title: 'Success', description: 'Profile updated successfully' });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: 'Error', description: error.message, variant: 'destructive' });
         }
     });
@@ -150,7 +147,7 @@ export function useUserMutations() {
             queryClient.invalidateQueries({ queryKey: USER_KEYS.security(variables.id) });
             toast({ title: 'Success', description: 'User account status updated' });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: 'Error', description: error.message, variant: 'destructive' });
         }
     });
@@ -167,7 +164,7 @@ export function useUserMutations() {
             queryClient.invalidateQueries({ queryKey: USER_KEYS.security(userId) });
             toast({ title: 'Success', description: 'Password reset forced for user' });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: 'Error', description: error.message, variant: 'destructive' });
         }
     });

@@ -36,23 +36,4 @@ persistQueryClient({
     hydrateOptions: {},
 });
 
-// Helper for manual hydration if needed (though persistQueryClient handles most cases)
-export const getInitialData = (key: string | readonly any[]) => {
-    try {
-        const cache = localStorage.getItem('OFLEX_STUDIO_CACHE');
-        if (!cache) return undefined;
-        const parsed = JSON.parse(cache);
 
-        // Find the specific query in the persisted state
-        const query = parsed.clientState.queries.find((q: any) => {
-            if (Array.isArray(key)) {
-                return JSON.stringify(q.queryKey) === JSON.stringify(key);
-            }
-            return q.queryKey[0] === key;
-        });
-
-        return query?.state?.data;
-    } catch (error) {
-        return undefined;
-    }
-};

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useTestimonials, useTestimonialMutations } from '@/hooks/useTestimonials';
+import { useTestimonials, useTestimonialMutations, type Testimonial } from '@/hooks/useTestimonials';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ProtectedRoute } from '@/components/admin/ProtectedRoute';
 import { Button } from '@/components/ui/button';
@@ -33,7 +33,7 @@ import {
 const Testimonials = () => {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingTestimonial, setEditingTestimonial] = useState<any | null>(null);
+  const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     role: '',
@@ -61,7 +61,7 @@ const Testimonials = () => {
     setIsDialogOpen(false);
   };
 
-  const handleEdit = (testimonial: any) => {
+  const handleEdit = (testimonial: Testimonial) => {
     setEditingTestimonial(testimonial);
     setFormData({
       name: testimonial.name,

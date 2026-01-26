@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useServices, useServiceMutations } from '@/hooks/useServices';
+import { useServices, useServiceMutations, type Service } from '@/hooks/useServices';
 import { Plus, Edit, Trash2, GripVertical, Sparkles, Palette, Layers, Code, Zap, Wand2, X } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ProtectedRoute } from '@/components/admin/ProtectedRoute';
@@ -45,7 +45,7 @@ const getIconComponent = (iconName: string) => {
 
 const Services = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingService, setEditingService] = useState<any | null>(null);
+  const [editingService, setEditingService] = useState<Service | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -68,7 +68,7 @@ const Services = () => {
     });
   };
 
-  const handleEdit = (service: any) => {
+  const handleEdit = (service: Service) => {
     setEditingService(service);
     setFormData({
       title: service.title,
@@ -84,7 +84,7 @@ const Services = () => {
     e.preventDefault();
     const dataWithOrder = {
       ...formData,
-      display_order: editingService?.display_order ?? (services.reduce((max: number, s: any) => Math.max(max, s.display_order || 0), 0) + 1)
+      display_order: editingService?.display_order ?? (services.reduce((max: number, s: Service) => Math.max(max, s.display_order || 0), 0) + 1)
     };
 
     if (editingService) {
@@ -302,7 +302,7 @@ const Services = () => {
                 <Button type="button" variant="outline" className="flex-1" onClick={() => setIsDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" className="flex-1" disabled={createMutation.isPending || updateMutation.isPending}>
+                <Button type="submit" className="flex-1" disabled={createService.isPending || updateService.isPending}>
                   {editingService ? 'Update' : 'Create'}
                 </Button>
               </div>
@@ -322,7 +322,7 @@ const Services = () => {
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
-                onClick={() => deleteId && deleteMutation.mutate(deleteId)}
+                onClick={() => deleteId && deleteService.mutate(deleteId)}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
                 Delete

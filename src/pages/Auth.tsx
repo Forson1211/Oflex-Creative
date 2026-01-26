@@ -26,7 +26,7 @@ const Auth = () => {
   const [pendingEmailConfirmation, setPendingEmailConfirmation] = useState<string | null>(null);
   const [showResend, setShowResend] = useState(false);
 
-  const { signIn, signUp, resendSignupConfirmation, resetPasswordForEmail, user, loading } = useAuth();
+  const { signIn, signUp, resendSignupConfirmation, resetPasswordForEmail, user, loading, isAuthReady } = useAuth();
   const { getSetting, isLoading: settingsLoading } = useSiteSettings();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -41,11 +41,12 @@ const Auth = () => {
     }
   }, [searchParams]);
 
+  // Optimized redirect - only redirect when auth is fully ready and user exists
   useEffect(() => {
-    if (!loading && user && !isUpdatePassword) {
-      navigate('/');
+    if (isAuthReady && !loading && user && !isUpdatePassword) {
+      navigate('/', { replace: true });
     }
-  }, [user, loading, navigate, isUpdatePassword]);
+  }, [user, loading, isAuthReady, navigate, isUpdatePassword]);
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
@@ -218,7 +219,9 @@ const Auth = () => {
     }
   };
 
-  if (loading) {
+  // Only show loading spinner when auth state is not yet determined
+  // Don't check 'loading' here as it can be true during sign-in attempts
+  if (!isAuthReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -243,16 +246,16 @@ const Auth = () => {
         <div className="bg-card border border-border rounded-2xl p-8 shadow-lg">
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center justify-center">
-              {settingsLoading ? (
-                <div className="h-10 w-24 bg-muted animate-pulse rounded" />
-              ) : (
-                <img
-                  src={logoUrl || '/placeholder.svg'}
-                  alt={siteName || 'Site logo'}
-                  className="h-10 w-auto"
-                  loading="eager"
-                />
-              )}
+              <img
+                src={logoUrl || '/placeholder.svg'}
+                alt={siteName || 'Site logo'}
+                className="h-10 w-auto"
+                loading="eager"
+                onError={(e) => {
+                  // Fallback if logo fails to load
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
             </Link>
             <h1 className="text-xl font-semibold text-foreground mt-4">
               {isUpdatePassword

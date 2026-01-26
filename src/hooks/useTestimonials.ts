@@ -30,8 +30,8 @@ export function useTestimonialMutations() {
     const { toast } = useToast();
 
     const createTestimonial = useMutation({
-        mutationFn: async (newTestimonial: any) => {
-            const { data, error } = await supabase.from('testimonials').insert([newTestimonial]).select().single();
+        mutationFn: async (newTestimonial: Partial<Testimonial>) => {
+            const { data, error } = await supabase.from('testimonials').insert([newTestimonial as any]).select().single();
             if (error) throw error;
             return data;
         },
@@ -39,21 +39,21 @@ export function useTestimonialMutations() {
             queryClient.invalidateQueries({ queryKey: TESTIMONIAL_KEYS.all });
             toast({ title: 'Success', description: 'Testimonial created' });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: 'Error', description: error.message, variant: 'destructive' });
         }
     });
 
     const updateTestimonial = useMutation({
-        mutationFn: async ({ id, data }: { id: string; data: any }) => {
-            const { error } = await supabase.from('testimonials').update(data).eq('id', id);
+        mutationFn: async ({ id, data }: { id: string; data: Partial<Testimonial> }) => {
+            const { error } = await supabase.from('testimonials').update(data as any).eq('id', id);
             if (error) throw error;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: TESTIMONIAL_KEYS.all });
             toast({ title: 'Success', description: 'Testimonial updated' });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: 'Error', description: error.message, variant: 'destructive' });
         }
     });
@@ -67,7 +67,7 @@ export function useTestimonialMutations() {
             queryClient.invalidateQueries({ queryKey: TESTIMONIAL_KEYS.all });
             toast({ title: 'Success', description: 'Testimonial deleted' });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: 'Error', description: error.message, variant: 'destructive' });
         }
     });

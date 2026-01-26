@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { getInitialData } from '@/lib/query-client';
+
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
@@ -36,7 +36,6 @@ export const StoreHeroSlider = () => {
       if (error) throw error;
       return data as StoreSlide[];
     },
-    initialData: () => getInitialData('store-slides'),
   });
 
   const nextSlide = useCallback(() => {
@@ -154,8 +153,8 @@ export const StoreHeroSlider = () => {
                       whileHover={{ scale: 1.2 }}
                       whileTap={{ scale: 0.9 }}
                       className={`h-2 rounded-full transition-all duration-300 ${index === currentIndex
-                          ? 'bg-primary w-6'
-                          : 'bg-foreground/40 w-2 hover:bg-foreground/60'
+                        ? 'bg-primary w-6'
+                        : 'bg-foreground/40 w-2 hover:bg-foreground/60'
                         }`}
                       aria-label={`Go to slide ${index + 1}`}
                     />

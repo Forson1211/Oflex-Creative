@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useOrders, useOrderMutations } from '@/hooks/useOrders';
+import { useOrders, useOrderMutations, type Order } from '@/hooks/useOrders';
 import { Search, Eye, ShoppingCart, Loader2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { AdminLayout } from '@/components/admin/AdminLayout';
@@ -27,7 +27,7 @@ import { AdminTable, ADMIN_TABLE_HEADER_CLASS } from '@/components/admin/AdminTa
 
 const Orders = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const { toast } = useToast();
 
   const { data: orders = [], isLoading: loading } = useOrders();

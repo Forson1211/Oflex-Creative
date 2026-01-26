@@ -3,15 +3,21 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
-import { getInitialData } from '@/lib/query-client';
+
 import { useAuth } from '@/hooks/useAuth';
 
-export type Order = Tables<'orders'>;
+export type OrderItem = Tables<'order_items'> & {
+    product?: Tables<'products'> | null;
+};
+
+export type Order = Tables<'orders'> & {
+    order_items: OrderItem[];
+};
 
 export const ORDER_KEYS = {
     all: ['orders'] as const,
     lists: () => [...ORDER_KEYS.all, 'list'] as const,
-    list: (filters: any) => [...ORDER_KEYS.lists(), filters] as const,
+    list: (filters: Record<string, string | number | boolean | null>) => [...ORDER_KEYS.lists(), filters] as const,
     details: () => [...ORDER_KEYS.all, 'detail'] as const,
     detail: (id: string) => [...ORDER_KEYS.details(), id] as const,
 };
@@ -41,11 +47,9 @@ export function useOrders(filters: { status?: string; userId?: string } = {}) {
             }
 
             const { data, error } = await query.order('created_at', { ascending: false });
-
             if (error) throw error;
-            return data;
+            return (data || []) as Order[];
         },
-        initialData: () => getInitialData(queryKey[0]),
         staleTime: 1000 * 60 * 5, // 5 minutes
         enabled: isAuthReady && !!user,
     });
@@ -70,7 +74,7 @@ export function useOrder(id: string | undefined) {
                 .single();
 
             if (error) throw error;
-            return data;
+            return data as Order;
         },
         enabled: isAuthReady && !!id,
     });
@@ -90,7 +94,7 @@ export function useOrderMutations() {
             queryClient.invalidateQueries({ queryKey: ORDER_KEYS.detail(variables.id) });
             toast({ title: 'Success', description: 'Order status updated' });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: 'Error', description: error.message, variant: 'destructive' });
         }
     });

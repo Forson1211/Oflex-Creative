@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,16 +23,42 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isAuthReady, setIsAuthReady] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isModerator, setIsModerator] = useState(false);
-  const [userRole, setUserRole] = useState<AppRole | null>(null);
+  // Initialize state from cache synchronously to prevent flickering and infinite loops
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const cached = localStorage.getItem('sb-rilcytjdydirhhtbrwet-auth-token');
+      return cached ? JSON.parse(cached)?.currentSession?.user || null : null;
+    } catch { return null; }
+  });
+
+  const [userRole, setUserRole] = useState<AppRole | null>(() =>
+    (localStorage.getItem('userRole') as AppRole) || null
+  );
+
+  const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('userRole') === 'admin');
+  const [isModerator, setIsModerator] = useState(() => {
+    const r = localStorage.getItem('userRole');
+    return r === 'admin' || r === 'moderator';
+  });
+
+  // Auth is ready immediately if we have cached data
+  const [isAuthReady, setIsAuthReady] = useState(() => {
+    const hasRole = !!localStorage.getItem('userRole');
+    const hasSession = !!localStorage.getItem('sb-rilcytjdydirhhtbrwet-auth-token');
+    return hasRole && hasSession;
+  });
+
+  // Non-blocking loading if cache exists
+  const [loading, setLoading] = useState(() => {
+    const hasRole = !!localStorage.getItem('userRole');
+    const hasSession = !!localStorage.getItem('sb-rilcytjdydirhhtbrwet-auth-token');
+    return !(hasRole && hasSession);
+  });
+
   const queryClient = useQueryClient();
 
+  // Helper to check role
   const checkUserRole = async (userId: string) => {
-    console.log("Checking role for user:", userId);
     try {
       const { data, error } = await supabase
         .from('user_roles')
@@ -54,9 +79,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUserRole(role);
         setIsAdmin(role === 'admin');
         setIsModerator(role === 'admin' || role === 'moderator');
-        console.log("Role found:", role);
+        localStorage.setItem('userRole', role);
       } else {
-        console.log("No role found, defaulting to 'user'");
         setUserRole('user');
         setIsAdmin(false);
         setIsModerator(false);
@@ -68,24 +92,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    // Check active sessions and sets the user
     let isMounted = true;
 
     const initAuth = async () => {
       try {
-        setLoading(true);
+        if (!isAuthReady) setLoading(true);
+
         const { data: { session } } = await supabase.auth.getSession();
 
-        if (!isMounted) return;
+        if (isMounted) {
+          if (session?.user) {
+            // Update user if session is fresh
+            if (user?.id !== session.user.id) {
+              setUser(session.user);
+            }
 
-        if (session?.user) {
-          setUser(session.user);
-          await checkUserRole(session.user.id);
-        } else {
-          setUser(null);
-          setIsAdmin(false);
-          setIsModerator(false);
-          setUserRole(null);
+            const cachedRole = localStorage.getItem('userRole');
+            if (!cachedRole) {
+              await checkUserRole(session.user.id);
+            }
+          } else {
+            // Only clear if we currently have a user (to prevent unnecessary updates)
+            if (user) {
+              setUser(null);
+              setIsAdmin(false);
+              setIsModerator(false);
+              setUserRole(null);
+              localStorage.removeItem('userRole');
+            }
+          }
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
@@ -99,16 +134,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     initAuth();
 
-    // Listen for changes on auth state
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log(`Auth event: ${event}`);
-
       if (!isMounted) return;
 
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         setUser(session?.user ?? null);
         if (session?.user) {
-          await checkUserRole(session.user.id);
+          const cachedRole = localStorage.getItem('userRole');
+          if (!cachedRole) {
+            await checkUserRole(session.user.id);
+          }
         }
         setLoading(false);
         setIsAuthReady(true);
@@ -117,13 +152,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsAdmin(false);
         setIsModerator(false);
         setUserRole(null);
+        localStorage.removeItem('userRole');
         queryClient.clear();
         setLoading(false);
         setIsAuthReady(true);
       } else if (event === 'USER_UPDATED') {
         setUser(session?.user ?? null);
-        setLoading(false);
-        setIsAuthReady(true);
       }
     });
 
@@ -146,7 +180,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { error };
       }
 
-      // Successful auth, now check profile for security status
       if (data.user) {
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
@@ -160,7 +193,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (profile?.account_locked) {
           console.warn("Account is locked for user:", data.user.id);
-          // Sign them out immediately locally and on server
           await supabase.auth.signOut();
           setUser(null);
           return {
@@ -171,7 +203,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           };
         }
 
-        // Track last login activity via RPC
         try {
           await supabase.rpc('update_last_login', {
             p_user_id: data.user.id
@@ -202,10 +233,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       },
     });
 
-    if (!error && data.user) {
-      // Create profile record if needed, but usually handled by triggers
-    }
-
     return { error };
   };
 
@@ -220,14 +247,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
-      // Reset local state
       setUser(null);
       setIsAdmin(false);
       setIsModerator(false);
       setUserRole(null);
-      // Clear all queries from the cache
+      localStorage.removeItem('userRole');
       queryClient.clear();
-      // Clear site settings from localStorage
       localStorage.removeItem('site_settings');
     } catch (error) {
       console.error("Error during sign out:", error);

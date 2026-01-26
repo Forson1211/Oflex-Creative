@@ -6,8 +6,9 @@ import path from "path";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: true, // Listen on all addresses (0.0.0.0)
+    host: '0.0.0.0', // Explicitly use IPv4 - prevents IPv6 DNS delays on Windows
     port: 3000,
+    strictPort: false, // Allow fallback to another port if 3000 is busy
   },
   plugins: [react()].filter(Boolean),
   resolve: {

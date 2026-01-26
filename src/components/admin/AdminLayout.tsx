@@ -72,10 +72,10 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
     [isOnOrdersPage, newOrderCount]
   );
 
+  // Optimize real-time orders by adding caching and reducing redundant updates
   useRealtimeOrders({
     enabled: shouldEnableRealtime,
     onNewOrder: () => {
-      // If they're already viewing orders, don't accumulate a badge
       setNewOrderCount((prev) => (isOnOrdersPage ? 0 : prev + 1));
     },
   });

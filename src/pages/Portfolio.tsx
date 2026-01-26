@@ -4,7 +4,7 @@ import { X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
-import { getInitialData } from '@/lib/query-client';
+import { useAuth } from '@/hooks/useAuth';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/button';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
@@ -25,8 +25,8 @@ const Portfolio = () => {
   const { getSetting } = useSiteSettings();
 
   // Fetch all featured projects from database
-  const { data: portfolioItems = [] } = useQuery<FeaturedProject[]>({
-    queryKey: ['portfolio-projects'],
+  const { data: portfolioItems = [], isLoading } = useQuery<FeaturedProject[]>({
+    queryKey: ['projects', 'portfolio'], // Aligned with PROJECT_KEYS for invalidation
     queryFn: async () => {
       const { data, error } = await supabase
         .from('featured_projects')
@@ -35,7 +35,7 @@ const Portfolio = () => {
       if (error) throw error;
       return data as FeaturedProject[];
     },
-    initialData: () => getInitialData('portfolio-projects') as FeaturedProject[] || [],
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   // Extract unique categories from projects
@@ -44,9 +44,11 @@ const Portfolio = () => {
     return ['All', ...Array.from(cats)];
   }, [portfolioItems]);
 
-  const filteredItems = activeCategory === 'All'
-    ? portfolioItems
-    : portfolioItems.filter(item => item.category === activeCategory);
+  const filteredItems = useMemo(() => {
+    return activeCategory === 'All'
+      ? portfolioItems
+      : portfolioItems.filter(item => item.category === activeCategory);
+  }, [activeCategory, portfolioItems]);
 
   return (
     <Layout>
@@ -81,64 +83,80 @@ const Portfolio = () => {
             transition={{ delay: 0.1 }}
             className="flex flex-wrap items-center justify-center gap-2 mb-12"
           >
-            {categories.map((category) => (
-              <Button
-                key={category}
-                variant={activeCategory === category ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setActiveCategory(category)}
-                className="rounded-full"
-              >
-                {category}
-              </Button>
-            ))}
+            {isLoading ? (
+              // Filter Loading State
+              [...Array(4)].map((_, i) => (
+                <div key={i} className="h-9 w-24 bg-muted animate-pulse rounded-full" />
+              ))
+            ) : (
+              categories.map((category) => (
+                <Button
+                  key={category}
+                  variant={activeCategory === category ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setActiveCategory(category)}
+                  className="rounded-full"
+                >
+                  {category}
+                </Button>
+              ))
+            )}
           </motion.div>
 
           {/* Gallery Grid */}
-          <motion.div
-            layout
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-          >
-            <AnimatePresence mode="popLayout">
-              {filteredItems.map((item, index) => (
-                <motion.div
-                  key={item.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <GlassCard
-                    className="overflow-hidden p-0 group cursor-pointer"
-                    onClick={() => setSelectedItem(item)}
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="aspect-[4/3] bg-muted animate-pulse rounded-2xl" />
+              ))}
+            </div>
+          ) : (
+            <motion.div
+              layout
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            >
+              <AnimatePresence mode="popLayout">
+                {filteredItems.map((item, index) => (
+                  <motion.div
+                    key={item.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ delay: index * 0.05 }}
                   >
-                    <div className="relative aspect-[4/3] overflow-hidden">
-                      <img
-                        src={item.image_url}
-                        alt={item.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600&h=400&fit=crop';
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                        <div>
-                          <span className="inline-block px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-xs font-medium mb-2">
-                            {item.category}
-                          </span>
-                          <h3 className="text-foreground font-semibold">{item.title}</h3>
-                          {item.description && (
-                            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{item.description}</p>
-                          )}
+                    <GlassCard
+                      className="overflow-hidden p-0 group cursor-pointer h-full"
+                      onClick={() => setSelectedItem(item)}
+                    >
+                      <div className="relative aspect-[4/3] overflow-hidden">
+                        <img
+                          src={item.image_url}
+                          alt={item.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          loading="lazy"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600&h=400&fit=crop';
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                          <div className="w-full">
+                            <span className="inline-block px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-xs font-medium mb-2">
+                              {item.category}
+                            </span>
+                            <h3 className="text-foreground font-semibold truncate">{item.title}</h3>
+                            {item.description && (
+                              <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{item.description}</p>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </GlassCard>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
+                    </GlassCard>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          )}
         </div>
       </section>
 

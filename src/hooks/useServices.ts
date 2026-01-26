@@ -30,8 +30,8 @@ export function useServiceMutations() {
     const { toast } = useToast();
 
     const createService = useMutation({
-        mutationFn: async (newService: any) => {
-            const { data, error } = await supabase.from('services').insert([newService]).select().single();
+        mutationFn: async (newService: Partial<Service>) => {
+            const { data, error } = await supabase.from('services').insert([newService as any]).select().single();
             if (error) throw error;
             return data;
         },
@@ -39,21 +39,21 @@ export function useServiceMutations() {
             queryClient.invalidateQueries({ queryKey: SERVICE_KEYS.all });
             toast({ title: 'Success', description: 'Service created' });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: 'Error', description: error.message, variant: 'destructive' });
         }
     });
 
     const updateService = useMutation({
-        mutationFn: async ({ id, data }: { id: string; data: any }) => {
-            const { error } = await supabase.from('services').update(data).eq('id', id);
+        mutationFn: async ({ id, data }: { id: string; data: Partial<Service> }) => {
+            const { error } = await supabase.from('services').update(data as any).eq('id', id);
             if (error) throw error;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: SERVICE_KEYS.all });
             toast({ title: 'Success', description: 'Service updated' });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: 'Error', description: error.message, variant: 'destructive' });
         }
     });
@@ -67,7 +67,7 @@ export function useServiceMutations() {
             queryClient.invalidateQueries({ queryKey: SERVICE_KEYS.all });
             toast({ title: 'Success', description: 'Service deleted' });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: 'Error', description: error.message, variant: 'destructive' });
         }
     });

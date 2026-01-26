@@ -38,7 +38,7 @@ interface FAQ {
 const FAQs = () => {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingFAQ, setEditingFAQ] = useState<any | null>(null);
+  const [editingFAQ, setEditingFAQ] = useState<FAQ | null>(null);
   const [formData, setFormData] = useState({
     question: '',
     answer: '',
@@ -60,7 +60,7 @@ const FAQs = () => {
     });
   };
 
-  const handleEdit = (faq: any) => {
+  const handleEdit = (faq: FAQ) => {
     setEditingFAQ(faq);
     setFormData({
       question: faq.question,

@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-import { getInitialData } from '@/lib/query-client';
+
 
 interface SiteSetting {
   setting_key: string;
@@ -46,7 +46,10 @@ export function useSiteSettings() {
       if (error) throw error;
       return data as SiteSetting[];
     },
-    initialData: () => getInitialData('site-settings'),
+    staleTime: 1000 * 60 * 10, // 10 minutes - settings don't change often
+    gcTime: 1000 * 60 * 30, // 30 minutes cache time
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnMount: false, // Don't refetch on component mount if data exists
   });
 
   const getSetting = useCallback((key: string, defaultValue: string = '') => {

@@ -9,7 +9,7 @@ export type Product = Tables<'products'>;
 export const PRODUCT_KEYS = {
     all: ['products'] as const,
     lists: () => [...PRODUCT_KEYS.all, 'list'] as const,
-    list: (filters: any) => [...PRODUCT_KEYS.lists(), filters] as const,
+    list: (filters: Record<string, string | number | boolean | undefined>) => [...PRODUCT_KEYS.lists(), filters] as const,
     details: () => [...PRODUCT_KEYS.all, 'detail'] as const,
     detail: (id: string) => [...PRODUCT_KEYS.details(), id] as const,
 };
@@ -79,8 +79,8 @@ export function useProductMutations() {
     const { toast } = useToast();
 
     const createProduct = useMutation({
-        mutationFn: async (newProduct: any) => {
-            const { data, error } = await supabase.from('products').insert([newProduct]).select().single();
+        mutationFn: async (newProduct: Partial<Product>) => {
+            const { data, error } = await supabase.from('products').insert([newProduct as any]).select().single();
             if (error) throw error;
             return data;
         },
@@ -88,14 +88,14 @@ export function useProductMutations() {
             queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.all });
             toast({ title: 'Success', description: 'Product created successfully' });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: 'Error', description: error.message, variant: 'destructive' });
         }
     });
 
     const updateProduct = useMutation({
-        mutationFn: async ({ id, data }: { id: string; data: any }) => {
-            const { error } = await supabase.from('products').update(data).eq('id', id);
+        mutationFn: async ({ id, data }: { id: string; data: Partial<Product> }) => {
+            const { error } = await supabase.from('products').update(data as any).eq('id', id);
             if (error) throw error;
         },
         onSuccess: (_, variables) => {
@@ -103,7 +103,7 @@ export function useProductMutations() {
             queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.detail(variables.id) });
             toast({ title: 'Success', description: 'Product updated successfully' });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: 'Error', description: error.message, variant: 'destructive' });
         }
     });
@@ -117,7 +117,7 @@ export function useProductMutations() {
             queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.all });
             toast({ title: 'Success', description: 'Product deleted successfully' });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: 'Error', description: error.message, variant: 'destructive' });
         }
     });

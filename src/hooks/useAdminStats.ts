@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { getInitialData } from '@/lib/query-client';
+
 import { useAuth } from '@/hooks/useAuth';
 
 export const ADMIN_STATS_KEYS = {
@@ -35,7 +35,6 @@ export function useAnalytics() {
             if (error) throw error;
             return data as AnalyticsData[];
         },
-        initialData: () => getInitialData('site-analytics'),
         staleTime: 1000 * 60 * 30, // 30 minutes
         gcTime: 1000 * 60 * 60 * 24, // 24 hours
         enabled: isAuthReady && !!user,
@@ -71,7 +70,6 @@ export function useAdminStats() {
             if (error) throw error;
             return data as unknown as AdminStatsResponse;
         },
-        initialData: () => getInitialData('admin-stats'),
         staleTime: 1000 * 60 * 10, // 10 minutes (keep dashboard data fresh but not noisy)
         gcTime: 1000 * 60 * 60 * 24, // 24 hours
         enabled: isAuthReady && !!user,
@@ -91,7 +89,7 @@ export function useAdminActions() {
             queryClient.invalidateQueries({ queryKey: ADMIN_STATS_KEYS.all });
             toast({ title: 'Analytics reset successfully' });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({
                 title: 'Reset failed',
                 description: error.message,

@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { getInitialData } from '@/lib/query-client';
+
 
 export interface Purchase {
     id: string;
@@ -35,7 +35,6 @@ export function usePurchases() {
             if (error) throw error;
             return data as Purchase[];
         },
-        initialData: () => getInitialData(PURCHASE_KEYS.user(user?.id || '')),
         staleTime: 1000 * 60 * 60, // 1 hour (purchases don't change often)
         enabled: isAuthReady && !!user,
     });
@@ -61,7 +60,7 @@ export function usePurchaseMutations() {
             queryClient.invalidateQueries({ queryKey: PURCHASE_KEYS.all });
             toast({ title: 'Success', description: 'Purchase removed from your account' });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: 'Error', description: error.message, variant: 'destructive' });
         }
     });

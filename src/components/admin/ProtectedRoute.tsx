@@ -1,5 +1,5 @@
-import { ReactNode, useEffect } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { ReactNode } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
 interface ProtectedRouteProps {
@@ -14,10 +14,9 @@ export const ProtectedRoute = ({
   requireModerator = false
 }: ProtectedRouteProps) => {
   const { user, loading, isAuthReady, isAdmin, isModerator } = useAuth();
-  const navigate = useNavigate();
 
-  // Wait for auth to be fully ready (session + role check)
-  if (!isAuthReady || loading) {
+  // Only show loading when auth state is not yet determined
+  if (!isAuthReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -25,7 +24,7 @@ export const ProtectedRoute = ({
     );
   }
 
-  // Declarative redirects
+  // Once auth is ready, perform checks
   if (!user) {
     return <Navigate to="/auth" replace />;
   }

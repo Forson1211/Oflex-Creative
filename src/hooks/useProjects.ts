@@ -9,7 +9,7 @@ export type Project = Tables<'featured_projects'>;
 export const PROJECT_KEYS = {
     all: ['projects'] as const,
     lists: () => [...PROJECT_KEYS.all, 'list'] as const,
-    list: (filters: any) => [...PROJECT_KEYS.lists(), filters] as const,
+    list: (filters: Record<string, string | number | boolean | undefined>) => [...PROJECT_KEYS.lists(), filters] as const,
     details: () => [...PROJECT_KEYS.all, 'detail'] as const,
     detail: (id: string) => [...PROJECT_KEYS.details(), id] as const,
 };
@@ -41,8 +41,8 @@ export function useProjectMutations() {
     const { toast } = useToast();
 
     const createProject = useMutation({
-        mutationFn: async (newProject: any) => {
-            const { data, error } = await supabase.from('featured_projects').insert([newProject]).select().single();
+        mutationFn: async (newProject: Partial<Project>) => {
+            const { data, error } = await supabase.from('featured_projects').insert([newProject as any]).select().single();
             if (error) throw error;
             return data;
         },
@@ -50,14 +50,14 @@ export function useProjectMutations() {
             queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.all });
             toast({ title: 'Success', description: 'Project created successfully' });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: 'Error', description: error.message, variant: 'destructive' });
         }
     });
 
     const updateProject = useMutation({
-        mutationFn: async ({ id, data }: { id: string; data: any }) => {
-            const { error } = await supabase.from('featured_projects').update(data).eq('id', id);
+        mutationFn: async ({ id, data }: { id: string; data: Partial<Project> }) => {
+            const { error } = await supabase.from('featured_projects').update(data as any).eq('id', id);
             if (error) throw error;
         },
         onSuccess: (_, variables) => {
@@ -65,7 +65,7 @@ export function useProjectMutations() {
             queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.detail(variables.id) });
             toast({ title: 'Success', description: 'Project updated successfully' });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: 'Error', description: error.message, variant: 'destructive' });
         }
     });
@@ -79,7 +79,7 @@ export function useProjectMutations() {
             queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.all });
             toast({ title: 'Success', description: 'Project deleted successfully' });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: 'Error', description: error.message, variant: 'destructive' });
         }
     });
