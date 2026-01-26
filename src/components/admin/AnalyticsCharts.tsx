@@ -81,6 +81,20 @@ export const AnalyticsCharts = () => {
     );
   }
 
+  if (rawData.length === 0) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+          <TrendingUp className="w-12 h-12 text-muted-foreground/30 mb-4" />
+          <h3 className="text-lg font-medium text-foreground">No Analytics Data Yet</h3>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            Site traffic and sales statistics will appear here once users start visiting and making purchases.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Stat Cards */}

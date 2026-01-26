@@ -35,7 +35,7 @@ export function useAnalytics() {
             if (error) throw error;
             return data as AnalyticsData[];
         },
-        staleTime: 1000 * 60 * 30, // 30 minutes
+        staleTime: 1000 * 60 * 5, // 5 minutes
         gcTime: 1000 * 60 * 60 * 24, // 24 hours
         enabled: isAuthReady && !!user,
     });
@@ -70,7 +70,7 @@ export function useAdminStats() {
             if (error) throw error;
             return data as unknown as AdminStatsResponse;
         },
-        staleTime: 1000 * 60 * 10, // 10 minutes (keep dashboard data fresh but not noisy)
+        staleTime: 1000 * 60, // 1 minute (keep dashboard data fresh but not noisy)
         gcTime: 1000 * 60 * 60 * 24, // 24 hours
         enabled: isAuthReady && !!user,
     });
@@ -87,6 +87,7 @@ export function useAdminActions() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ADMIN_STATS_KEYS.all });
+            queryClient.invalidateQueries({ queryKey: ADMIN_STATS_KEYS.analytics });
             toast({ title: 'Analytics reset successfully' });
         },
         onError: (error: Error) => {

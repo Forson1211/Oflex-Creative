@@ -800,6 +800,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      update_daily_analytics: {
+        Args: {
+          col_name: string
+          increment_val?: number
+        }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -813,6 +820,14 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      admin_sync_users: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          success: boolean
+          synced_profiles: number
+          synced_roles: number
+        }
       }
     }
     Enums: {

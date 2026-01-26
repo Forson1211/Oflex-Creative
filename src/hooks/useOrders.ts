@@ -99,5 +99,19 @@ export function useOrderMutations() {
         }
     });
 
-    return { updateOrderStatus };
+    const deleteOrder = useMutation({
+        mutationFn: async (id: string) => {
+            const { error } = await supabase.from('orders').delete().eq('id', id);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ORDER_KEYS.all });
+            toast({ title: 'Success', description: 'Order deleted successfully' });
+        },
+        onError: (error: Error) => {
+            toast({ title: 'Error', description: error.message, variant: 'destructive' });
+        }
+    });
+
+    return { updateOrderStatus, deleteOrder };
 }

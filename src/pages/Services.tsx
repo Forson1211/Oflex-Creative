@@ -20,7 +20,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 const Services = () => {
   const { getSetting } = useSiteSettings();
-  
+
   const { data: services = [], isLoading } = useQuery({
     queryKey: ['services'],
     queryFn: async () => {
@@ -45,12 +45,12 @@ const Services = () => {
             className="max-w-3xl mx-auto text-center"
           >
             <span className="inline-block px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-sm font-medium mb-6">
-              Our Services
+              {getSetting('services_badge', 'Our Services')}
             </span>
             <h1 className="font-sans text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight tracking-tight">
               {getSetting('services_title', 'Creative Solutions for Every Need')}
             </h1>
-            <p className="text-lg text-muted-foreground mb-8">
+            <p className="text-lg text-muted-foreground mb-8 text-center px-4 sm:px-0">
               {getSetting('services_description', 'From AI-powered prompts to complete brand identities, we offer comprehensive creative services to elevate your brand and streamline your workflow.')}
             </p>
           </motion.div>
@@ -101,11 +101,11 @@ const Services = () => {
       <section className="py-20 bg-card">
         <div className="container mx-auto px-4">
           <SectionHeading
-            badge="Our Process"
-            title="How We Work"
-            description="A streamlined approach to deliver exceptional results"
+            badge={getSetting('services_process_badge', 'Our Process')}
+            title={getSetting('services_process_title', 'How We Work')}
+            description={getSetting('services_process_description', 'A streamlined approach to deliver exceptional results')}
           />
-          
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
               { step: '01', title: 'Discovery', description: 'Understanding your needs, goals, and vision' },
@@ -142,10 +142,10 @@ const Services = () => {
             className="max-w-3xl mx-auto text-center"
           >
             <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-6">
-              Ready to Get Started?
+              {getSetting('services_cta_title', 'Ready to Get Started?')}
             </h2>
             <p className="text-muted-foreground text-lg mb-8">
-              Let's discuss your project and find the perfect solution for your needs.
+              {getSetting('services_cta_description', "Let's discuss your project and find the perfect solution for your needs.")}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" asChild>

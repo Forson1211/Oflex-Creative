@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -15,8 +15,20 @@ export const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const { user, loading, isAuthReady, isAdmin, isModerator } = useAuth();
 
+  // Timeout fallback
+  const [forceReady, setForceReady] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (!isAuthReady) {
+        setForceReady(true);
+      }
+    }, 3000);
+    return () => clearTimeout(timeout);
+  }, [isAuthReady]);
+
   // Only show loading when auth state is not yet determined
-  if (!isAuthReady) {
+  if (!isAuthReady && !forceReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>

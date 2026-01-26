@@ -41,30 +41,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return r === 'admin' || r === 'moderator';
   });
 
-  // Auth is ready immediately if we have cached data
+  // Auth is ready immediately if we have cached data OR if we definitely have no session
   const [isAuthReady, setIsAuthReady] = useState(() => {
-    const hasRole = !!localStorage.getItem('userRole');
     const hasSession = !!localStorage.getItem('sb-rilcytjdydirhhtbrwet-auth-token');
-    return hasRole && hasSession;
+    // If no session, we are ready (anonymous)
+    if (!hasSession) return true;
+
+    // If we have session, we need role to be ready
+    const hasRole = !!localStorage.getItem('userRole');
+    return hasRole;
   });
 
-  // Non-blocking loading if cache exists
+  // Non-blocking loading if cache exists or if we are anonymous
   const [loading, setLoading] = useState(() => {
-    const hasRole = !!localStorage.getItem('userRole');
     const hasSession = !!localStorage.getItem('sb-rilcytjdydirhhtbrwet-auth-token');
-    return !(hasRole && hasSession);
+    // If no session, not loading
+    if (!hasSession) return false;
+
+    // If session exists but no role, we are loading
+    const hasRole = !!localStorage.getItem('userRole');
+    return !hasRole;
   });
 
   const queryClient = useQueryClient();
 
-  // Helper to check role
+  // Helper to check role with timeout
   const checkUserRole = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      // Create a promise that rejects after 3 seconds
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Role check timeout')), 3000)
+      );
+
+      // Race the query against the timeout
+      const queryPromise = supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
         .maybeSingle();
+
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
 
       if (error) {
         console.error("Error checking user role:", error);
@@ -86,8 +102,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsModerator(false);
       }
     } catch (error) {
-      console.error("Critical error in checkUserRole:", error);
+      console.error("Critical error in checkUserRole (timeout/error):", error);
+      // Default to user role on error/timeout so app loads
       setUserRole('user');
+      setIsAdmin(false);
+      setIsModerator(false);
     }
   };
 
@@ -181,35 +200,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (data.user) {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('account_locked, locked_reason, force_password_reset')
-          .eq('user_id', data.user.id)
-          .maybeSingle();
-
-        if (profileError) {
-          console.error("Error fetching profile during sign in:", profileError);
-        }
-
-        if (profile?.account_locked) {
-          console.warn("Account is locked for user:", data.user.id);
-          await supabase.auth.signOut();
-          setUser(null);
-          return {
-            error: {
-              message: profile.locked_reason || "Your account has been locked. Please contact support.",
-              status: 403
-            }
-          };
-        }
-
+        // Check for lock status - with timeout to prevent hanging
         try {
-          await supabase.rpc('update_last_login', {
-            p_user_id: data.user.id
-          });
-        } catch (rpcErr) {
-          console.warn("Could not log activity:", rpcErr);
+          // Create a promise that rejects after 5 seconds
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Profile check timeout')), 5000)
+          );
+
+          // Race the profile query against the timeout
+          const profilePromise = supabase
+            .from('profiles')
+            .select('account_locked, locked_reason, force_password_reset')
+            .eq('user_id', data.user.id)
+            .maybeSingle();
+
+          const result = await Promise.race([profilePromise, timeoutPromise]) as any;
+          const { data: profile, error: profileError } = result || {};
+
+          if (profileError) {
+            console.error("Error fetching profile during sign in:", profileError);
+          } else if (profile?.account_locked) {
+            console.warn("Account is locked for user:", data.user.id);
+            await supabase.auth.signOut();
+            setUser(null);
+            return {
+              error: {
+                message: profile.locked_reason || "Your account has been locked. Please contact support.",
+                status: 403
+              }
+            };
+          }
+        } catch (err) {
+          console.warn("Skipping lock check due to timeout/error:", err);
         }
+
+        // Fire and forget - don't await this
+        supabase.rpc('update_last_login', {
+          p_user_id: data.user.id
+        }).then(({ error }) => {
+          if (error) console.warn("Could not log activity:", error);
+        });
 
         console.log("Sign in successful for:", data.user?.email);
       }

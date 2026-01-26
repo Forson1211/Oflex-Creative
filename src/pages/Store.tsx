@@ -14,9 +14,10 @@ import {
   LayoutList,
   Star,
   Heart,
-  Sparkles,
   Tag,
-  Package
+  Package,
+  Crown,
+  Palette
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -259,8 +260,8 @@ const Store = () => {
               transition={{ delay: 0.1 }}
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-primary text-sm font-medium mb-8 backdrop-blur-md shadow-xl"
             >
-              <Sparkles className="w-4 h-4 text-yellow-500" />
-              <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">Premium Digital Assets</span>
+              <Crown className="w-4 h-4 text-yellow-500" />
+              <span className="text-foreground/80">{getSetting('store_badge', 'Premium Digital Assets')}</span>
             </motion.div>
 
             <motion.h1
@@ -269,20 +270,16 @@ const Store = () => {
               transition={{ delay: 0.2 }}
               className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground mb-6"
             >
-              The Digital <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-orange-500 to-yellow-500 animate-gradient">
-                Creator Store
-              </span>
+              {getSetting('store_title', 'The Digital Creator Store')}
             </motion.h1>
 
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed"
+              className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed text-center px-4 sm:px-0"
             >
-              Elevate your projects with our curated collection of professional Canva templates,
-              social media kits, and premium design resources.
+              {getSetting('store_description', 'Elevate your projects with our curated collection of professional Canva templates, social media kits, and premium design resources.')}
             </motion.p>
 
             {/* Search and Cart - Glassmorphic Container */}
@@ -300,7 +297,7 @@ const Store = () => {
                     placeholder="Search for templates, assets..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 h-14 text-base placeholder:text-muted-foreground/70"
+                    className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 h-11 sm:h-12 text-sm sm:text-base placeholder:text-muted-foreground/70"
                   />
                 </div>
               </div>
@@ -695,7 +692,7 @@ const Store = () => {
             className="max-w-3xl mx-auto text-center"
           >
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-              <Sparkles className="w-4 h-4" />
+              <Palette className="w-4 h-4" />
               Custom Designs Available
             </div>
             <h2 className="font-sans text-3xl md:text-4xl font-bold text-foreground mb-6">

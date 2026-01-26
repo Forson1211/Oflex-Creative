@@ -56,12 +56,12 @@ const About = () => {
               transition={{ duration: 0.6 }}
             >
               <span className="inline-block px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-sm font-medium mb-6">
-                About Us
+                {getSetting('about_badge', 'About Us')}
               </span>
               <h1 className="font-sans text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight tracking-tight">
                 {getSetting('about_title', 'Crafting Digital Excellence')}
               </h1>
-              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+              <p className="text-lg text-muted-foreground mb-8 leading-relaxed text-center px-4 sm:px-0">
                 {getSetting('about_description', 'Oflex Creative is a digital design studio specializing in creating premium visual experiences. From AI-powered prompts to complete brand identities, we bring creative visions to life with precision and artistry.')}
               </p>
               <Button size="lg" asChild>
@@ -71,7 +71,7 @@ const About = () => {
                 </Link>
               </Button>
             </motion.div>
-            
+
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
@@ -113,10 +113,10 @@ const About = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <SectionHeading
-              badge="Our Story"
+              badge={getSetting('about_story_badge', 'Our Story')}
               title={getSetting('about_story_title', 'The Journey So Far')}
             />
-            
+
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -132,13 +132,13 @@ const About = () => {
               ) : (
                 <>
                   <p className="text-muted-foreground leading-relaxed mb-6">
-                    What started as a passion for digital design has evolved into a full-service 
-                    creative studio. Oflex Creative was born from the belief that great design 
+                    What started as a passion for digital design has evolved into a full-service
+                    creative studio. Oflex Creative was born from the belief that great design
                     should be accessible to everyone, from startups to established brands.
                   </p>
                   <p className="text-muted-foreground leading-relaxed">
-                    Today, we combine traditional design principles with cutting-edge AI technology 
-                    to deliver solutions that are both beautiful and effective. Our digital products 
+                    Today, we combine traditional design principles with cutting-edge AI technology
+                    to deliver solutions that are both beautiful and effective. Our digital products
                     have helped countless creators streamline their workflows and achieve stunning results.
                   </p>
                 </>
@@ -152,11 +152,11 @@ const About = () => {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <SectionHeading
-            badge="What Drives Us"
-            title="Our Core Values"
-            description="The principles that guide our creative process"
+            badge={getSetting('about_values_badge', 'What Drives Us')}
+            title={getSetting('about_values_title', 'Our Core Values')}
+            description={getSetting('about_values_description', 'The principles that guide our creative process')}
           />
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {values.map((value, index) => (
               <motion.div
@@ -188,11 +188,11 @@ const About = () => {
         <section className="py-20 bg-card">
           <div className="container mx-auto px-4">
             <SectionHeading
-              badge="Our Team"
-              title="Meet the Team"
-              description="The creative minds behind our work"
+              badge={getSetting('about_team_badge', 'Our Team')}
+              title={getSetting('about_team_title', 'Meet the Team')}
+              description={getSetting('about_team_description', 'The creative minds behind our work')}
             />
-            
+
             <div className={`grid gap-8 ${teamMembers.length === 1 ? 'max-w-md mx-auto' : teamMembers.length === 2 ? 'grid-cols-1 md:grid-cols-2 max-w-3xl mx-auto' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
               {teamMembers.map((member, index) => (
                 <motion.div
@@ -234,19 +234,19 @@ const About = () => {
             className="max-w-3xl mx-auto text-center"
           >
             <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-6">
-              Ready to Create Something Amazing?
+              {getSetting('about_cta_title', 'Ready to Create Something Amazing?')}
             </h2>
             <p className="text-muted-foreground text-lg mb-8">
-              Let's collaborate and bring your vision to life.
+              {getSetting('about_cta_description', "Let's collaborate and bring your vision to life.")}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" asChild>
+              <Button size="lg" className="w-56 sm:w-auto" asChild>
                 <Link to="/contact">
                   Get In Touch
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild>
+              <Button size="lg" variant="outline" className="w-56 sm:w-auto" asChild>
                 <Link to="/portfolio">View Our Work</Link>
               </Button>
             </div>

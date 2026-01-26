@@ -44,20 +44,20 @@ const Users = () => {
   const handleSyncUsers = async () => {
     setSyncing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('sync-users-profiles');
+      const { data, error } = await supabase.rpc('admin_sync_users');
       if (error) throw error;
 
       toast({
         title: 'Users synced',
-        description: `Synced ${data?.inserted_or_updated ?? 0} user profile(s).`,
+        description: `Synced ${data?.synced_profiles ?? 0} profiles and ${data?.synced_roles ?? 0} roles.`,
       });
 
       await fetchUsers();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error syncing users:', error);
       toast({
         title: 'Sync failed',
-        description: error instanceof Error ? error.message : 'Unable to sync users right now.',
+        description: error.message || error.details || 'Unable to sync users right now.',
         variant: 'destructive',
       });
     } finally {

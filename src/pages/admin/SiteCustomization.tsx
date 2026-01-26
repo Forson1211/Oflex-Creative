@@ -148,12 +148,15 @@ const SiteCustomization = () => {
           </div>
 
           <Tabs defaultValue="general" className="space-y-6">
-            <TabsList className="flex w-full justify-start gap-1 overflow-x-auto sm:grid sm:grid-cols-5">
+            <TabsList className="flex w-full justify-start gap-1 overflow-x-auto sm:grid sm:grid-cols-6">
               <TabsTrigger value="general" className="whitespace-nowrap">
                 General
               </TabsTrigger>
               <TabsTrigger value="hero" className="whitespace-nowrap">
                 Hero Section
+              </TabsTrigger>
+              <TabsTrigger value="homepage" className="whitespace-nowrap">
+                Homepage
               </TabsTrigger>
               <TabsTrigger value="pages" className="whitespace-nowrap">
                 Pages
@@ -326,6 +329,57 @@ const SiteCustomization = () => {
                       placeholder="From AI prompts to stunning designs..."
                     />
                   </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border">
+                    <div className="space-y-2">
+                      <Label htmlFor="hero_button1_text">Primary Button Text</Label>
+                      <Input
+                        id="hero_button1_text"
+                        value={settings.hero_button1_text || ''}
+                        onChange={(e) => updateSetting('hero_button1_text', e.target.value)}
+                        placeholder="View Portfolio"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="hero_button2_text">Secondary Button Text</Label>
+                      <Input
+                        id="hero_button2_text"
+                        value={settings.hero_button2_text || ''}
+                        onChange={(e) => updateSetting('hero_button2_text', e.target.value)}
+                        placeholder="Visit Store"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border">
+                    <div className="space-y-2">
+                      <Label htmlFor="hero_stat1_label">Stat 1 Label</Label>
+                      <Input
+                        id="hero_stat1_label"
+                        value={settings.hero_stat1_label || ''}
+                        onChange={(e) => updateSetting('hero_stat1_label', e.target.value)}
+                        placeholder="Digital Products Available"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="hero_stat2_label">Stat 2 Label</Label>
+                      <Input
+                        id="hero_stat2_label"
+                        value={settings.hero_stat2_label || ''}
+                        onChange={(e) => updateSetting('hero_stat2_label', e.target.value)}
+                        placeholder="Happy Clients"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="hero_stat3_label">Stat 3 Label</Label>
+                      <Input
+                        id="hero_stat3_label"
+                        value={settings.hero_stat3_label || ''}
+                        onChange={(e) => updateSetting('hero_stat3_label', e.target.value)}
+                        placeholder="Completed Projects"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -379,6 +433,193 @@ const SiteCustomization = () => {
               </div>
             </TabsContent>
 
+            {/* Homepage Tab */}
+            <TabsContent value="homepage" className="space-y-6">
+              <div className="bg-card border border-border rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Layout className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground">Homepage Sections</h2>
+                    <p className="text-sm text-muted-foreground">Customize section titles and subtitles on the homepage</p>
+                  </div>
+                </div>
+
+                <div className="space-y-8">
+                  {/* Services Section */}
+                  <div className="space-y-4 pt-4 border-t border-border">
+                    <h3 className="font-medium text-foreground">Services Section</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="home_services_badge">Badge Text</Label>
+                        <Input
+                          id="home_services_badge"
+                          value={settings.home_services_badge || ''}
+                          onChange={(e) => updateSetting('home_services_badge', e.target.value)}
+                          placeholder="What We Do"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="home_services_title">Section Title</Label>
+                        <Input
+                          id="home_services_title"
+                          value={settings.home_services_title || ''}
+                          onChange={(e) => updateSetting('home_services_title', e.target.value)}
+                          placeholder="Our Services"
+                        />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="home_services_description">Section Description</Label>
+                        <Textarea
+                          id="home_services_description"
+                          value={settings.home_services_description || ''}
+                          onChange={(e) => updateSetting('home_services_description', e.target.value)}
+                          rows={2}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Portfolio Section */}
+                  <div className="space-y-4 pt-4 border-t border-border">
+                    <h3 className="font-medium text-foreground">Portfolio Section</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="home_portfolio_badge">Badge Text</Label>
+                        <Input
+                          id="home_portfolio_badge"
+                          value={settings.home_portfolio_badge || ''}
+                          onChange={(e) => updateSetting('home_portfolio_badge', e.target.value)}
+                          placeholder="Our Work"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="home_portfolio_title">Section Title</Label>
+                        <Input
+                          id="home_portfolio_title"
+                          value={settings.home_portfolio_title || ''}
+                          onChange={(e) => updateSetting('home_portfolio_title', e.target.value)}
+                          placeholder="Featured Projects"
+                        />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="home_portfolio_description">Section Description</Label>
+                        <Textarea
+                          id="home_portfolio_description"
+                          value={settings.home_portfolio_description || ''}
+                          onChange={(e) => updateSetting('home_portfolio_description', e.target.value)}
+                          rows={2}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Store Section */}
+                  <div className="space-y-4 pt-4 border-t border-border">
+                    <h3 className="font-medium text-foreground">Store Section</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="home_store_badge">Badge Text</Label>
+                        <Input
+                          id="home_store_badge"
+                          value={settings.home_store_badge || ''}
+                          onChange={(e) => updateSetting('home_store_badge', e.target.value)}
+                          placeholder="Digital Store"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="home_store_title">Section Title</Label>
+                        <Input
+                          id="home_store_title"
+                          value={settings.home_store_title || ''}
+                          onChange={(e) => updateSetting('home_store_title', e.target.value)}
+                          placeholder="Featured Products"
+                        />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="home_store_description">Section Description</Label>
+                        <Textarea
+                          id="home_store_description"
+                          value={settings.home_store_description || ''}
+                          onChange={(e) => updateSetting('home_store_description', e.target.value)}
+                          rows={2}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Testimonials Section */}
+                  <div className="space-y-4 pt-4 border-t border-border">
+                    <h3 className="font-medium text-foreground">Testimonials Section</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="home_testimonials_badge">Badge Text</Label>
+                        <Input
+                          id="home_testimonials_badge"
+                          value={settings.home_testimonials_badge || ''}
+                          onChange={(e) => updateSetting('home_testimonials_badge', e.target.value)}
+                          placeholder="Testimonials"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="home_testimonials_title">Section Title</Label>
+                        <Input
+                          id="home_testimonials_title"
+                          value={settings.home_testimonials_title || ''}
+                          onChange={(e) => updateSetting('home_testimonials_title', e.target.value)}
+                          placeholder="What Clients Say"
+                        />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="home_testimonials_description">Section Description</Label>
+                        <Textarea
+                          id="home_testimonials_description"
+                          value={settings.home_testimonials_description || ''}
+                          onChange={(e) => updateSetting('home_testimonials_description', e.target.value)}
+                          rows={2}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* CTA Section */}
+                  <div className="space-y-4 pt-4 border-t border-border">
+                    <h3 className="font-medium text-foreground">CTA Section (Bottom)</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="home_cta_badge">Badge Text</Label>
+                        <Input
+                          id="home_cta_badge"
+                          value={settings.home_cta_badge || ''}
+                          onChange={(e) => updateSetting('home_cta_badge', e.target.value)}
+                          placeholder="🚀 Let's Build Something Amazing"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="home_cta_title">Section Title</Label>
+                        <Input
+                          id="home_cta_title"
+                          value={settings.home_cta_title || ''}
+                          onChange={(e) => updateSetting('home_cta_title', e.target.value)}
+                          placeholder="Ready to elevate your brand?"
+                        />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="home_cta_description">Section Description</Label>
+                        <Textarea
+                          id="home_cta_description"
+                          value={settings.home_cta_description || ''}
+                          onChange={(e) => updateSetting('home_cta_description', e.target.value)}
+                          rows={2}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
             {/* Pages Tab */}
             <TabsContent value="pages" className="space-y-6">
               {/* Services Page */}
@@ -389,29 +630,69 @@ const SiteCustomization = () => {
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold text-foreground">Services Page</h2>
-                    <p className="text-sm text-muted-foreground">Customize the services page header</p>
+                    <p className="text-sm text-muted-foreground">Customize the services page headers</p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="services_title">Services Page Title</Label>
-                    <Input
-                      id="services_title"
-                      value={settings.services_title || ''}
-                      onChange={(e) => updateSetting('services_title', e.target.value)}
-                      placeholder="Creative Solutions for Every Need"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="services_badge">Hero Badge</Label>
+                      <Input
+                        id="services_badge"
+                        value={settings.services_badge || ''}
+                        onChange={(e) => updateSetting('services_badge', e.target.value)}
+                        placeholder="Our Services"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="services_title">Hero Title</Label>
+                      <Input
+                        id="services_title"
+                        value={settings.services_title || ''}
+                        onChange={(e) => updateSetting('services_title', e.target.value)}
+                        placeholder="Creative Solutions for Every Need"
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="services_description">Services Page Description</Label>
+                    <Label htmlFor="services_description">Hero Description</Label>
                     <Textarea
                       id="services_description"
                       value={settings.services_description || ''}
                       onChange={(e) => updateSetting('services_description', e.target.value)}
-                      rows={3}
-                      placeholder="From AI-powered prompts to complete brand identities..."
+                      rows={2}
                     />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border">
+                    <div className="space-y-2">
+                      <Label htmlFor="services_process_badge">Process Badge</Label>
+                      <Input
+                        id="services_process_badge"
+                        value={settings.services_process_badge || ''}
+                        onChange={(e) => updateSetting('services_process_badge', e.target.value)}
+                        placeholder="Our Process"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="services_process_title">Process Title</Label>
+                      <Input
+                        id="services_process_title"
+                        value={settings.services_process_title || ''}
+                        onChange={(e) => updateSetting('services_process_title', e.target.value)}
+                        placeholder="How We Work"
+                      />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="services_process_description">Process Description</Label>
+                      <Textarea
+                        id="services_process_description"
+                        value={settings.services_process_description || ''}
+                        onChange={(e) => updateSetting('services_process_description', e.target.value)}
+                        rows={2}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -429,23 +710,33 @@ const SiteCustomization = () => {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="store_title">Store Page Title</Label>
-                    <Input
-                      id="store_title"
-                      value={settings.store_title || ''}
-                      onChange={(e) => updateSetting('store_title', e.target.value)}
-                      placeholder="Premium Digital Products"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="store_badge">Hero Badge</Label>
+                      <Input
+                        id="store_badge"
+                        value={settings.store_badge || ''}
+                        onChange={(e) => updateSetting('store_badge', e.target.value)}
+                        placeholder="Creator Store"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="store_title">Hero Title</Label>
+                      <Input
+                        id="store_title"
+                        value={settings.store_title || ''}
+                        onChange={(e) => updateSetting('store_title', e.target.value)}
+                        placeholder="Premium Digital Products"
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="store_description">Store Page Description</Label>
+                    <Label htmlFor="store_description">Hero Description</Label>
                     <Textarea
                       id="store_description"
                       value={settings.store_description || ''}
                       onChange={(e) => updateSetting('store_description', e.target.value)}
-                      rows={3}
-                      placeholder="Discover our collection of premium digital assets..."
+                      rows={2}
                     />
                   </div>
                 </div>
@@ -480,7 +771,7 @@ const SiteCustomization = () => {
                       value={settings.contact_page_description || ''}
                       onChange={(e) => updateSetting('contact_page_description', e.target.value)}
                       rows={3}
-                      placeholder="Have a project in mind? Let's discuss how we can help..."
+                      placeholder="Have a project in mind? Let's discuss..."
                     />
                   </div>
                 </div>
@@ -499,23 +790,33 @@ const SiteCustomization = () => {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="about_title_page">About Page Title</Label>
-                    <Input
-                      id="about_title_page"
-                      value={settings.about_title || ''}
-                      onChange={(e) => updateSetting('about_title', e.target.value)}
-                      placeholder="Crafting Digital Excellence"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="about_badge">Hero Badge</Label>
+                      <Input
+                        id="about_badge"
+                        value={settings.about_badge || ''}
+                        onChange={(e) => updateSetting('about_badge', e.target.value)}
+                        placeholder="About Us"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="about_title_page">Hero Title</Label>
+                      <Input
+                        id="about_title_page"
+                        value={settings.about_title || ''}
+                        onChange={(e) => updateSetting('about_title', e.target.value)}
+                        placeholder="Crafting Digital Excellence"
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="about_description_page">About Page Description</Label>
+                    <Label htmlFor="about_description_page">Hero Description</Label>
                     <Textarea
                       id="about_description_page"
                       value={settings.about_description || ''}
                       onChange={(e) => updateSetting('about_description', e.target.value)}
-                      rows={4}
-                      placeholder="Oflex Creative is a digital design studio..."
+                      rows={2}
                     />
                   </div>
 
@@ -531,13 +832,12 @@ const SiteCustomization = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="about_story">Our Story (Use double new-line for paragraphs)</Label>
+                        <Label htmlFor="about_story">Our Story Content</Label>
                         <Textarea
                           id="about_story"
                           value={settings.about_story || ''}
                           onChange={(e) => updateSetting('about_story', e.target.value)}
                           rows={6}
-                          placeholder="What started as a passion..."
                         />
                       </div>
                     </div>
@@ -573,12 +873,6 @@ const SiteCustomization = () => {
                           isUploading={isUploadingAboutImg}
                           aspectRatio="video"
                         />
-                        <Input
-                          value={settings.about_image_url || ''}
-                          onChange={(e) => updateSetting('about_image_url', e.target.value)}
-                          placeholder="https://... (or upload above)"
-                          className="mt-2"
-                        />
                       </div>
                     </div>
                   </div>
@@ -598,23 +892,33 @@ const SiteCustomization = () => {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="portfolio_title">Portfolio Page Title</Label>
-                    <Input
-                      id="portfolio_title"
-                      value={settings.portfolio_title || ''}
-                      onChange={(e) => updateSetting('portfolio_title', e.target.value)}
-                      placeholder="Our Creative Portfolio"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="portfolio_badge">Hero Badge</Label>
+                      <Input
+                        id="portfolio_badge"
+                        value={settings.portfolio_badge || ''}
+                        onChange={(e) => updateSetting('portfolio_badge', e.target.value)}
+                        placeholder="Our Work"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="portfolio_title">Hero Title</Label>
+                      <Input
+                        id="portfolio_title"
+                        value={settings.portfolio_title || ''}
+                        onChange={(e) => updateSetting('portfolio_title', e.target.value)}
+                        placeholder="Our Creative Portfolio"
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="portfolio_description">Portfolio Page Description</Label>
+                    <Label htmlFor="portfolio_description">Hero Description</Label>
                     <Textarea
                       id="portfolio_description"
                       value={settings.portfolio_description || ''}
                       onChange={(e) => updateSetting('portfolio_description', e.target.value)}
-                      rows={3}
-                      placeholder="Explore our collection of creative works..."
+                      rows={2}
                     />
                   </div>
                 </div>

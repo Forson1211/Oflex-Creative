@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { User, Package, Settings, LogOut, ShoppingBag, Download, ExternalLink, Edit2, Camera } from 'lucide-react';
+import { User, Package, Settings, LogOut, ShoppingBag, Download, ExternalLink, Edit2, Camera, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useProfile, useUserMutations } from '@/hooks/useUsers';
-import { useOrders } from '@/hooks/useOrders';
+import { useOrders, useOrderMutations } from '@/hooks/useOrders';
 import { usePurchases } from '@/hooks/usePurchases';
 import { Layout } from '@/components/layout/Layout';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -22,6 +22,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const Profile = () => {
   const { user, signOut, loading: authLoading, isAuthReady } = useAuth();
@@ -29,11 +39,14 @@ const Profile = () => {
   const { data: orders = [], isLoading: ordersLoading } = useOrders({ userId: user?.id });
   const { data: purchases = [], isLoading: purchasesLoading } = usePurchases();
   const { updateProfile } = useUserMutations();
+
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [fullName, setFullName] = useState('');
+  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
+  const { deleteOrder } = useOrderMutations();
 
   useEffect(() => {
     if (profile?.full_name) {
@@ -92,7 +105,9 @@ const Profile = () => {
                   {isLoading ? (
                     <div className="h-8 w-48 bg-muted animate-pulse rounded" />
                   ) : (
-                    profile?.full_name || 'User'
+                    <span className="text-primary">
+                      {profile?.full_name || 'User'}
+                    </span>
                   )}
                 </h1>
                 <p className="text-muted-foreground mb-4">{user?.email}</p>
@@ -245,6 +260,15 @@ const Profile = () => {
                           >
                             {order.status}
                           </Badge>
+
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="ml-2 h-6 w-6 text-muted-foreground hover:text-destructive transition-colors"
+                            onClick={() => setOrderToDelete(order.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
                       </div>
                       {order.order_items && order.order_items.length > 0 && (
@@ -267,6 +291,30 @@ const Profile = () => {
           </Tabs>
         </motion.div>
       </div>
+      <AlertDialog open={!!orderToDelete} onOpenChange={(open) => !open && setOrderToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Order?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this order? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (orderToDelete) {
+                  deleteOrder.mutate(orderToDelete);
+                  setOrderToDelete(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 };

@@ -227,15 +227,8 @@ const Auth = () => {
     }
   };
 
-  // Only show loading spinner when auth state is not yet determined
-  // Don't check 'loading' here as it can be true during sign-in attempts
-  if (!isAuthReady) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  // Spinner removed - showing form immediately
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">

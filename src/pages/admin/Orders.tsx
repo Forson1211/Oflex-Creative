@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useOrders, useOrderMutations, type Order } from '@/hooks/useOrders';
-import { Search, Eye, ShoppingCart, Loader2 } from 'lucide-react';
+import { Search, Eye, ShoppingCart, Loader2, Trash2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ProtectedRoute } from '@/components/admin/ProtectedRoute';
@@ -19,6 +19,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminTable, ADMIN_TABLE_HEADER_CLASS } from '@/components/admin/AdminTable';
@@ -31,7 +41,8 @@ const Orders = () => {
   const { toast } = useToast();
 
   const { data: orders = [], isLoading: loading } = useOrders();
-  const { updateOrderStatus } = useOrderMutations();
+  const { updateOrderStatus, deleteOrder } = useOrderMutations();
+  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
 
   const handleStatusChange = (newStatus: string) => {
     if (!selectedOrder) return;
@@ -145,6 +156,14 @@ const Orders = () => {
                         <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)}>
                           <Eye className="w-4 h-4" />
                         </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => setOrderToDelete(order.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -234,6 +253,30 @@ const Orders = () => {
             </DialogContent>
           </Dialog>
         </div>
+        <AlertDialog open={!!orderToDelete} onOpenChange={(open) => !open && setOrderToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Order?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this order? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => {
+                  if (orderToDelete) {
+                    deleteOrder.mutate(orderToDelete);
+                    setOrderToDelete(null);
+                  }
+                }}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </AdminLayout>
     </ProtectedRoute>
   );

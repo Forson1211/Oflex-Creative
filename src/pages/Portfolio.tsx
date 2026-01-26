@@ -66,7 +66,7 @@ const Portfolio = () => {
             <h1 className="font-sans text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight tracking-tight">
               {getSetting('portfolio_title', 'Our Creative Work')}
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-lg text-muted-foreground text-center px-4 sm:px-0">
               {getSetting('portfolio_description', 'Explore our diverse portfolio of design projects, from brand identities to digital interfaces and AI-generated art.')}
             </p>
           </motion.div>

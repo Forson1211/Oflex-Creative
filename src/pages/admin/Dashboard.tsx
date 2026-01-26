@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useAdminStats, useAdminActions, type AdminStatsResponse } from '@/hooks/useAdminStats';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAdminStats, useAdminActions, type AdminStatsResponse, ADMIN_STATS_KEYS } from '@/hooks/useAdminStats';
 import { Package, ShoppingCart, DollarSign, Users, TrendingUp, Clock, CheckCircle2, XCircle, AlertCircle, RefreshCw, Bell, Trash2 } from 'lucide-react';
 import {
   AlertDialog,
@@ -33,14 +34,26 @@ interface Stats {
 
 
 const Dashboard = () => {
-  const { data: adminStats, isLoading: loading, refetch } = useAdminStats();
+  const { data: adminStats, isLoading, isFetching, refetch } = useAdminStats();
   const { resetAnalytics } = useAdminActions();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
 
-  const handleRefresh = () => {
-    refetch();
-    toast({ title: 'Dashboard refreshed!' });
+  const handleRefresh = async () => {
+    setIsManualRefreshing(true);
+    try {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ADMIN_STATS_KEYS.all }),
+        queryClient.invalidateQueries({ queryKey: ADMIN_STATS_KEYS.analytics }),
+      ]);
+      toast({ title: 'Dashboard refreshed!' });
+    } finally {
+      setIsManualRefreshing(false);
+    }
   };
+
+  const loading = isLoading || isFetching || isManualRefreshing;
 
   const stats = {
     totalProducts: adminStats?.total_products || 0,
@@ -133,7 +146,7 @@ const Dashboard = () => {
                       disabled={resetAnalytics.isPending || loading}
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
-                      Reset Stats
+                      Reset Analytics
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>

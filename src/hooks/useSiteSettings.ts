@@ -46,10 +46,9 @@ export function useSiteSettings() {
       if (error) throw error;
       return data as SiteSetting[];
     },
-    staleTime: 1000 * 60 * 10, // 10 minutes - settings don't change often
+    staleTime: 1000 * 60, // 1 minute
     gcTime: 1000 * 60 * 30, // 30 minutes cache time
-    refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    refetchOnMount: false, // Don't refetch on component mount if data exists
+    refetchOnWindowFocus: true,
   });
 
   const getSetting = useCallback((key: string, defaultValue: string = '') => {

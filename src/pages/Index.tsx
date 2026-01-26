@@ -135,8 +135,8 @@ const Index = () => {
             className="absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: `url(${getSetting('hero_background_url', 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=1920&h=1080&fit=crop')})` }}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/95 to-background/40" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent opacity-50" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/20" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/30 via-primary/5 to-transparent opacity-100" />
         </div>
 
         <div className="container mx-auto px-4 relative z-10 h-full">
@@ -144,25 +144,15 @@ const Index = () => {
 
             {/* Left Column: Content */}
             <div className="max-w-2xl text-center lg:text-left mx-auto lg:mx-0 pt-8 lg:pt-0">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6 backdrop-blur-sm"
-              >
-                <Sparkles className="w-4 h-4" />
-                <span>{getSetting('hero_badge', 'Welcome to Oflex Creative')}</span>
-              </motion.div>
-
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground leading-[1.1] mb-6"
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-foreground leading-[1.1] mb-6"
               >
                 {getSetting('hero_title', 'Crafting Digital')}
                 <br />
-                <span className="bg-gradient-to-r from-primary via-orange-500 to-yellow-500 bg-clip-text text-transparent">
+                <span className="text-primary font-extrabold">
                   {getSetting('hero_subtitle', 'Experiences')}
                 </span>
               </motion.h1>
@@ -171,7 +161,7 @@ const Index = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg mx-auto lg:mx-0 leading-relaxed"
+                className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg mx-auto lg:mx-0 leading-relaxed text-center px-4 sm:px-0"
               >
                 {getSetting('hero_description', 'From AI prompts to stunning designs, we bring your creative visions to life. Explore our portfolio and discover premium digital products.')}
               </motion.p>
@@ -180,18 +170,18 @@ const Index = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
-                className="flex flex-row gap-3 sm:gap-4 justify-center lg:justify-start"
+                className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start items-center lg:items-start"
               >
-                <Button size="lg" className="h-10 sm:h-14 px-5 sm:px-8 rounded-full text-sm sm:text-base shadow-lg shadow-primary/20 hover:scale-105 transition-transform" asChild>
+                <Button size="lg" className="w-56 sm:w-auto h-11 sm:h-14 px-5 sm:px-8 rounded-full text-sm sm:text-base shadow-lg shadow-primary/20 hover:scale-105 transition-transform" asChild>
                   <Link to="/portfolio">
-                    View Portfolio
+                    {getSetting('hero_button1_text', 'View Portfolio')}
                     <ArrowRight className="ml-1.5 sm:ml-2 w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" className="h-10 sm:h-14 px-5 sm:px-8 rounded-full text-sm sm:text-base backdrop-blur-sm bg-background/50 hover:bg-background/80" asChild>
+                <Button size="lg" variant="outline" className="w-56 sm:w-auto h-11 sm:h-14 px-5 sm:px-8 rounded-full text-sm sm:text-base backdrop-blur-sm bg-background/50 hover:bg-background/80" asChild>
                   <Link to="/store">
                     <ShoppingBag className="mr-1.5 sm:mr-2 w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    Visit Store
+                    {getSetting('hero_button2_text', 'Visit Store')}
                   </Link>
                 </Button>
               </motion.div>
@@ -221,7 +211,7 @@ const Index = () => {
                           </div>
                           <div>
                             <h3 className="text-3xl font-bold text-foreground">{siteStats.productCount}+</h3>
-                            <p className="text-sm text-muted-foreground">Digital Products Available</p>
+                            <p className="text-sm text-muted-foreground">{getSetting('hero_stat1_label', 'Digital Products Available')}</p>
                           </div>
                         </div>
                         <div className="mt-4 h-1 w-full bg-white/10 rounded-full overflow-hidden">
@@ -238,7 +228,7 @@ const Index = () => {
                         </div>
                         <div>
                           <p className="text-2xl font-bold">{siteStats.userCount}+</p>
-                          <p className="text-xs text-muted-foreground">Happy Clients</p>
+                          <p className="text-xs text-muted-foreground">{getSetting('hero_stat2_label', 'Happy Clients')}</p>
                         </div>
                       </div>
                     </GlassCard>
@@ -250,7 +240,7 @@ const Index = () => {
                         </div>
                         <div>
                           <p className="text-2xl font-bold">{siteStats.projectCount}+</p>
-                          <p className="text-xs text-muted-foreground">Completed Projects</p>
+                          <p className="text-xs text-muted-foreground">{getSetting('hero_stat3_label', 'Completed Projects')}</p>
                         </div>
                       </div>
                     </GlassCard>
@@ -292,9 +282,9 @@ const Index = () => {
       <section className="py-20 bg-card">
         <div className="container mx-auto px-4">
           <SectionHeading
-            badge="What We Do"
-            title="Our Services"
-            description="Comprehensive creative solutions tailored to your needs"
+            badge={getSetting('home_services_badge', 'What We Do')}
+            title={getSetting('home_services_title', 'Our Services')}
+            description={getSetting('home_services_description', 'Comprehensive creative solutions tailored to your needs')}
           />
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
@@ -323,9 +313,9 @@ const Index = () => {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <SectionHeading
-            badge="Our Work"
-            title="Featured Projects"
-            description="A glimpse into our creative portfolio"
+            badge={getSetting('home_portfolio_badge', 'Our Work')}
+            title={getSetting('home_portfolio_title', 'Featured Projects')}
+            description={getSetting('home_portfolio_description', 'A glimpse into our creative portfolio')}
           />
 
           {/* Grid: 1 column on mobile (vertical), 3 columns on desktop (larger) */}
@@ -386,9 +376,9 @@ const Index = () => {
       <section className="py-20 bg-card/50">
         <div className="container mx-auto px-4">
           <SectionHeading
-            badge="Digital Store"
-            title="Featured Products"
-            description="Premium digital assets for your creative projects"
+            badge={getSetting('home_store_badge', 'Digital Store')}
+            title={getSetting('home_store_title', 'Featured Products')}
+            description={getSetting('home_store_description', 'Premium digital assets for your creative projects')}
           />
 
           <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 -mx-4 px-4 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6 md:pb-0 md:mx-0 md:px-0 scrollbar-none">
@@ -470,9 +460,9 @@ const Index = () => {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <SectionHeading
-            badge="Testimonials"
-            title="What Clients Say"
-            description="Hear from those who've experienced our work"
+            badge={getSetting('home_testimonials_badge', 'Testimonials')}
+            title={getSetting('home_testimonials_title', 'What Clients Say')}
+            description={getSetting('home_testimonials_description', "Hear from those who've experienced our work")}
           />
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -537,19 +527,17 @@ const Index = () => {
                 {/* Text Content */}
                 <div className="text-left space-y-6">
                   <Badge variant="outline" className="px-4 py-1.5 border-primary/50 text-primary bg-primary/10 text-sm">
-                    🚀 Let's Build Something Amazing
+                    {getSetting('home_cta_badge', "🚀 Let's Build Something Amazing")}
                   </Badge>
 
                   <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">
-                    Ready to elevate <br />
-                    <span className="text-primary bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-500">
-                      your brand?
+                    <span className="text-primary">
+                      {getSetting('home_cta_title', 'Ready to elevate your brand?')}
                     </span>
                   </h2>
 
                   <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">
-                    Join hundreds of satisfied clients who have transformed their digital presence.
-                    From concept to launch, we are your partners in creative excellence.
+                    {getSetting('home_cta_description', 'Join hundreds of satisfied clients who have transformed their digital presence. From concept to launch, we are your partners in creative excellence.')}
                   </p>
 
                   <div className="flex flex-col sm:flex-row gap-4 pt-4">
