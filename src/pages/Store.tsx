@@ -76,7 +76,7 @@ const Store = () => {
   const { getSetting } = useSiteSettings();
 
   // Fetch products
-  const { data: products = [], isLoading: productsLoading } = useQuery({
+  const { data: products = [] as Product[], isLoading: productsLoading } = useQuery<Product[]>({
     queryKey: ['store-products'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -92,7 +92,7 @@ const Store = () => {
   });
 
   // Fetch cart items
-  const { data: cartItems = [] } = useQuery({
+  const { data: cartItems = [] as CartItem[] } = useQuery<CartItem[]>({
     queryKey: ['cart', user?.id],
     queryFn: async () => {
       if (!user) return [];
@@ -112,7 +112,7 @@ const Store = () => {
   });
 
   // Get unique categories
-  const categories = ['All', ...new Set(products.map((p) => p.category).filter(Boolean))];
+  const categories: string[] = ['All', ...Array.from(new Set(products.map((p) => p.category).filter(Boolean)))];
 
   // Filter and sort products
   const filteredProducts = products
