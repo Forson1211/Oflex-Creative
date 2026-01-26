@@ -63,7 +63,7 @@ Deno.serve(async (req: Request) => {
 
         // Send password reset email
         const { error: resetError } = await supabase.auth.resetPasswordForEmail(userEmail, {
-            redirectTo: `${req.headers.get('origin') || 'http://localhost:8082'}/auth?mode=reset`,
+            redirectTo: `${req.headers.get('origin') || 'http://localhost:3000'}/auth?mode=reset`,
         });
 
         if (resetError) {

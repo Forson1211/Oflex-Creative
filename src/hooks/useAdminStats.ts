@@ -2,10 +2,45 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getInitialData } from '@/lib/query-client';
+import { useAuth } from '@/hooks/useAuth';
 
 export const ADMIN_STATS_KEYS = {
     all: ['admin-stats'] as const,
+    analytics: ['site-analytics'] as const,
 };
+
+export interface AnalyticsData {
+    date: string;
+    page_views: number;
+    unique_visitors: number;
+    orders_count: number;
+    revenue: number;
+    new_users: number;
+}
+
+export function useAnalytics() {
+    const { user } = useAuth();
+
+    return useQuery({
+        queryKey: ADMIN_STATS_KEYS.analytics,
+        queryFn: async () => {
+            if (!user) return [];
+            const { data, error } = await supabase
+                .from('site_analytics')
+                .select('*')
+                .order('date', { ascending: true })
+                .limit(7);
+
+            if (error) throw error;
+            return data as AnalyticsData[];
+        },
+        initialData: () => getInitialData('site-analytics'),
+        staleTime: 1000 * 60 * 30, // 30 minutes
+        gcTime: 1000 * 60 * 60 * 24, // 24 hours
+        enabled: !!user,
+    });
+}
 
 export interface RecentOrder {
     id: string;
@@ -26,14 +61,20 @@ export interface AdminStatsResponse {
 }
 
 export function useAdminStats() {
+    const { user } = useAuth();
+
     return useQuery({
         queryKey: ADMIN_STATS_KEYS.all,
         queryFn: async () => {
+            if (!user) return null;
             const { data, error } = await supabase.rpc('get_admin_stats');
             if (error) throw error;
             return data as unknown as AdminStatsResponse;
         },
-        refetchInterval: 1000 * 60, // Refresh every minute
+        initialData: () => getInitialData('admin-stats'),
+        staleTime: 1000 * 60 * 10, // 10 minutes (keep dashboard data fresh but not noisy)
+        gcTime: 1000 * 60 * 60 * 24, // 24 hours
+        enabled: !!user,
     });
 }
 

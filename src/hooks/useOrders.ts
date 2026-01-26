@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
+import { getInitialData } from '@/lib/query-client';
+import { useAuth } from '@/hooks/useAuth';
 
 export type Order = Tables<'orders'>;
 
@@ -15,9 +17,13 @@ export const ORDER_KEYS = {
 };
 
 export function useOrders(filters: { status?: string; userId?: string } = {}) {
+    const { user } = useAuth();
+    const queryKey = ORDER_KEYS.list(filters);
+
     return useQuery({
-        queryKey: ORDER_KEYS.list(filters),
+        queryKey,
         queryFn: async () => {
+            if (!user) return [];
             let query = supabase.from('orders').select(`
         *,
         order_items:order_items(
@@ -39,6 +45,9 @@ export function useOrders(filters: { status?: string; userId?: string } = {}) {
             if (error) throw error;
             return data;
         },
+        initialData: () => getInitialData(queryKey[0]),
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        enabled: !!user,
     });
 }
 

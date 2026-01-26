@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Shield, UserCog, User, Lock, Key, ShieldAlert, Loader2, Unlock, Mail, History, Search } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ProtectedRoute } from '@/components/admin/ProtectedRoute';
@@ -20,41 +20,12 @@ import {
 } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import type { Tables } from '@/integrations/supabase/types';
+import { useUsers, useUserSecurityInfo, useUserMutations, type UserWithRole, type UserActivity } from '@/hooks/useUsers';
 import { AdminTable, ADMIN_TABLE_HEADER_CLASS } from '@/components/admin/AdminTable';
 
-type Profile = Tables<'profiles'>;
-type UserRole = Tables<'user_roles'>;
-
-interface UserWithRole extends Profile {
-  role: string | null;
-}
-
-interface UserActivity {
-  activity_type: string;
-  ip_address: string | null;
-  created_at: string;
-}
-
-interface UserSecurityInfo {
-  user_id: string;
-  email: string;
-  full_name: string | null;
-  account_locked: boolean;
-  locked_reason: string | null;
-  locked_at: string | null;
-  force_password_reset: boolean;
-  last_login_at: string | null;
-  last_login_ip: string | null;
-  failed_login_attempts: number;
-  last_failed_login_at: string | null;
-  created_at: string;
-  recent_activity: UserActivity[];
-}
-
 const Users = () => {
-  const [users, setUsers] = useState<UserWithRole[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: users = [], isLoading: loading, refetch: fetchUsers } = useUsers();
+  const { lockUser, forcePasswordReset, updateProfile } = useUserMutations();
   const [syncing, setSyncing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
@@ -62,48 +33,13 @@ const Users = () => {
   const [isSecurityDialogOpen, setIsSecurityDialogOpen] = useState(false);
   const [updatingRole, setUpdatingRole] = useState(false);
   const [processingSecurity, setProcessingSecurity] = useState(false);
-  const [securityInfo, setSecurityInfo] = useState<UserSecurityInfo | null>(null);
-  const [loadingSecurityInfo, setLoadingSecurityInfo] = useState(false);
+
+  // Fetch security info via hook when dialog is open and user is selected
+  const { data: securityInfo, isLoading: loadingSecurityInfo } = useUserSecurityInfo(
+    isSecurityDialogOpen ? selectedUser?.user_id : undefined
+  );
+
   const { toast } = useToast();
-
-  const fetchUsers = useCallback(async () => {
-    setLoading(true);
-
-    const { data: profiles, error: profilesError } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (profilesError) {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch users',
-        variant: 'destructive',
-      });
-      setLoading(false);
-      return;
-    }
-
-    const { data: roles, error: rolesError } = await supabase
-      .from('user_roles')
-      .select('*');
-
-    if (rolesError) {
-      console.error('Error fetching roles:', rolesError);
-    }
-
-    const usersWithRoles = profiles?.map((profile) => ({
-      ...profile,
-      role: roles?.find((r) => r.user_id === profile.user_id)?.role || 'user',
-    })) || [];
-
-    setUsers(usersWithRoles);
-    setLoading(false);
-  }, [toast]);
-
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
 
   const handleSyncUsers = async () => {
     setSyncing(true);
@@ -131,11 +67,11 @@ const Users = () => {
 
   const handleRoleChange = async (newRole: string) => {
     if (!selectedUser) return;
-
     setUpdatingRole(true);
 
     try {
-      // Check if user already has a role entry
+      // We use the direct supabase call here for role management as it's not strictly a profile update
+      // but it could be added to mutations if needed.
       const { data: existingRole } = await supabase
         .from('user_roles')
         .select('*')
@@ -143,22 +79,18 @@ const Users = () => {
         .maybeSingle();
 
       if (existingRole) {
-        // Update existing role
         const { error } = await supabase
           .from('user_roles')
           .update({ role: newRole as 'admin' | 'moderator' | 'user' })
           .eq('user_id', selectedUser.user_id);
-
         if (error) throw error;
       } else {
-        // Insert new role
         const { error } = await supabase
           .from('user_roles')
           .insert({
             user_id: selectedUser.user_id,
             role: newRole as 'admin' | 'moderator' | 'user'
           });
-
         if (error) throw error;
       }
 
@@ -181,83 +113,24 @@ const Users = () => {
     }
   };
 
-  const handleFetchSecurityInfo = async (userId: string) => {
-    setLoadingSecurityInfo(true);
-    try {
-      const { data, error } = await supabase.rpc('admin_get_user_security_info', {
-        p_user_id: userId
-      });
-      if (error) throw error;
-      setSecurityInfo(data as unknown as UserSecurityInfo);
-    } catch (error) {
-      console.error('Error fetching security info:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load user security information',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoadingSecurityInfo(false);
-    }
-  };
-
   const handleLockAccount = async (lock: boolean, reason: string = '') => {
     if (!selectedUser) return;
     setProcessingSecurity(true);
-    try {
-      const { data, error } = await supabase.rpc('admin_lock_user_account', {
-        p_user_id: selectedUser.user_id,
-        p_lock: lock,
-        p_reason: reason || (lock ? 'Locked by admin' : null)
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: lock ? 'Account Locked' : 'Account Unlocked',
-        description: `Successfully ${lock ? 'locked' : 'unlocked'} ${selectedUser.full_name || selectedUser.email}`,
-      });
-
-      handleFetchSecurityInfo(selectedUser.user_id!);
-      fetchUsers();
-    } catch (error) {
-      console.error('Error locking account:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update account lock status',
-        variant: 'destructive',
-      });
-    } finally {
-      setProcessingSecurity(false);
-    }
+    lockUser.mutate({
+      id: selectedUser.user_id!,
+      lock,
+      reason: reason || (lock ? 'Locked by admin' : null)
+    }, {
+      onSettled: () => setProcessingSecurity(false)
+    });
   };
 
   const handleForcePasswordReset = async () => {
     if (!selectedUser) return;
     setProcessingSecurity(true);
-    try {
-      const { data, error } = await supabase.rpc('admin_force_password_reset', {
-        p_user_id: selectedUser.user_id
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: 'Password Reset Forced',
-        description: 'User will be required to change password on next login',
-      });
-
-      handleFetchSecurityInfo(selectedUser.user_id!);
-    } catch (error) {
-      console.error('Error forcing reset:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to force password reset',
-        variant: 'destructive',
-      });
-    } finally {
-      setProcessingSecurity(false);
-    }
+    forcePasswordReset.mutate(selectedUser.user_id!, {
+      onSettled: () => setProcessingSecurity(false)
+    });
   };
 
   const handleSendResetEmail = async () => {
@@ -287,11 +160,14 @@ const Users = () => {
     }
   };
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = useMemo(() => {
+    return users.filter(
+      (user) =>
+        user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [users, searchTerm]);
+
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -435,9 +311,7 @@ const Users = () => {
                           size="sm"
                           onClick={() => {
                             setSelectedUser(user);
-                            setSecurityInfo(null);
                             setIsSecurityDialogOpen(true);
-                            handleFetchSecurityInfo(user.user_id!);
                           }}
                         >
                           <ShieldAlert className="w-4 h-4 mr-2" />

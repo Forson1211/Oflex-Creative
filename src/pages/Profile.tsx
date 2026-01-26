@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { User, Package, Settings, LogOut, ShoppingBag, Download, ExternalLink, Edit2, Camera, Shield, Trash2 } from 'lucide-react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useImageUpload } from '@/hooks/useImageUpload';
+import { useProfile, useUserMutations } from '@/hooks/useUsers';
+import { useOrders } from '@/hooks/useOrders';
+import { usePurchases, usePurchaseMutations } from '@/hooks/usePurchases';
 import { ImageUpload } from '@/components/ui/ImageUpload';
 import { Layout } from '@/components/layout/Layout';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -35,27 +36,10 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
-interface Purchase {
-  id: string;
-  product_id: string;
-  product_title: string;
-  template_link: string | null;
-  purchased_at: string;
-}
-
-interface Profile {
-  id: string;
-  user_id: string;
-  full_name: string | null;
-  email: string | null;
-  avatar_url: string | null;
-}
-
 const ProfilePage = () => {
   const { user, signOut, isAdmin, isModerator, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState({
     full_name: '',
@@ -67,101 +51,12 @@ const ProfilePage = () => {
     onSuccess: (url) => setEditForm((prev) => ({ ...prev, avatar_url: url })),
   });
 
-  // Fetch user profile
-  const { data: profile } = useQuery({
-    queryKey: ['profile', user?.id],
-    queryFn: async () => {
-      if (!user) return null;
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data as Profile | null;
-    },
-    enabled: !!user,
-  });
-
-  // Fetch user orders
-  const { data: orders = [] } = useQuery({
-    queryKey: ['user-orders', user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*, order_items(*)')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user,
-  });
-
-  // Fetch user purchases (for downloads)
-  const { data: purchases = [] } = useQuery({
-    queryKey: ['purchases', user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      const { data, error } = await supabase
-        .from('purchases')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('purchased_at', { ascending: false });
-
-      if (error) throw error;
-      return data as Purchase[];
-    },
-    enabled: !!user,
-  });
-
-  // Update profile mutation
-  const updateProfileMutation = useMutation({
-    mutationFn: async (data: { full_name: string; avatar_url: string }) => {
-      if (!user) throw new Error('Not authenticated');
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: data.full_name,
-          avatar_url: data.avatar_url,
-        })
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      toast({ title: 'Profile updated!' });
-      setIsEditDialogOpen(false);
-    },
-    onError: () => {
-      toast({ title: 'Error updating profile', variant: 'destructive' });
-    },
-  });
-
-  // Delete purchase mutation
-  const deletePurchaseMutation = useMutation({
-    mutationFn: async (purchaseId: string) => {
-      const { error } = await supabase
-        .from('purchases')
-        .delete()
-        .eq('id', purchaseId)
-        .eq('user_id', user!.id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['purchases'] });
-      toast({ title: 'Purchase removed from your account' });
-    },
-    onError: () => {
-      toast({ title: 'Error removing purchase', variant: 'destructive' });
-    },
-  });
+  // Centralized Hooks
+  const { data: profile } = useProfile(user?.id);
+  const { data: orders = [] } = useOrders({ userId: user?.id });
+  const { data: purchases = [] } = usePurchases();
+  const { updateProfile } = useUserMutations();
+  const { deletePurchase } = usePurchaseMutations();
 
   const handleSignOut = async () => {
     try {
@@ -183,10 +78,20 @@ const ProfilePage = () => {
   };
 
   const handleSaveProfile = () => {
-    updateProfileMutation.mutate(editForm);
+    if (!user) return;
+    updateProfile.mutate({
+      userId: user.id,
+      data: {
+        full_name: editForm.full_name,
+        avatar_url: editForm.avatar_url,
+      }
+    }, {
+      onSuccess: () => setIsEditDialogOpen(false)
+    });
   };
 
   // Loading state
+  const isProfileUpdating = updateProfile.isPending;
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -346,7 +251,7 @@ const ProfilePage = () => {
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                                   <AlertDialogAction
-                                    onClick={() => deletePurchaseMutation.mutate(purchase.id)}
+                                    onClick={() => deletePurchase.mutate(purchase.id)}
                                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                   >
                                     Remove
@@ -488,8 +393,8 @@ const ProfilePage = () => {
                               <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                                 Cancel
                               </Button>
-                              <Button onClick={handleSaveProfile} disabled={updateProfileMutation.isPending}>
-                                {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
+                              <Button onClick={handleSaveProfile} disabled={updateProfile.isPending}>
+                                {updateProfile.isPending ? 'Saving...' : 'Save Changes'}
                               </Button>
                             </div>
                           </div>

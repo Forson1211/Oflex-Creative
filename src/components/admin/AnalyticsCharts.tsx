@@ -1,41 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area } from 'recharts';
 import { TrendingUp, TrendingDown, Users, Eye, ShoppingCart, DollarSign } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { useAnalytics, type AnalyticsData } from '@/hooks/useAdminStats';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-interface AnalyticsData {
-  date: string;
-  page_views: number;
-  unique_visitors: number;
-  orders_count: number;
-  revenue: number;
-  new_users: number;
-}
-
 export const AnalyticsCharts = () => {
-  const [data, setData] = useState<AnalyticsData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: rawData = [], isLoading: loading } = useAnalytics();
 
-  useEffect(() => {
-    const fetchAnalytics = async () => {
-      const { data: analyticsData, error } = await supabase
-        .from('site_analytics')
-        .select('*')
-        .order('date', { ascending: true })
-        .limit(7);
-
-      if (!error && analyticsData) {
-        setData(analyticsData.map(item => ({
-          ...item,
-          date: new Date(item.date).toLocaleDateString('en-US', { weekday: 'short' })
-        })));
-      }
-      setLoading(false);
-    };
-
-    fetchAnalytics();
-  }, []);
+  const data = useMemo(() => {
+    return rawData.map(item => ({
+      ...item,
+      date: new Date(item.date).toLocaleDateString('en-US', { weekday: 'short' })
+    }));
+  }, [rawData]);
 
   const totalPageViews = data.reduce((sum, d) => sum + d.page_views, 0);
   const totalVisitors = data.reduce((sum, d) => sum + d.unique_visitors, 0);
@@ -144,40 +121,40 @@ export const AnalyticsCharts = () => {
                 <AreaChart data={data}>
                   <defs>
                     <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="colorVisitors" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="date" className="text-muted-foreground text-xs" tick={{ fontSize: 12 }} />
                   <YAxis className="text-muted-foreground text-xs" tick={{ fontSize: 12 }} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px'
                     }}
                     labelStyle={{ color: 'hsl(var(--foreground))' }}
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="page_views" 
-                    stroke="hsl(var(--primary))" 
-                    fillOpacity={1} 
-                    fill="url(#colorViews)" 
+                  <Area
+                    type="monotone"
+                    dataKey="page_views"
+                    stroke="hsl(var(--primary))"
+                    fillOpacity={1}
+                    fill="url(#colorViews)"
                     strokeWidth={2}
                     name="Page Views"
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="unique_visitors" 
-                    stroke="hsl(var(--chart-2))" 
-                    fillOpacity={1} 
-                    fill="url(#colorVisitors)" 
+                  <Area
+                    type="monotone"
+                    dataKey="unique_visitors"
+                    stroke="hsl(var(--chart-2))"
+                    fillOpacity={1}
+                    fill="url(#colorVisitors)"
                     strokeWidth={2}
                     name="Visitors"
                   />
@@ -199,9 +176,9 @@ export const AnalyticsCharts = () => {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="date" className="text-muted-foreground text-xs" tick={{ fontSize: 12 }} />
                   <YAxis className="text-muted-foreground text-xs" tick={{ fontSize: 12 }} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px'
                     }}
@@ -211,15 +188,15 @@ export const AnalyticsCharts = () => {
                       name === 'revenue' ? 'Revenue' : 'Orders'
                     ]}
                   />
-                  <Bar 
-                    dataKey="revenue" 
-                    fill="hsl(var(--chart-3))" 
+                  <Bar
+                    dataKey="revenue"
+                    fill="hsl(var(--chart-3))"
                     radius={[4, 4, 0, 0]}
                     name="revenue"
                   />
-                  <Bar 
-                    dataKey="orders_count" 
-                    fill="hsl(var(--chart-4))" 
+                  <Bar
+                    dataKey="orders_count"
+                    fill="hsl(var(--chart-4))"
                     radius={[4, 4, 0, 0]}
                     name="orders"
                   />
@@ -242,18 +219,18 @@ export const AnalyticsCharts = () => {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="date" className="text-muted-foreground text-xs" tick={{ fontSize: 12 }} />
                 <YAxis className="text-muted-foreground text-xs" tick={{ fontSize: 12 }} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--card))', 
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--card))',
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '8px'
                   }}
                   labelStyle={{ color: 'hsl(var(--foreground))' }}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="new_users" 
-                  stroke="hsl(var(--primary))" 
+                <Line
+                  type="monotone"
+                  dataKey="new_users"
+                  stroke="hsl(var(--primary))"
                   strokeWidth={3}
                   dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2 }}
                   activeDot={{ r: 6 }}
