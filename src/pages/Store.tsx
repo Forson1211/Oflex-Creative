@@ -238,165 +238,179 @@ const Store = () => {
       {/* Store Hero Slider */}
       <StoreHeroSlider />
 
-      {/* Hero Section */}
-      <section className="relative py-12 md:py-20 overflow-hidden">
-        {/* Background decoration */}
+      {/* Hero Section - Immersive Design */}
+      <section className="relative py-20 md:py-32 overflow-hidden">
+        {/* Dynamic Background */}
         <div className="absolute inset-0 -z-10">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-72 h-72 bg-accent/10 rounded-full blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background z-0" />
+          <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-r from-primary/10 via-purple-500/5 to-blue-500/10 opacity-60 blur-[100px]" />
+          <div className="absolute -top-40 right-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] opacity-40 animate-pulse" />
         </div>
 
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-3xl mx-auto text-center"
+            className="max-w-4xl mx-auto text-center"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-primary text-sm font-medium mb-8 backdrop-blur-md shadow-xl"
             >
-              <Sparkles className="w-4 h-4" />
-              Premium Digital Products
+              <Sparkles className="w-4 h-4 text-yellow-500" />
+              <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">Premium Digital Assets</span>
             </motion.div>
 
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="font-sans text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight tracking-tight"
+              className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground mb-6"
             >
-              {getSetting('store_title', 'Canva Templates & Digital Assets')}
+              The Digital <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-orange-500 to-yellow-500 animate-gradient">
+                Creator Store
+              </span>
             </motion.h1>
 
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="text-lg text-muted-foreground mb-8"
+              className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed"
             >
-              {getSetting('store_description', 'Professional Canva templates, social media kits, and digital assets to elevate your brand and boost your creativity.')}
+              Elevate your projects with our curated collection of professional Canva templates,
+              social media kits, and premium design resources.
             </motion.p>
 
-            {/* Search and Cart */}
+            {/* Search and Cart - Glassmorphic Container */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+              className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-2xl mx-auto"
             >
-              <div className="relative w-full max-w-md">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
-                <Input
-                  placeholder="Search templates..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 pr-4 h-12 rounded-full border-border bg-background backdrop-blur-sm"
-                />
+              <div className="relative w-full group">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/50 to-purple-600/50 rounded-full opacity-30 group-hover:opacity-100 transition duration-500 blur"></div>
+                <div className="relative flex items-center bg-background/50 backdrop-blur-xl border border-white/10 rounded-full px-2">
+                  <Search className="ml-4 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  <Input
+                    placeholder="Search for templates, assets..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 h-14 text-base placeholder:text-muted-foreground/70"
+                  />
+                </div>
               </div>
 
               <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
                 <SheetTrigger asChild>
-                  <Button size="lg" className="relative rounded-full h-12 px-6">
+                  <Button size="lg" className="h-14 px-8 rounded-full shadow-lg shadow-primary/20 hover:scale-105 transition-transform bg-gradient-to-r from-primary to-primary/90">
                     <ShoppingCart className="w-5 h-5 mr-2" />
-                    Cart
+                    <span className="font-semibold">Cart</span>
                     {cartCount > 0 && (
-                      <Badge className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 flex items-center justify-center">
+                      <span className="ml-2 bg-white text-primary text-xs font-bold px-2 py-0.5 rounded-full">
                         {cartCount}
-                      </Badge>
+                      </span>
                     )}
                   </Button>
                 </SheetTrigger>
-                <SheetContent className="w-full sm:max-w-lg flex flex-col bg-background">
+                <SheetContent className="w-full sm:max-w-lg flex flex-col bg-background/95 backdrop-blur-xl border-l border-white/10">
                   <SheetHeader>
-                    <SheetTitle className="flex items-center gap-2">
-                      <ShoppingCart className="w-5 h-5" />
-                      Shopping Cart ({cartCount} items)
+                    <SheetTitle className="flex items-center gap-2 text-xl font-bold">
+                      <ShoppingCart className="w-6 h-6 text-primary" />
+                      Your Cart ({cartCount})
                     </SheetTitle>
                   </SheetHeader>
                   <div className="flex-1 flex flex-col mt-6 overflow-hidden">
                     {!user ? (
-                      <div className="flex-1 flex flex-col items-center justify-center gap-4">
-                        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                          <ShoppingCart className="w-8 h-8 text-muted-foreground" />
+                      <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center p-8">
+                        <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                          <ShoppingCart className="w-10 h-10 text-muted-foreground" />
                         </div>
-                        <p className="text-muted-foreground">Please login to view your cart</p>
-                        <Button onClick={() => { setIsCartOpen(false); navigate('/auth'); }}>
-                          Login to Continue
+                        <h3 className="text-xl font-semibold">Login Required</h3>
+                        <p className="text-muted-foreground mb-4">Please sign in to manage your cart and checkout.</p>
+                        <Button onClick={() => { setIsCartOpen(false); navigate('/auth'); }} className="w-full">
+                          Login / Sign Up
                         </Button>
                       </div>
                     ) : cartItems.length === 0 ? (
-                      <div className="flex-1 flex flex-col items-center justify-center gap-4">
-                        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                          <Package className="w-8 h-8 text-muted-foreground" />
+                      <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center p-8">
+                        <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                          <Package className="w-10 h-10 text-muted-foreground" />
                         </div>
-                        <p className="text-muted-foreground">Your cart is empty</p>
-                        <Button variant="outline" onClick={() => setIsCartOpen(false)}>
-                          Continue Shopping
+                        <h3 className="text-xl font-semibold">Your cart is empty</h3>
+                        <p className="text-muted-foreground mb-4">Looks like you haven't added any premium goodies yet.</p>
+                        <Button variant="outline" onClick={() => setIsCartOpen(false)} className="w-full">
+                          Start Shopping
                         </Button>
                       </div>
                     ) : (
                       <>
-                        <div className="flex-1 overflow-auto space-y-4 pr-2">
+                        <div className="flex-1 overflow-auto space-y-4 pr-2 -mr-2">
                           {cartItems.map((item) => (
                             <motion.div
                               key={item.id}
                               layout
-                              initial={{ opacity: 0, x: 20 }}
-                              animate={{ opacity: 1, x: 0 }}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, x: -20 }}
-                              className="flex gap-4 p-4 border border-border rounded-xl bg-card"
+                              className="flex gap-4 p-4 border border-white/5 bg-white/5 rounded-2xl backdrop-blur-sm hover:bg-white/10 transition-colors"
                             >
                               {item.product?.image_url && (
                                 <img
                                   src={item.product.image_url}
                                   alt={item.product.title}
-                                  className="w-20 h-20 object-cover rounded-lg"
+                                  className="w-20 h-20 object-cover rounded-xl shadow-sm"
                                 />
                               )}
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-medium text-foreground truncate">
-                                  {item.product?.title}
-                                </h4>
-                                <p className="text-sm text-primary font-semibold">
-                                  ${item.product?.price?.toFixed(2)}
-                                </p>
-                                <div className="flex items-center gap-2 mt-2">
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    onClick={() =>
-                                      updateQuantityMutation.mutate({
-                                        itemId: item.id,
-                                        quantity: item.quantity - 1,
-                                      })
-                                    }
-                                  >
-                                    <Minus className="h-4 w-4" />
-                                  </Button>
-                                  <span className="w-8 text-center text-foreground font-medium">
-                                    {item.quantity}
-                                  </span>
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    onClick={() =>
-                                      updateQuantityMutation.mutate({
-                                        itemId: item.id,
-                                        quantity: item.quantity + 1,
-                                      })
-                                    }
-                                  >
-                                    <Plus className="h-4 w-4" />
-                                  </Button>
+                              <div className="flex-1 min-w-0 flex flex-col justify-between">
+                                <div>
+                                  <h4 className="font-semibold text-foreground truncate text-base">
+                                    {item.product?.title}
+                                  </h4>
+                                  <p className="text-sm font-bold text-primary mt-1">
+                                    ${item.product?.price?.toFixed(2)}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-3 mt-2">
+                                  <div className="flex items-center bg-background rounded-lg border border-border p-0.5">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 rounded-md"
+                                      onClick={() =>
+                                        updateQuantityMutation.mutate({
+                                          itemId: item.id,
+                                          quantity: item.quantity - 1,
+                                        })
+                                      }
+                                    >
+                                      <Minus className="h-3 w-3" />
+                                    </Button>
+                                    <span className="w-8 text-center text-sm font-medium">
+                                      {item.quantity}
+                                    </span>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 rounded-md"
+                                      onClick={() =>
+                                        updateQuantityMutation.mutate({
+                                          itemId: item.id,
+                                          quantity: item.quantity + 1,
+                                        })
+                                      }
+                                    >
+                                      <Plus className="h-3 w-3" />
+                                    </Button>
+                                  </div>
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 ml-auto text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    className="h-8 w-8 ml-auto text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg"
                                     onClick={() => removeFromCartMutation.mutate(item.id)}
                                   >
                                     <Trash2 className="h-4 w-4" />
@@ -406,18 +420,18 @@ const Store = () => {
                             </motion.div>
                           ))}
                         </div>
-                        <div className="border-t border-border pt-4 mt-4 space-y-4">
-                          <div className="flex justify-between text-lg font-semibold text-foreground">
-                            <span>Total:</span>
-                            <span>${cartTotal.toFixed(2)}</span>
+                        <div className="border-t border-white/10 pt-6 mt-4 space-y-4">
+                          <div className="flex justify-between items-end">
+                            <span className="text-muted-foreground">Total</span>
+                            <span className="text-2xl font-bold tracking-tight">${cartTotal.toFixed(2)}</span>
                           </div>
                           <Button
-                            className="w-full"
+                            className="w-full h-12 text-base rounded-xl font-bold shadow-lg shadow-primary/20"
                             size="lg"
                             onClick={handleCheckout}
                           >
                             Proceed to Checkout
-                            <ArrowRight className="w-4 h-4 ml-2" />
+                            <ArrowRight className="w-5 h-5 ml-2" />
                           </Button>
                         </div>
                       </>
@@ -431,42 +445,49 @@ const Store = () => {
       </section>
 
       {/* Products Section */}
-      <section className="pb-20">
+      <section className="pb-32">
         <div className="container mx-auto px-4">
-          {/* Filters and Controls */}
+          {/* Enhanced Filters */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="mb-8"
+            className="mb-12"
           >
-            {/* Category Filter */}
-            <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
+            {/* Category Filter Pills */}
+            <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
               {categories.map((category) => (
                 <Button
                   key={category}
                   variant={activeCategory === category ? 'default' : 'outline'}
-                  size="sm"
+                  size="lg"
                   onClick={() => setActiveCategory(category)}
-                  className="rounded-full"
+                  className={`rounded-full px-6 h-11 transition-all duration-300 ${activeCategory === category
+                    ? 'shadow-lg shadow-primary/25 scale-105'
+                    : 'bg-background/50 hover:bg-background hover:scale-105 border-white/10'
+                    }`}
                 >
                   {category}
                 </Button>
               ))}
             </div>
 
-            {/* Sort and View controls */}
-            <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-card border border-border">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Tag className="w-4 h-4" />
-                <span>{filteredProducts.length} products found</span>
+            {/* Sort and View controls - Glass Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-4 p-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl">
+              <div className="flex items-center gap-3 px-4 py-2">
+                <div className="bg-primary/20 p-2 rounded-lg">
+                  <Tag className="w-4 h-4 text-primary" />
+                </div>
+                <span className="text-sm font-medium"><span className="text-foreground">{filteredProducts.length}</span> items found</span>
               </div>
 
               <div className="flex items-center gap-3">
                 <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-                  <SelectTrigger className="w-40">
-                    <SlidersHorizontal className="w-4 h-4 mr-2" />
-                    <SelectValue placeholder="Sort by" />
+                  <SelectTrigger className="w-44 bg-transparent border-0 focus:ring-0 focus:ring-offset-0 text-right">
+                    <div className="flex items-center text-muted-foreground hover:text-foreground transition-colors">
+                      <SlidersHorizontal className="w-4 h-4 mr-2" />
+                      <SelectValue placeholder="Sort by" />
+                    </div>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="newest">Newest First</SelectItem>
@@ -476,19 +497,19 @@ const Store = () => {
                   </SelectContent>
                 </Select>
 
-                <div className="hidden sm:flex items-center border border-border rounded-lg overflow-hidden">
+                <div className="hidden sm:flex items-center bg-black/20 rounded-xl p-1 gap-1">
                   <Button
-                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                    variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
                     size="sm"
-                    className="rounded-none"
+                    className="h-8 w-8 rounded-lg p-0"
                     onClick={() => setViewMode('grid')}
                   >
                     <Grid3X3 className="w-4 h-4" />
                   </Button>
                   <Button
-                    variant={viewMode === 'list' ? 'default' : 'ghost'}
+                    variant={viewMode === 'list' ? 'secondary' : 'ghost'}
                     size="sm"
-                    className="rounded-none"
+                    className="h-8 w-8 rounded-lg p-0"
                     onClick={() => setViewMode('list')}
                   >
                     <LayoutList className="w-4 h-4" />

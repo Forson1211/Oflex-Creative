@@ -21,6 +21,7 @@ interface Product {
   title: string;
   price: number;
   image_url: string | null;
+  template_link: string | null;
 }
 
 interface CartItem {
@@ -42,13 +43,35 @@ const Checkout = () => {
   const [orderComplete, setOrderComplete] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('paystack');
   const [verifyingPayment, setVerifyingPayment] = useState(false);
+  const [exchangeRate, setExchangeRate] = useState<number>(15.5); // Default fallback
+  const [isLoadingRate, setIsLoadingRate] = useState(true);
+
+  // Fetch real-time exchange rate
+  useEffect(() => {
+    const fetchExchangeRate = async () => {
+      try {
+        const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+        const data = await res.json();
+        if (data && data.rates && data.rates.GHS) {
+          console.log('Fetched real-time info:', data.rates.GHS);
+          setExchangeRate(data.rates.GHS);
+        }
+      } catch (error) {
+        console.warn('Failed to fetch exchange rate, using fallback:', error);
+      } finally {
+        setIsLoadingRate(false);
+      }
+    };
+
+    fetchExchangeRate();
+  }, []);
 
   const verifyPayment = useCallback(async (reference: string) => {
     if (!user) return;
 
     setVerifyingPayment(true);
     try {
-      const { data, error } = await supabase.functions.invoke('paystack-verify', {
+      const { data, error } = await supabase.functions.invoke('payment-verify', {
         body: { reference }
       });
 
@@ -136,6 +159,9 @@ const Checkout = () => {
     0
   );
 
+  // Calculate GHS amount dynamically
+  const amountInGhs = (cartTotal * exchangeRate).toFixed(2);
+
   // Create pending order and initialize payment
   const checkoutMutation = useMutation({
     mutationFn: async () => {
@@ -176,32 +202,97 @@ const Checkout = () => {
       if (paymentMethod === 'paystack') {
         const callbackUrl = getAbsoluteUrl('/checkout');
 
-        try {
-          const { data, error: functionError } = await supabase.functions.invoke('paystack-initialize', {
+        // Helper to perform the payment initialization
+        const initializePayment = async () => {
+          const payload = {
             body: {
               orderId: order.id,
               email: user.email,
               amount: cartTotal,
               callbackUrl
             }
-          });
+          };
 
-          if (functionError) {
-            console.error('Edge Function Error details:', functionError);
-            throw functionError;
+          try {
+            console.log('Attempting standard invoke...');
+            const { data, error } = await supabase.functions.invoke('payment-init', payload);
+            if (error) throw error;
+            return data;
+          } catch (invokeError) {
+            console.warn('Standard invoke failed, attempting direct fetch fallback...', invokeError);
+
+            // Fallback: Direct Fetch (bypasses some SDK limitations/interception)
+            // Use the hardcoded URL if ENV_CONFIG is missing for some reason to ensure it works
+            const supabaseUrl = "https://rilcytjdydirhhtbrwet.supabase.co";
+            const functionUrl = `${supabaseUrl}/functions/v1/payment-init`;
+
+            const session = await supabase.auth.getSession();
+            const token = session.data.session?.access_token;
+
+            if (!token) throw new Error('Authentication lost. Please login again.');
+
+            try {
+              const res = await fetch(functionUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify(payload.body)
+              });
+
+              const data = await res.json();
+              if (!res.ok) {
+                throw new Error(data.error || data.message || 'Fallback request failed');
+              }
+              return data;
+            } catch (fetchError) {
+              // If both methods fail, it's likely a network/blocker issue
+              console.error('Fallback also failed:', fetchError);
+              throw invokeError; // Throw the original error to preserve context
+            }
           }
+        };
+
+        try {
+          console.log('Calling payment-init...', { orderId: order.id });
+          const data = await initializePayment();
+          console.log('Payment response:', data);
 
           if (!data?.success) {
-            throw new Error(data?.error || 'Failed to initialize payment');
+            console.error('Payment initialization failed:', data);
+            const errorMessage = data?.error || 'Failed to initialize payment';
+
+            if (errorMessage.includes('Invalid key')) {
+              throw new Error('Payment configuration error: Invalid Paystack API key. Please contact support.');
+            }
+            if (errorMessage.includes('Server Config Error')) {
+              throw new Error('Payment service is not properly configured. Please contact support.');
+            }
+            throw new Error(errorMessage);
           }
 
           // Redirect to Paystack
           window.location.href = data.authorizationUrl;
           return { redirecting: true };
-        } catch (err: unknown) {
-          console.error('Call to paystack-initialize failed:', err);
-          const errorMessage = err instanceof Error ? err.message : 'Payment service is currently unavailable';
-          throw new Error(errorMessage);
+
+        } catch (error: any) {
+          const errorMsg = error.message || '';
+          console.error('Final payment error:', errorMsg);
+
+          if (errorMsg.includes('Failed to send a request') || errorMsg.includes('Load failed')) {
+            throw new Error('Connection blocked. If you are using an Ad Blocker (like uBlock Origin), please disable it for this site and try again.');
+          }
+
+          if (errorMsg.includes('Relay Error') || errorMsg.includes('FunctionsHttpError')) {
+            throw new Error('Payment service is temporarily unavailable. Please try again later.');
+          }
+
+          if (errorMsg.includes('Invalid key')) {
+            throw new Error('Payment configuration error: Invalid Paystack API key. Please contact support.');
+          }
+
+          throw error;
         }
       } else {
         toast({
@@ -218,26 +309,17 @@ const Checkout = () => {
       }
     },
     onError: (error: Error) => {
-      console.error('Checkout error details:', error);
-
-      // Try to extract a specific error message
-      let errorMessage = error.message || 'Unknown error occurred';
-
-      // Check for Supabase Edge Function specific error structures
-      if (errorMessage.includes('FunctionsHttpError')) {
-        try {
-          const errorBody = JSON.parse(errorMessage);
-          if (errorBody && errorBody.error) {
-            errorMessage = errorBody.error;
-          }
-        } catch (e) {
-          // Keep original message if parsing fails
-        }
+      // Don't show error if we successfully handled it via fallback
+      if (orderComplete) {
+        setIsProcessing(false);
+        return;
       }
 
-      const errorWithContext = error as { context?: { message?: string } };
-      if (errorWithContext.context?.message) {
-        errorMessage = errorWithContext.context.message;
+      console.error('Checkout error details:', error);
+      // ... rest of error handling
+      let errorMessage = error.message || 'Unknown error occurred';
+      if (errorMessage.includes('FunctionsHttpError')) {
+        errorMessage = "Payment service is unavailable. Please try again later.";
       }
 
       toast({
@@ -411,12 +493,23 @@ const Checkout = () => {
                     <span className="text-primary">${cartTotal.toFixed(2)}</span>
                   </div>
                   {paymentMethod === 'paystack' && (
-                    <div className="flex justify-between text-sm text-muted-foreground bg-accent/50 rounded-lg p-2 mt-2">
-                      <span className="flex items-center gap-1">
-                        <DollarSign className="w-3 h-3" />
-                        Amount in GHS
-                      </span>
-                      <span className="font-medium">{formatPriceWithConversion(cartTotal).ghs}</span>
+                    <div className="flex flex-col gap-1 bg-accent/50 rounded-lg p-3 mt-2">
+                      <div className="flex justify-between items-center text-sm text-foreground">
+                        <span className="flex items-center gap-1 font-medium">
+                          <DollarSign className="w-3 h-3" />
+                          Amount in GHS
+                        </span>
+                        <span className="font-bold text-base">
+                          {isLoadingRate ? (
+                            <Loader2 className="w-3 h-3 animate-spin inline mr-1" />
+                          ) : (
+                            `GH₵${amountInGhs}`
+                          )}
+                        </span>
+                      </div>
+                      <div className="text-xs text-muted-foreground text-right border-t border-border/50 pt-2 mt-1">
+                        Exchange Rate: 1 USD ≈ {isLoadingRate ? '...' : exchangeRate} GHS
+                      </div>
                     </div>
                   )}
                 </div>
@@ -479,7 +572,7 @@ const Checkout = () => {
                         You'll be redirected to Paystack to complete your payment using card, bank transfer, or mobile money.
                       </p>
                       <p className="text-sm font-medium text-primary">
-                        Amount: {formatPriceWithConversion(cartTotal).ghs} (≈ ${cartTotal.toFixed(2)} USD)
+                        Amount: GH₵{amountInGhs} (≈ ${cartTotal.toFixed(2)} USD)
                       </p>
                     </div>
                   )}

@@ -178,6 +178,7 @@ const Auth = () => {
               description: error.message,
               variant: 'destructive',
             });
+            console.error("Signup error:", error);
           }
         } else {
           toast({
@@ -190,6 +191,13 @@ const Auth = () => {
           setPassword('');
         }
       }
+    } catch (error: any) {
+      console.error("Auth error:", error);
+      toast({
+        title: 'Error',
+        description: error.message || 'An unexpected error occurred',
+        variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }

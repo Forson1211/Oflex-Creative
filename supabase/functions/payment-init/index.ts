@@ -1,4 +1,5 @@
-// File: supabase/functions/paystack-initialize/index.ts
+// File: supabase/functions/payment-init/index.ts
+/// <reference path="../deno.d.ts" />
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,18 +15,16 @@ Deno.serve(async (req: Request) => {
   try {
     const REQUEST_headers = { ...corsHeaders, 'Content-Type': 'application/json' };
 
-    // Check for Paystack key
-    const PAYSTACK_KEY = Deno.env.get('PAYSTACK_SECRET_KEY');
+    // Check for Paystack key and TRIM whitespace
+    let PAYSTACK_KEY = Deno.env.get('PAYSTACK_SECRET_KEY');
     if (!PAYSTACK_KEY) {
-      console.error('PAYSTACK_SECRET_KEY is missing from environment variables');
+      console.error('PAYSTACK_SECRET_KEY is missing');
       return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Configuration Error: Paystack secret key is missing. Please check your Supabase secrets.'
-        }),
+        JSON.stringify({ success: false, error: 'Server Config Error: Missing Paystack Key' }),
         { headers: REQUEST_headers, status: 200 }
       );
     }
+    PAYSTACK_KEY = PAYSTACK_KEY.trim(); // Critical fix for copy-paste errors
 
     const body = await req.json();
     const { orderId, email, amount, callbackUrl } = body;
@@ -37,30 +36,36 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // ===== GET REAL-TIME EXCHANGE RATE =====
-    let usdToGhsRate = 15.5; // Fallback rate
+    // ===== EXCHANGE RATE LOGIC =====
+    let usdToGhsRate = 15.5; // Default safe fallback
 
+    // Attempt to fetch live rate with a strict timeout of 2 seconds
     try {
-      // Using free exchangerate-api.com (no API key needed for basic usage)
-      const exchangeRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+      const exchangeRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD', {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
       if (exchangeRes.ok) {
         const exchangeData = await exchangeRes.json();
         if (exchangeData.rates && exchangeData.rates.GHS) {
           usdToGhsRate = exchangeData.rates.GHS;
-          console.log(`Using live rate: 1 USD = ${usdToGhsRate} GHS`);
         }
       }
-    } catch (exchangeError) {
-      console.error('Exchange API error, using fallback rate:', exchangeError);
+    } catch (e) {
+      console.warn('Exchange rate API timed out or failed, using fallback 15.5');
     }
 
-    // Calculate amount in GHS, then convert to pesewas (smallest unit)
+    // Calculate amount
     const amountInGHS = amount * usdToGhsRate;
     const amountInPesewas = Math.round(amountInGHS * 100);
 
-    console.log(`Initializing Payment for Order ${orderId}: $${amount} USD → ${amountInGHS.toFixed(2)} GHS → ${amountInPesewas} pesewas`);
+    console.log(`Init Paystack: Order ${orderId}, Amt ${amountInPesewas} (GHS Pesewas)`);
 
-    // Call Paystack
+    // Call Paystack Initialize
     const paystackRes = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
       headers: {
@@ -71,14 +76,13 @@ Deno.serve(async (req: Request) => {
         email: email,
         amount: amountInPesewas,
         currency: 'GHS',
-        reference: `order_${orderId}_${Date.now()}`,
+        reference: `order_${orderId}_${Date.now()}`, // Unique reference
         callback_url: callbackUrl,
         metadata: {
           order_id: orderId,
+          user_id: body.userId, // Ensure we pass this if available, otherwise it relies on email match
           usd_amount: amount,
-          exchange_rate: usdToGhsRate,
-          ghs_amount: amountInGHS,
-          site_url: req.headers.get('origin') || 'unknown'
+          exchange_rate: usdToGhsRate
         },
       }),
     });
@@ -86,11 +90,11 @@ Deno.serve(async (req: Request) => {
     const paystackData = await paystackRes.json();
 
     if (!paystackRes.ok || !paystackData.status) {
-      console.error('Paystack API Error:', paystackData);
+      console.error('Paystack API Failed:', paystackData);
       return new Response(
         JSON.stringify({
           success: false,
-          error: paystackData.message || 'Payment provider rejected the request',
+          error: paystackData.message || 'Paystack rejected the initialization',
           details: paystackData
         }),
         { headers: REQUEST_headers, status: 200 }
@@ -108,7 +112,7 @@ Deno.serve(async (req: Request) => {
     );
 
   } catch (error) {
-    console.error('Exception in paystack-initialize:', error);
+    console.error('Edge Function Exception:', error);
     return new Response(
       JSON.stringify({
         success: false,

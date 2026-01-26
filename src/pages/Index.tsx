@@ -17,6 +17,7 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/badge';
 import { HeroBannerSlider } from '@/components/HeroBannerSlider';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 
 
@@ -32,6 +33,15 @@ const services = [
   { icon: Code, title: 'UI/UX Design', description: 'User-centered interfaces' },
   { icon: Zap, title: 'AI Automation', description: 'Workflow optimization' },
 ];
+
+const getInitials = (name: string) => {
+  return name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+};
 
 const Index = () => {
   const { user } = useAuth();
@@ -114,149 +124,161 @@ const Index = () => {
 
   return (
     <Layout>
-      {/* Hero Section - Modern & Professional */}
-      <section className="relative min-h-[85vh] md:min-h-[90vh] flex flex-col justify-center overflow-hidden pt-16 md:pt-20">
-        {/* Animated Background */}
-        <div className="absolute inset-0">
+      {/* Hero Section - V2 Modern Split Design */}
+      <section className="relative min-h-[90vh] flex items-center overflow-hidden pt-20 pb-16">
+        {/* Dynamic Background */}
+        <div className="absolute inset-0 z-0">
           <motion.div
             initial={{ scale: 1.1, opacity: 0 }}
-            animate={{ scale: 1, opacity: 0.6 }}
-            transition={{ duration: 1.5, ease: "easeOut" }}
+            animate={{ scale: 1, opacity: 0.4 }}
+            transition={{ duration: 1.5 }}
             className="absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: `url(${getSetting('hero_background_url', 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=1920&h=1080&fit=crop')})` }}
           />
-          {/* Gradient overlay that shows background but ensures text readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/80 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/95 to-background/40" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent opacity-50" />
         </div>
 
-        {/* Gradient Orbs - Subtle background effects */}
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.1, 0.2, 0.1],
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-primary/20 blur-[100px]"
-        />
-        <motion.div
-          animate={{
-            scale: [1.1, 1, 1.1],
-            opacity: [0.08, 0.15, 0.08],
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-1/4 -right-32 w-[500px] h-[500px] rounded-full bg-primary/15 blur-[120px]"
-        />
+        <div className="container mx-auto px-4 relative z-10 h-full">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
 
-        {/* Main Hero Content */}
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-5xl mx-auto">
-            {/* Top Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="flex justify-center mb-6 md:mb-8"
-            >
-              <motion.span
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium"
-                whileHover={{ scale: 1.02 }}
+            {/* Left Column: Content */}
+            <div className="max-w-2xl text-center lg:text-left mx-auto lg:mx-0 pt-8 lg:pt-0">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6 backdrop-blur-sm"
               >
                 <Sparkles className="w-4 h-4" />
-                {getSetting('hero_badge', 'Welcome to Oflex Creative')}
-              </motion.span>
-            </motion.div>
+                <span>{getSetting('hero_badge', 'Welcome to Oflex Creative')}</span>
+              </motion.div>
 
-            {/* Main Title */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-center mb-6"
-            >
-              <h1 className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-foreground leading-[1.1] tracking-tight">
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground leading-[1.1] mb-6"
+              >
                 {getSetting('hero_title', 'Crafting Digital')}
-                <span className="block mt-2 bg-gradient-to-r from-primary via-primary to-primary/70 bg-clip-text text-transparent">
+                <br />
+                <span className="bg-gradient-to-r from-primary via-orange-500 to-yellow-500 bg-clip-text text-transparent">
                   {getSetting('hero_subtitle', 'Experiences')}
                 </span>
-              </h1>
-            </motion.div>
+              </motion.h1>
 
-            {/* Description */}
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-base sm:text-lg md:text-xl text-muted-foreground text-center max-w-2xl mx-auto mb-8 md:mb-10 px-4"
-            >
-              {getSetting('hero_description', 'From AI prompts to stunning designs, we bring your creative visions to life. Explore our portfolio and discover premium digital products.')}
-            </motion.p>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg mx-auto lg:mx-0 leading-relaxed"
+              >
+                {getSetting('hero_description', 'From AI prompts to stunning designs, we bring your creative visions to life. Explore our portfolio and discover premium digital products.')}
+              </motion.p>
 
-            {/* CTA Buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-12 md:mb-16 px-4"
-            >
-              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-                <Button size="lg" asChild className="min-w-[160px] sm:min-w-[180px] h-12 text-base">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="flex flex-row gap-3 sm:gap-4 justify-center lg:justify-start"
+              >
+                <Button size="lg" className="h-10 sm:h-14 px-5 sm:px-8 rounded-full text-sm sm:text-base shadow-lg shadow-primary/20 hover:scale-105 transition-transform" asChild>
                   <Link to="/portfolio">
                     View Portfolio
-                    <ArrowRight className="ml-2 w-4 h-4" />
+                    <ArrowRight className="ml-1.5 sm:ml-2 w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </Link>
                 </Button>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-                <Button size="lg" variant="outline" asChild className="min-w-[160px] sm:min-w-[180px] h-12 text-base">
+                <Button size="lg" variant="outline" className="h-10 sm:h-14 px-5 sm:px-8 rounded-full text-sm sm:text-base backdrop-blur-sm bg-background/50 hover:bg-background/80" asChild>
                   <Link to="/store">
-                    <ShoppingBag className="mr-2 w-4 h-4" />
+                    <ShoppingBag className="mr-1.5 sm:mr-2 w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     Visit Store
                   </Link>
                 </Button>
               </motion.div>
+            </div>
+
+            {/* Right Column: Visual Composition */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="relative hidden lg:block h-full min-h-[500px]"
+            >
+              {/* Abstract decorative shapes */}
+              <div className="absolute top-10 right-10 w-64 h-64 bg-primary/20 rounded-full blur-[80px]" />
+              <div className="absolute bottom-10 left-10 w-64 h-64 bg-purple-500/20 rounded-full blur-[80px]" />
+
+              {/* Floating Cards Composition */}
+              <div className="relative z-10 w-full h-full flex flex-col justify-center items-center">
+                {siteStats && (
+                  <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
+                    {/* Main Large Card */}
+                    <div className="col-span-2">
+                      <GlassCard className="p-6 border-white/20 bg-white/5 backdrop-blur-md">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-primary-foreground shadow-lg">
+                            <Package className="w-6 h-6" />
+                          </div>
+                          <div>
+                            <h3 className="text-3xl font-bold text-foreground">{siteStats.productCount}+</h3>
+                            <p className="text-sm text-muted-foreground">Digital Products Available</p>
+                          </div>
+                        </div>
+                        <div className="mt-4 h-1 w-full bg-white/10 rounded-full overflow-hidden">
+                          <div className="h-full w-3/4 bg-primary rounded-full animate-pulse" />
+                        </div>
+                      </GlassCard>
+                    </div>
+
+                    {/* Secondary Cards */}
+                    <GlassCard className="p-5 border-white/20 bg-white/5 backdrop-blur-md transform hover:-translate-y-1 transition-transform">
+                      <div className="flex flex-col gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-chart-2/20 text-chart-2 flex items-center justify-center">
+                          <Users className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold">{siteStats.userCount}+</p>
+                          <p className="text-xs text-muted-foreground">Happy Clients</p>
+                        </div>
+                      </div>
+                    </GlassCard>
+
+                    <GlassCard className="p-5 border-white/20 bg-white/5 backdrop-blur-md transform hover:-translate-y-1 transition-transform">
+                      <div className="flex flex-col gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-chart-3/20 text-chart-3 flex items-center justify-center">
+                          <Briefcase className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold">{siteStats.projectCount}+</p>
+                          <p className="text-xs text-muted-foreground">Completed Projects</p>
+                        </div>
+                      </div>
+                    </GlassCard>
+                  </div>
+                )}
+              </div>
             </motion.div>
 
-            {/* Stats Section - Clean card design */}
-            {siteStats && (
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                className="w-full"
-              >
-                <div className="grid grid-cols-3 gap-3 sm:gap-6 max-w-2xl mx-auto">
-                  <div className="group relative bg-card/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-border/50 hover:border-primary/30 transition-all duration-300">
-                    <div className="flex flex-col items-center text-center">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-2 sm:mb-3 group-hover:bg-primary/20 transition-colors">
-                        <Package className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-                      </div>
-                      <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">{siteStats.productCount}+</p>
-                      <p className="text-xs sm:text-sm text-muted-foreground mt-1">Products</p>
-                    </div>
+            {/* Mobile Stats (Only visible on small screens) */}
+            <div className="lg:hidden w-full pb-8">
+              {siteStats && (
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-card/50 p-3 rounded-xl border text-center">
+                    <p className="text-xl font-bold text-primary">{siteStats.productCount}+</p>
+                    <p className="text-[10px] text-muted-foreground">Products</p>
                   </div>
-
-                  <div className="group relative bg-card/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-border/50 hover:border-chart-2/30 transition-all duration-300">
-                    <div className="flex flex-col items-center text-center">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-chart-2/10 flex items-center justify-center mb-2 sm:mb-3 group-hover:bg-chart-2/20 transition-colors">
-                        <Users className="w-5 h-5 sm:w-6 sm:h-6 text-chart-2" />
-                      </div>
-                      <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">{siteStats.userCount}+</p>
-                      <p className="text-xs sm:text-sm text-muted-foreground mt-1">Clients</p>
-                    </div>
+                  <div className="bg-card/50 p-3 rounded-xl border text-center">
+                    <p className="text-xl font-bold text-foreground">{siteStats.userCount}+</p>
+                    <p className="text-[10px] text-muted-foreground">Clients</p>
                   </div>
-
-                  <div className="group relative bg-card/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-border/50 hover:border-chart-3/30 transition-all duration-300">
-                    <div className="flex flex-col items-center text-center">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-chart-3/10 flex items-center justify-center mb-2 sm:mb-3 group-hover:bg-chart-3/20 transition-colors">
-                        <Briefcase className="w-5 h-5 sm:w-6 sm:h-6 text-chart-3" />
-                      </div>
-                      <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">{siteStats.projectCount}+</p>
-                      <p className="text-xs sm:text-sm text-muted-foreground mt-1">Projects</p>
-                    </div>
+                  <div className="bg-card/50 p-3 rounded-xl border text-center">
+                    <p className="text-xl font-bold text-foreground">{siteStats.projectCount}+</p>
+                    <p className="text-[10px] text-muted-foreground">Projects</p>
                   </div>
                 </div>
-              </motion.div>
-            )}
+              )}
+            </div>
+
           </div>
         </div>
       </section>
@@ -472,13 +494,12 @@ const Index = () => {
                     "{testimonial.content}"
                   </p>
                   <div className="flex items-center gap-3">
-                    <OptimizedImage
-                      src={testimonial.avatar_url || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop'}
-                      alt={testimonial.name}
-                      width={100}
-                      className="w-12 h-12 rounded-full"
-                      imageClassName="object-cover"
-                    />
+                    <Avatar className="w-12 h-12 border border-border">
+                      <AvatarImage src={testimonial.avatar_url || ''} alt={testimonial.name} className="object-cover" />
+                      <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                        {getInitials(testimonial.name)}
+                      </AvatarFallback>
+                    </Avatar>
                     <div>
                       <p className="font-semibold text-foreground">{testimonial.name}</p>
                       <p className="text-sm text-muted-foreground">{testimonial.role}</p>
@@ -492,32 +513,110 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-primary relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-1/4 w-64 h-64 rounded-full bg-primary-foreground blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-primary-foreground blur-3xl" />
+      {/* CTA Section - Modern Glassmorphic Design */}
+      <section className="py-24 relative overflow-hidden">
+        {/* Abstract Background */}
+        <div className="absolute inset-0 bg-background">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background" />
+          <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/10 blur-[120px] rounded-full opacity-50 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-500/10 blur-[100px] rounded-full opacity-50 pointer-events-none" />
         </div>
 
         <div className="container mx-auto px-4 relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="max-w-3xl mx-auto text-center"
+            transition={{ duration: 0.7 }}
           >
-            <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-6">
-              Ready to Start Your Project?
-            </h2>
-            <p className="text-primary-foreground/80 text-lg mb-8">
-              Let's collaborate and bring your creative vision to life.
-              Get in touch today!
-            </p>
-            <Button size="lg" variant="secondary" asChild>
-              <Link to="/contact">
-                Get In Touch
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </Link>
-            </Button>
+            <GlassCard className="max-w-6xl mx-auto rounded-3xl overflow-hidden border-primary/20 p-0 relative group">
+              {/* Card Background Gradient */}
+              <div className="absolute inset-0 bg-gradient-to-r from-background/80 to-background/40 z-0" />
+
+              <div className="relative z-10 grid md:grid-cols-2 gap-12 items-center p-8 md:p-16">
+                {/* Text Content */}
+                <div className="text-left space-y-6">
+                  <Badge variant="outline" className="px-4 py-1.5 border-primary/50 text-primary bg-primary/10 text-sm">
+                    🚀 Let's Build Something Amazing
+                  </Badge>
+
+                  <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">
+                    Ready to elevate <br />
+                    <span className="text-primary bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-500">
+                      your brand?
+                    </span>
+                  </h2>
+
+                  <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">
+                    Join hundreds of satisfied clients who have transformed their digital presence.
+                    From concept to launch, we are your partners in creative excellence.
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                    <Button size="lg" className="h-14 px-8 rounded-full text-base shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all duration-300" asChild>
+                      <Link to="/contact">
+                        Start a Project
+                        <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      </Link>
+                    </Button>
+                    <Button size="lg" variant="outline" className="h-14 px-8 rounded-full text-base bg-background/50 border-white/10 hover:bg-background/80" asChild>
+                      <Link to="/portfolio">
+                        View Our Work
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Visual Element (Desktop Only) */}
+                <div className="relative hidden md:block h-full min-h-[400px] flex items-center justify-center">
+                  {/* Floating abstract code/design interface */}
+                  <div className="relative z-10 w-full max-w-md bg-card/50 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl transform rotate-3 transition-transform duration-700 ease-out group-hover:rotate-0 group-hover:scale-105">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-red-500/80" />
+                        <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
+                        <div className="w-3 h-3 rounded-full bg-green-500/80" />
+                      </div>
+                      <div className="h-2 w-20 bg-white/10 rounded-full" />
+                    </div>
+                    {/* Content skeleton */}
+                    <div className="space-y-4">
+                      <div className="flex gap-4">
+                        <div className="w-1/3 h-24 rounded-lg bg-primary/20 animate-pulse" />
+                        <div className="w-2/3 space-y-3">
+                          <div className="h-4 w-full bg-white/10 rounded-md" />
+                          <div className="h-4 w-3/4 bg-white/10 rounded-md" />
+                          <div className="h-4 w-1/2 bg-white/10 rounded-md" />
+                        </div>
+                      </div>
+                      <div className="h-32 w-full bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-lg border border-white/5" />
+                      <div className="flex justify-between items-center pt-2">
+                        <div className="h-8 w-24 bg-primary rounded-md opacity-80" />
+                        <div className="h-8 w-8 rounded-full bg-white/10" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Floating Icons */}
+                  <motion.div
+                    animate={{ y: [0, -10, 0] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute top-10 right-10 bg-background/80 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-primary/20"
+                  >
+                    <Sparkles className="w-8 h-8 text-yellow-500" />
+                  </motion.div>
+
+                  <motion.div
+                    animate={{ y: [0, 15, 0] }}
+                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                    className="absolute bottom-20 -left-4 bg-background/80 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-primary/20"
+                  >
+                    <Zap className="w-8 h-8 text-primary" />
+                  </motion.div>
+                </div>
+              </div>
+            </GlassCard>
           </motion.div>
         </div>
       </section>
