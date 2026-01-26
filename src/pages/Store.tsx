@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getInitialData } from '@/lib/query-client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Layout } from '@/components/layout/Layout';
@@ -76,7 +77,7 @@ const Store = () => {
 
   // Fetch products
   const { data: products = [], isLoading: productsLoading } = useQuery({
-    queryKey: ['products'],
+    queryKey: ['store-products'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
@@ -87,6 +88,7 @@ const Store = () => {
       if (error) throw error;
       return data as Product[];
     },
+    initialData: () => getInitialData('store-products'),
   });
 
   // Fetch cart items

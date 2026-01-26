@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, Palette, Code, Zap, Star, ShoppingBag, ShoppingCart, Users, Package, Briefcase } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getInitialData } from '@/lib/query-client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
@@ -67,6 +68,7 @@ const Index = () => {
         projectCount: projectsCount || 0,
       } as SiteStats;
     },
+    initialData: () => getInitialData('site-stats'),
   });
 
   // Fetch featured projects
@@ -83,6 +85,7 @@ const Index = () => {
       if (error) throw error;
       return data as FeaturedProject[];
     },
+    initialData: () => getInitialData('featured-projects'),
   });
 
   // Fetch featured products
@@ -99,6 +102,7 @@ const Index = () => {
       if (error) throw error;
       return data;
     },
+    initialData: () => getInitialData('featured-products'),
   });
 
   // Fetch testimonials with manual join for safety
@@ -142,6 +146,7 @@ const Index = () => {
 
       return mergedTestimonials as Testimonial[];
     },
+    initialData: () => getInitialData('testimonials'),
   });
 
   // Add to cart mutation

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getInitialData } from '@/lib/query-client';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { getOptimizedImageUrl, generateSrcSet } from '@/lib/image-optimizer';
 
@@ -34,6 +35,7 @@ export const HeroBannerSlider = () => {
       if (error) throw error;
       return data as HeroSlide[];
     },
+    initialData: () => getInitialData('hero-slides'),
   });
 
   const nextSlide = useCallback(() => {

@@ -18,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
@@ -45,16 +46,15 @@ interface OrderWithItems extends Order {
 }
 
 const Orders = () => {
-  const [orders, setOrders] = useState<OrderWithItems[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<OrderWithItems | null>(null);
-  const [updating, setUpdating] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const fetchOrders = useCallback(async () => {
-    setLoading(true);
-    try {
+  // Fetch orders with React Query
+  const { data: orders = [], isLoading: loading } = useQuery({
+    queryKey: ['admin-orders'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('orders')
         .select(`
@@ -64,49 +64,43 @@ const Orders = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setOrders(data || []);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch orders',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+      return data as OrderWithItems[];
+    },
+  });
 
-  const handleStatusChange = async (newStatus: string) => {
-    if (!selectedOrder) return;
-
-    setUpdating(true);
-    try {
+  // Status update mutation
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ orderId, newStatus }: { orderId: string, newStatus: string }) => {
       const { error } = await supabase
         .from('orders')
         .update({ status: newStatus })
-        .eq('id', selectedOrder.id);
-
+        .eq('id', orderId);
       if (error) throw error;
-
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
       toast({ title: 'Order status updated' });
-      setSelectedOrder({ ...selectedOrder, status: newStatus });
-      fetchOrders();
-    } catch (error) {
+      // Update local state if dialog is open
+      if (selectedOrder && selectedOrder.id === variables.orderId) {
+        setSelectedOrder({ ...selectedOrder, status: variables.newStatus });
+      }
+    },
+    onError: (error: Error) => {
       console.error('Error updating order status:', error);
       toast({
         title: 'Error',
         description: 'Failed to update order status',
         variant: 'destructive'
       });
-    } finally {
-      setUpdating(false);
-    }
+    },
+  });
+
+  const handleStatusChange = (newStatus: string) => {
+    if (!selectedOrder) return;
+    updateStatusMutation.mutate({ orderId: selectedOrder.id, newStatus });
   };
 
-  useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+  const updating = updateStatusMutation.isPending;
 
   const getStatusColor = (status: string) => {
     switch (status) {

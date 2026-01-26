@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+import { getInitialData } from '@/lib/query-client';
+
 interface SiteSetting {
   setting_key: string;
   setting_value: string | null;
@@ -34,7 +36,7 @@ function hexToHSL(hex: string): string {
 }
 
 export function useSiteSettings() {
-  const { data: siteSettings = JSON.parse(localStorage.getItem('site_settings') || '[]'), isLoading } = useQuery({
+  const { data: siteSettings, isLoading } = useQuery({
     queryKey: ['site-settings'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -42,11 +44,9 @@ export function useSiteSettings() {
         .select('*');
 
       if (error) throw error;
-
-      localStorage.setItem('site_settings', JSON.stringify(data));
       return data as SiteSetting[];
     },
-    staleTime: 1000 * 60 * 5,
+    initialData: () => getInitialData('site-settings'),
   });
 
   const getSetting = useCallback((key: string, defaultValue: string = '') => {

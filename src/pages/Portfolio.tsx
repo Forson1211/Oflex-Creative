@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
+import { getInitialData } from '@/lib/query-client';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/button';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
@@ -24,7 +25,7 @@ const Portfolio = () => {
   const { getSetting } = useSiteSettings();
 
   // Fetch all featured projects from database
-  const { data: portfolioItems = [] } = useQuery({
+  const { data: portfolioItems = [] } = useQuery<FeaturedProject[]>({
     queryKey: ['portfolio-projects'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -34,10 +35,11 @@ const Portfolio = () => {
       if (error) throw error;
       return data as FeaturedProject[];
     },
+    initialData: () => getInitialData('portfolio-projects') as FeaturedProject[] || [],
   });
 
   // Extract unique categories from projects
-  const categories = useMemo(() => {
+  const categories = useMemo<string[]>(() => {
     const cats = new Set(portfolioItems.map(item => item.category));
     return ['All', ...Array.from(cats)];
   }, [portfolioItems]);
