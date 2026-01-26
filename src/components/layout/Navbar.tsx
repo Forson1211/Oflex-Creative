@@ -50,7 +50,7 @@ export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
-  const { user, signOut, isAdmin } = useAuth();
+  const { user, signOut, isAdmin, isAuthReady } = useAuth();
   const { getSetting } = useSiteSettings();
   const location = useLocation();
   const navigate = useNavigate();
@@ -90,7 +90,7 @@ export const Navbar = () => {
       if (error) throw error;
       return data as CartItem[];
     },
-    enabled: !!user,
+    enabled: isAuthReady && !!user,
   });
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);

@@ -17,7 +17,7 @@ export const ORDER_KEYS = {
 };
 
 export function useOrders(filters: { status?: string; userId?: string } = {}) {
-    const { user } = useAuth();
+    const { user, isAuthReady } = useAuth();
     const queryKey = ORDER_KEYS.list(filters);
 
     return useQuery({
@@ -47,11 +47,13 @@ export function useOrders(filters: { status?: string; userId?: string } = {}) {
         },
         initialData: () => getInitialData(queryKey[0]),
         staleTime: 1000 * 60 * 5, // 5 minutes
-        enabled: !!user,
+        enabled: isAuthReady && !!user,
     });
 }
 
 export function useOrder(id: string | undefined) {
+    const { isAuthReady } = useAuth();
+
     return useQuery({
         queryKey: ORDER_KEYS.detail(id || ''),
         queryFn: async () => {
@@ -70,7 +72,7 @@ export function useOrder(id: string | undefined) {
             if (error) throw error;
             return data;
         },
-        enabled: !!id,
+        enabled: isAuthReady && !!id,
     });
 }
 

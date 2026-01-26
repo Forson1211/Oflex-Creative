@@ -43,7 +43,7 @@ export interface UserSecurityInfo {
 }
 
 export function useUserSecurityInfo(userId: string | undefined) {
-    const { user: currentUser } = useAuth();
+    const { user: currentUser, isAuthReady } = useAuth();
 
     return useQuery({
         queryKey: USER_KEYS.security(userId || ''),
@@ -57,11 +57,12 @@ export function useUserSecurityInfo(userId: string | undefined) {
         },
         initialData: () => getInitialData(USER_KEYS.security(userId || '')),
         staleTime: 1000 * 60 * 10, // 10 minutes
-        enabled: !!userId && !!currentUser,
+        enabled: isAuthReady && !!userId && !!currentUser,
     });
 }
 
 export function useProfile(userId: string | undefined) {
+    const { isAuthReady } = useAuth();
     return useQuery({
         queryKey: USER_KEYS.profile(userId || ''),
         queryFn: async () => {
@@ -77,12 +78,12 @@ export function useProfile(userId: string | undefined) {
         },
         initialData: () => getInitialData(USER_KEYS.profile(userId || '')),
         staleTime: 1000 * 60 * 30, // 30 minutes (profile changes rarely)
-        enabled: !!userId,
+        enabled: isAuthReady && !!userId,
     });
 }
 
 export function useUsers() {
-    const { user } = useAuth();
+    const { user, isAuthReady } = useAuth();
     return useQuery({
         queryKey: USER_KEYS.all,
         queryFn: async () => {
@@ -109,7 +110,7 @@ export function useUsers() {
         },
         initialData: () => getInitialData('users'),
         staleTime: 1000 * 60 * 15, // 15 minutes
-        enabled: !!user,
+        enabled: isAuthReady && !!user,
     });
 }
 

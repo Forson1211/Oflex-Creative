@@ -3,12 +3,14 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
+import { getAbsoluteUrl } from '@/config/env';
 
 type AppRole = 'admin' | 'moderator' | 'user';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  isAuthReady: boolean;
   isAdmin: boolean;
   isModerator: boolean;
   userRole: AppRole | null;
@@ -24,6 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAuthReady, setIsAuthReady] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isModerator, setIsModerator] = useState(false);
   const [userRole, setUserRole] = useState<AppRole | null>(null);
@@ -66,17 +69,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     // Check active sessions and sets the user
+    let isMounted = true;
+
     const initAuth = async () => {
       try {
+        setLoading(true);
         const { data: { session } } = await supabase.auth.getSession();
-        setUser(session?.user ?? null);
+
+        if (!isMounted) return;
+
         if (session?.user) {
+          setUser(session.user);
           await checkUserRole(session.user.id);
+        } else {
+          setUser(null);
+          setIsAdmin(false);
+          setIsModerator(false);
+          setUserRole(null);
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+          setIsAuthReady(true);
+        }
       }
     };
 
@@ -85,23 +102,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Listen for changes on auth state
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log(`Auth event: ${event}`);
-      setLoading(true); // Set loading while we verify new state
-      setUser(session?.user ?? null);
 
-      if (session?.user) {
-        await checkUserRole(session.user.id);
-      } else {
+      if (!isMounted) return;
+
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await checkUserRole(session.user.id);
+        }
+        setLoading(false);
+        setIsAuthReady(true);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
         setIsAdmin(false);
         setIsModerator(false);
         setUserRole(null);
-        if (event === 'SIGNED_OUT') {
-          queryClient.clear();
-        }
+        queryClient.clear();
+        setLoading(false);
+        setIsAuthReady(true);
+      } else if (event === 'USER_UPDATED') {
+        setUser(session?.user ?? null);
+        setLoading(false);
+        setIsAuthReady(true);
       }
-      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, [queryClient]);
 
   const signIn = async (email: string, password: string) => {
@@ -207,13 +236,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const resetPasswordForEmail = async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth?update_password=true`,
+      redirectTo: getAbsoluteUrl('/auth?update_password=true'),
     });
     return { error };
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAdmin, isModerator, userRole, signIn, signUp, resendSignupConfirmation, signOut, resetPasswordForEmail }}>
+    <AuthContext.Provider value={{ user, loading, isAuthReady, isAdmin, isModerator, userRole, signIn, signUp, resendSignupConfirmation, signOut, resetPasswordForEmail }}>
       {children}
     </AuthContext.Provider>
   );

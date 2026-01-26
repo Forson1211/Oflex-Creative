@@ -20,7 +20,7 @@ export const PURCHASE_KEYS = {
 };
 
 export function usePurchases() {
-    const { user } = useAuth();
+    const { user, isAuthReady } = useAuth();
 
     return useQuery({
         queryKey: PURCHASE_KEYS.user(user?.id || ''),
@@ -37,7 +37,7 @@ export function usePurchases() {
         },
         initialData: () => getInitialData(PURCHASE_KEYS.user(user?.id || '')),
         staleTime: 1000 * 60 * 60, // 1 hour (purchases don't change often)
-        enabled: !!user,
+        enabled: isAuthReady && !!user,
     });
 }
 

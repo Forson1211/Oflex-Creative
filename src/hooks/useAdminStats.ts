@@ -20,7 +20,7 @@ export interface AnalyticsData {
 }
 
 export function useAnalytics() {
-    const { user } = useAuth();
+    const { user, isAuthReady } = useAuth();
 
     return useQuery({
         queryKey: ADMIN_STATS_KEYS.analytics,
@@ -38,7 +38,7 @@ export function useAnalytics() {
         initialData: () => getInitialData('site-analytics'),
         staleTime: 1000 * 60 * 30, // 30 minutes
         gcTime: 1000 * 60 * 60 * 24, // 24 hours
-        enabled: !!user,
+        enabled: isAuthReady && !!user,
     });
 }
 
@@ -61,7 +61,7 @@ export interface AdminStatsResponse {
 }
 
 export function useAdminStats() {
-    const { user } = useAuth();
+    const { user, isAuthReady } = useAuth();
 
     return useQuery({
         queryKey: ADMIN_STATS_KEYS.all,
@@ -74,7 +74,7 @@ export function useAdminStats() {
         initialData: () => getInitialData('admin-stats'),
         staleTime: 1000 * 60 * 10, // 10 minutes (keep dashboard data fresh but not noisy)
         gcTime: 1000 * 60 * 60 * 24, // 24 hours
-        enabled: !!user,
+        enabled: isAuthReady && !!user,
     });
 }
 

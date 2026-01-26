@@ -69,7 +69,7 @@ const Store = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'name'>('newest');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const { user } = useAuth();
+  const { user, isAuthReady } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -97,7 +97,7 @@ const Store = () => {
 
       return data as CartItem[];
     },
-    enabled: !!user,
+    enabled: isAuthReady && !!user,
   });
 
   // Get unique categories

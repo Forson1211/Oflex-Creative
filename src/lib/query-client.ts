@@ -37,7 +37,7 @@ persistQueryClient({
 });
 
 // Helper for manual hydration if needed (though persistQueryClient handles most cases)
-export const getInitialData = (key: string | any[]) => {
+export const getInitialData = (key: string | readonly any[]) => {
     try {
         const cache = localStorage.getItem('OFLEX_STUDIO_CACHE');
         if (!cache) return undefined;

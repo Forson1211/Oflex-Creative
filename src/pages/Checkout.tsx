@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { formatPriceWithConversion } from '@/lib/currency';
+import { getAbsoluteUrl } from '@/config/env';
 
 interface Product {
   id: string;
@@ -173,7 +174,7 @@ const Checkout = () => {
       if (itemsError) throw itemsError;
 
       if (paymentMethod === 'paystack') {
-        const callbackUrl = `${window.location.origin}/checkout`;
+        const callbackUrl = getAbsoluteUrl('/checkout');
 
         try {
           const { data, error: functionError } = await supabase.functions.invoke('paystack-initialize', {

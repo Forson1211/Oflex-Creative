@@ -13,11 +13,11 @@ export const ProtectedRoute = ({
   requireAdmin = false,
   requireModerator = false
 }: ProtectedRouteProps) => {
-  const { user, loading, isAdmin, isModerator } = useAuth();
+  const { user, loading, isAuthReady, isAdmin, isModerator } = useAuth();
   const navigate = useNavigate();
 
-  // Loading state checks first
-  if (loading) {
+  // Wait for auth to be fully ready (session + role check)
+  if (!isAuthReady || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
