@@ -1,0 +1,88 @@
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
+import { useToast } from '@/hooks/use-toast';
+
+export type Order = Tables<'orders'>;
+
+export const ORDER_KEYS = {
+    all: ['orders'] as const,
+    lists: () => [...ORDER_KEYS.all, 'list'] as const,
+    list: (filters: any) => [...ORDER_KEYS.lists(), filters] as const,
+    details: () => [...ORDER_KEYS.all, 'detail'] as const,
+    detail: (id: string) => [...ORDER_KEYS.details(), id] as const,
+};
+
+export function useOrders(filters: { status?: string; userId?: string } = {}) {
+    return useQuery({
+        queryKey: ORDER_KEYS.list(filters),
+        queryFn: async () => {
+            let query = supabase.from('orders').select(`
+        *,
+        order_items:order_items(
+          *,
+          product:products(*)
+        )
+      `);
+
+            if (filters.status && filters.status !== 'all') {
+                query = query.eq('status', filters.status);
+            }
+
+            if (filters.userId) {
+                query = query.eq('user_id', filters.userId);
+            }
+
+            const { data, error } = await query.order('created_at', { ascending: false });
+
+            if (error) throw error;
+            return data;
+        },
+    });
+}
+
+export function useOrder(id: string | undefined) {
+    return useQuery({
+        queryKey: ORDER_KEYS.detail(id || ''),
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('orders')
+                .select(`
+          *,
+          order_items:order_items(
+            *,
+            product:products(*)
+          )
+        `)
+                .eq('id', id)
+                .single();
+
+            if (error) throw error;
+            return data;
+        },
+        enabled: !!id,
+    });
+}
+
+export function useOrderMutations() {
+    const queryClient = useQueryClient();
+    const { toast } = useToast();
+
+    const updateOrderStatus = useMutation({
+        mutationFn: async ({ id, status }: { id: string; status: string }) => {
+            const { error } = await supabase.from('orders').update({ status }).eq('id', id);
+            if (error) throw error;
+        },
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ORDER_KEYS.all });
+            queryClient.invalidateQueries({ queryKey: ORDER_KEYS.detail(variables.id) });
+            toast({ title: 'Success', description: 'Order status updated' });
+        },
+        onError: (error: any) => {
+            toast({ title: 'Error', description: error.message, variant: 'destructive' });
+        }
+    });
+
+    return { updateOrderStatus };
+}

@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useState } from 'react';
+import { useAdminStats, useAdminActions, type AdminStatsResponse } from '@/hooks/useAdminStats';
 import { Package, ShoppingCart, DollarSign, Users, TrendingUp, Clock, CheckCircle2, XCircle, AlertCircle, RefreshCw, Bell, Trash2 } from 'lucide-react';
 import {
   AlertDialog,
@@ -29,109 +30,29 @@ interface Stats {
   pendingOrders: number;
 }
 
-interface RecentOrder {
-  id: string;
-  status: string;
-  total_amount: number;
-  created_at: string;
-  payment_provider: string | null;
-}
 
-interface AdminStatsResponse {
-  total_products: number;
-  total_orders: number;
-  total_revenue: number;
-  total_users: number;
-  completed_orders: number;
-  pending_orders: number;
-  recent_orders: RecentOrder[];
-}
 
 const Dashboard = () => {
-  const [stats, setStats] = useState<Stats>({
-    totalProducts: 0,
-    totalOrders: 0,
-    totalRevenue: 0,
-    totalUsers: 0,
-    completedOrders: 0,
-    pendingOrders: 0,
-  });
-  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [resetting, setResetting] = useState(false);
+  const { data: adminStats, isLoading: loading, refetch } = useAdminStats();
+  const { resetAnalytics } = useAdminActions();
   const { toast } = useToast();
 
-  const fetchStats = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.rpc('get_admin_stats');
-
-      if (error) throw error;
-
-      if (data) {
-        const statsData = data as unknown as AdminStatsResponse;
-        setStats({
-          totalProducts: statsData.total_products || 0,
-          totalOrders: statsData.total_orders || 0,
-          totalRevenue: Number(statsData.total_revenue) || 0,
-          totalUsers: statsData.total_users || 0,
-          completedOrders: statsData.completed_orders || 0,
-          pendingOrders: statsData.pending_orders || 0,
-        });
-
-        setRecentOrders(statsData.recent_orders || []);
-      }
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-      toast({ title: 'Error fetching stats', variant: 'destructive' });
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [toast]);
-
-  // Fetch stats on mount and when page becomes visible (for refresh)
-  useEffect(() => {
-    fetchStats();
-
-    // Re-fetch when page becomes visible (e.g., after tab switch or browser refresh)
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        fetchStats();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [fetchStats]);
-
   const handleRefresh = () => {
-    setRefreshing(true);
-    fetchStats();
+    refetch();
     toast({ title: 'Dashboard refreshed!' });
   };
 
-  const handleResetStats = async () => {
-    setResetting(true);
-    try {
-      const { error } = await supabase.rpc('admin_reset_site_analytics');
-      if (error) throw error;
-
-      toast({ title: 'Analytics reset successfully' });
-      // Refresh the data on the screen
-      fetchStats();
-    } catch (error) {
-      console.error('Error resetting analytics:', error);
-      toast({
-        title: 'Reset failed',
-        description: error instanceof Error ? error.message : 'You may need to run the database migration script first.',
-        variant: 'destructive'
-      });
-    } finally {
-      setResetting(false);
-    }
+  const stats = {
+    totalProducts: adminStats?.total_products || 0,
+    totalOrders: adminStats?.total_orders || 0,
+    totalRevenue: Number(adminStats?.total_revenue) || 0,
+    totalUsers: adminStats?.total_users || 0,
+    completedOrders: adminStats?.completed_orders || 0,
+    pendingOrders: adminStats?.pending_orders || 0,
   };
+
+  const recentOrders = adminStats?.recent_orders || [];
+
 
   const statCards = [
     {
@@ -209,7 +130,7 @@ const Dashboard = () => {
                     <Button
                       variant="destructive"
                       size="sm"
-                      disabled={resetting || loading}
+                      disabled={resetAnalytics.isPending || loading}
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
                       Reset Stats
@@ -227,10 +148,10 @@ const Dashboard = () => {
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
-                        onClick={handleResetStats}
+                        onClick={() => resetAnalytics.mutate()}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       >
-                        {resetting ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : null}
+                        {resetAnalytics.isPending ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : null}
                         Reset Analytics
                       </AlertDialogAction>
                     </AlertDialogFooter>
@@ -241,11 +162,12 @@ const Dashboard = () => {
                   variant="outline"
                   size="sm"
                   onClick={handleRefresh}
-                  disabled={refreshing}
+                  disabled={loading}
                 >
-                  <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                   Refresh
                 </Button>
+
               </>
             }
           />

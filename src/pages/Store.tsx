@@ -20,8 +20,8 @@ import {
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { getInitialData } from '@/lib/query-client';
 import { useAuth } from '@/hooks/useAuth';
+import { useProducts } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
 import { Layout } from '@/components/layout/Layout';
 import { SectionHeading } from '@/components/ui/SectionHeading';
@@ -75,20 +75,9 @@ const Store = () => {
   const queryClient = useQueryClient();
   const { getSetting } = useSiteSettings();
 
-  // Fetch products
-  const { data: products = [] as Product[], isLoading: productsLoading } = useQuery<Product[]>({
-    queryKey: ['store-products'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data as Product[];
-    },
-    initialData: () => getInitialData('store-products'),
+  // Fetch products using centralized hook
+  const { data: products = [], isLoading: productsLoading } = useProducts({
+    isActive: true
   });
 
   // Fetch cart items

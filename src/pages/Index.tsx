@@ -7,6 +7,9 @@ import { getInitialData } from '@/lib/query-client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { useProducts } from '@/hooks/useProducts';
+import { useProjects } from '@/hooks/useProjects';
+import { useTestimonials } from '@/hooks/useTestimonials';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout/Layout';
 import { SectionHeading } from '@/components/ui/SectionHeading';
@@ -15,24 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { HeroBannerSlider } from '@/components/HeroBannerSlider';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
 
-interface FeaturedProject {
-  id: string;
-  title: string;
-  category: string;
-  image_url: string;
-  description: string | null;
-  is_featured: boolean;
-  display_order: number;
-}
 
-interface Testimonial {
-  id: string;
-  name: string;
-  role: string;
-  content: string;
-  avatar_url: string | null;
-  rating: number;
-}
 
 interface SiteStats {
   productCount: number;
@@ -71,83 +57,15 @@ const Index = () => {
     initialData: () => getInitialData('site-stats'),
   });
 
-  // Fetch featured projects
-  const { data: featuredProjects = [] } = useQuery({
-    queryKey: ['featured-projects'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('featured_projects')
-        .select('*')
-        .eq('is_featured', true)
-        .order('display_order', { ascending: true })
-        .limit(4);
+  // Fetch featured projects using centralized hook
+  const { data: featuredProjects = [] } = useProjects({ isFeatured: true });
 
-      if (error) throw error;
-      return data as FeaturedProject[];
-    },
-    initialData: () => getInitialData('featured-projects'),
-  });
+  // Fetch featured products using centralized hook
+  const { data: allProducts = [] } = useProducts({ isActive: true });
+  const featuredProducts = allProducts.slice(0, 4);
 
-  // Fetch featured products
-  const { data: featuredProducts = [] } = useQuery({
-    queryKey: ['featured-products'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(4);
-
-      if (error) throw error;
-      return data;
-    },
-    initialData: () => getInitialData('featured-products'),
-  });
-
-  // Fetch testimonials with manual join for safety
-  const { data: testimonials = [] } = useQuery({
-    queryKey: ['testimonials'],
-    queryFn: async () => {
-      // 1. Get active testimonials
-      const { data: testimonialsData, error: testimonialsError } = await supabase
-        .from('testimonials')
-        .select('*')
-        .eq('is_active', true)
-        .order('display_order', { ascending: true });
-
-      if (testimonialsError) throw testimonialsError;
-
-      // 2. Get unique user IDs from testimonials that have a user_id but might lack an avatar
-      const userIds = [...new Set(
-        testimonialsData
-          .filter(t => t.user_id && !t.avatar_url)
-          .map(t => t.user_id)
-      )];
-
-      if (userIds.length === 0) return testimonialsData as Testimonial[];
-
-      // 3. Fetch profiles for those users
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('user_id, avatar_url')
-        .in('user_id', userIds);
-
-      // 4. Merge data
-      const mergedTestimonials = testimonialsData.map(t => {
-        if (!t.avatar_url && t.user_id) {
-          const profile = profilesData?.find(p => p.user_id === t.user_id);
-          if (profile?.avatar_url) {
-            return { ...t, avatar_url: profile.avatar_url };
-          }
-        }
-        return t;
-      });
-
-      return mergedTestimonials as Testimonial[];
-    },
-    initialData: () => getInitialData('testimonials'),
-  });
+  // Fetch testimonials using centralized hook
+  const { data: testimonials = [] } = useTestimonials();
 
   // Add to cart mutation
   const addToCartMutation = useMutation({

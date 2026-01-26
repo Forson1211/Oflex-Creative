@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTestimonials, useTestimonialMutations } from '@/hooks/useTestimonials';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ProtectedRoute } from '@/components/admin/ProtectedRoute';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, Loader2, Star, GripVertical } from 'lucide-react';
 import {
@@ -29,22 +28,12 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
-interface Testimonial {
-  id: string;
-  name: string;
-  role: string;
-  content: string;
-  avatar_url: string | null;
-  rating: number;
-  is_active: boolean;
-  display_order: number;
-}
+
 
 const Testimonials = () => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null);
+  const [editingTestimonial, setEditingTestimonial] = useState<any | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     role: '',
@@ -55,55 +44,8 @@ const Testimonials = () => {
     display_order: 0,
   });
 
-  const { data: testimonials = [], isLoading } = useQuery({
-    queryKey: ['admin-testimonials'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('testimonials')
-        .select('*')
-        .order('display_order', { ascending: true });
-      if (error) throw error;
-      return data as Testimonial[];
-    },
-  });
-
-  const createMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
-      const { error } = await supabase.from('testimonials').insert(data);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-testimonials'] });
-      toast({ title: 'Testimonial created!' });
-      resetForm();
-    },
-    onError: () => toast({ title: 'Error creating testimonial', variant: 'destructive' }),
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, ...data }: Testimonial) => {
-      const { error } = await supabase.from('testimonials').update(data).eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-testimonials'] });
-      toast({ title: 'Testimonial updated!' });
-      resetForm();
-    },
-    onError: () => toast({ title: 'Error updating testimonial', variant: 'destructive' }),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('testimonials').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-testimonials'] });
-      toast({ title: 'Testimonial deleted!' });
-    },
-    onError: () => toast({ title: 'Error deleting testimonial', variant: 'destructive' }),
-  });
+  const { data: testimonials = [], isLoading } = useTestimonials();
+  const { createTestimonial, updateTestimonial, deleteTestimonial } = useTestimonialMutations();
 
   const resetForm = () => {
     setFormData({
@@ -119,7 +61,7 @@ const Testimonials = () => {
     setIsDialogOpen(false);
   };
 
-  const handleEdit = (testimonial: Testimonial) => {
+  const handleEdit = (testimonial: any) => {
     setEditingTestimonial(testimonial);
     setFormData({
       name: testimonial.name,
@@ -136,11 +78,15 @@ const Testimonials = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingTestimonial) {
-      updateMutation.mutate({ id: editingTestimonial.id, ...formData } as Testimonial);
+      updateTestimonial.mutate(
+        { id: editingTestimonial.id, data: formData },
+        { onSuccess: () => resetForm() }
+      );
     } else {
-      createMutation.mutate(formData);
+      createTestimonial.mutate(formData, { onSuccess: () => resetForm() });
     }
   };
+
 
   return (
     <ProtectedRoute requireModerator>
@@ -231,8 +177,8 @@ const Testimonials = () => {
                     <Button type="button" variant="outline" onClick={resetForm}>
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                      {(createMutation.isPending || updateMutation.isPending) && (
+                    <Button type="submit" disabled={createTestimonial.isPending || updateTestimonial.isPending}>
+                      {(createTestimonial.isPending || updateTestimonial.isPending) && (
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       )}
                       {editingTestimonial ? 'Update' : 'Create'}
@@ -252,9 +198,8 @@ const Testimonials = () => {
               {testimonials.map((testimonial) => (
                 <div
                   key={testimonial.id}
-                  className={`bg-card border border-border rounded-xl p-6 transition-opacity ${
-                    !testimonial.is_active ? 'opacity-50' : ''
-                  }`}
+                  className={`bg-card border border-border rounded-xl p-6 transition-opacity ${!testimonial.is_active ? 'opacity-50' : ''
+                    }`}
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex-shrink-0">
@@ -308,7 +253,7 @@ const Testimonials = () => {
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={() => deleteMutation.mutate(testimonial.id)}
+                              onClick={() => deleteTestimonial.mutate(testimonial.id)}
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
                               Delete

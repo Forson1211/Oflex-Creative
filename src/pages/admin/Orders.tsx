@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useState } from 'react';
+import { useOrders, useOrderMutations } from '@/hooks/useOrders';
 import { Search, Eye, ShoppingCart, Loader2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { AdminLayout } from '@/components/admin/AdminLayout';
@@ -18,89 +19,34 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminTable, ADMIN_TABLE_HEADER_CLASS } from '@/components/admin/AdminTable';
 
-interface Order {
-  id: string;
-  user_id: string;
-  total_amount: number;
-  status: string;
-  payment_provider: string | null;
-  created_at: string;
-}
 
-interface OrderItem {
-  id: string;
-  product_id: string;
-  product_title: string;
-  product_price: number;
-  quantity: number;
-}
-
-interface OrderWithItems extends Order {
-  order_items?: OrderItem[];
-}
 
 const Orders = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedOrder, setSelectedOrder] = useState<OrderWithItems | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  // Fetch orders with React Query
-  const { data: orders = [], isLoading: loading } = useQuery({
-    queryKey: ['admin-orders'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          order_items (*)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data as OrderWithItems[];
-    },
-  });
-
-  // Status update mutation
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({ orderId, newStatus }: { orderId: string, newStatus: string }) => {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: newStatus })
-        .eq('id', orderId);
-      if (error) throw error;
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-      toast({ title: 'Order status updated' });
-      // Update local state if dialog is open
-      if (selectedOrder && selectedOrder.id === variables.orderId) {
-        setSelectedOrder({ ...selectedOrder, status: variables.newStatus });
-      }
-    },
-    onError: (error: Error) => {
-      console.error('Error updating order status:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update order status',
-        variant: 'destructive'
-      });
-    },
-  });
+  const { data: orders = [], isLoading: loading } = useOrders();
+  const { updateOrderStatus } = useOrderMutations();
 
   const handleStatusChange = (newStatus: string) => {
     if (!selectedOrder) return;
-    updateStatusMutation.mutate({ orderId: selectedOrder.id, newStatus });
+    updateOrderStatus.mutate(
+      { id: selectedOrder.id, status: newStatus },
+      {
+        onSuccess: () => {
+          setSelectedOrder({ ...selectedOrder, status: newStatus });
+        },
+      }
+    );
   };
 
-  const updating = updateStatusMutation.isPending;
+  const updating = updateOrderStatus.isPending;
+
 
   const getStatusColor = (status: string) => {
     switch (status) {

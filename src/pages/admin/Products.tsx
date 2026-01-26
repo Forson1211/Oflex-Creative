@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useState } from 'react';
+import { useProducts, useProductMutations } from '@/hooks/useProducts';
 import { Package } from 'lucide-react';
 import { Plus, Pencil, Trash2, Search } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
@@ -34,8 +35,6 @@ type Product = Tables<'products'>;
 const categories = ['Prompts', 'Templates', 'Branding', 'UI Kits', 'Mockups'];
 
 const Products = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -49,35 +48,15 @@ const Products = () => {
     template_link: '',
     is_active: true,
   });
+
+  const { data: products = [], isLoading: loading } = useProducts();
+  const { createProduct, updateProduct, deleteProduct } = useProductMutations();
   const { toast } = useToast();
 
   const { uploadImage, isUploading } = useImageUpload({
     bucket: 'product-images',
     onSuccess: (url) => setFormData((prev) => ({ ...prev, image_url: url })),
   });
-
-  const fetchProducts = useCallback(async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch products',
-        variant: 'destructive',
-      });
-    } else {
-      setProducts(data || []);
-    }
-    setLoading(false);
-  }, [toast]);
-
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
 
   const resetForm = () => {
     setFormData({
@@ -110,22 +89,7 @@ const Products = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this product?')) return;
-
-    const { error } = await supabase.from('products').delete().eq('id', id);
-
-    if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete product',
-        variant: 'destructive',
-      });
-    } else {
-      toast({
-        title: 'Success',
-        description: 'Product deleted successfully',
-      });
-      fetchProducts();
-    }
+    deleteProduct.mutate(id);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -143,46 +107,25 @@ const Products = () => {
     };
 
     if (editingProduct) {
-      const { error } = await supabase
-        .from('products')
-        .update(productData)
-        .eq('id', editingProduct.id);
-
-      if (error) {
-        toast({
-          title: 'Error',
-          description: 'Failed to update product',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Success',
-          description: 'Product updated successfully',
-        });
-        setIsDialogOpen(false);
-        resetForm();
-        fetchProducts();
-      }
+      updateProduct.mutate(
+        { id: editingProduct.id, data: productData },
+        {
+          onSuccess: () => {
+            setIsDialogOpen(false);
+            resetForm();
+          },
+        }
+      );
     } else {
-      const { error } = await supabase.from('products').insert([productData]);
-
-      if (error) {
-        toast({
-          title: 'Error',
-          description: 'Failed to create product',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Success',
-          description: 'Product created successfully',
-        });
-        setIsDialogOpen(false);
-        resetForm();
-        fetchProducts();
-      }
+      createProduct.mutate(productData, {
+        onSuccess: () => {
+          setIsDialogOpen(false);
+          resetForm();
+        },
+      });
     }
   };
+
 
   const filteredProducts = products.filter(
     (product) =>

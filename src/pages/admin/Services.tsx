@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useServices, useServiceMutations } from '@/hooks/useServices';
 import { Plus, Edit, Trash2, GripVertical, Sparkles, Palette, Layers, Code, Zap, Wand2, X } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ProtectedRoute } from '@/components/admin/ProtectedRoute';
 import { Button } from '@/components/ui/button';
@@ -42,20 +41,11 @@ const getIconComponent = (iconName: string) => {
   return option?.icon || Sparkles;
 };
 
-interface Service {
-  id: string;
-  title: string;
-  description: string | null;
-  icon: string;
-  features: string[];
-  display_order: number | null;
-  is_active: boolean | null;
-}
+
 
 const Services = () => {
-  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingService, setEditingService] = useState<Service | null>(null);
+  const [editingService, setEditingService] = useState<any | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -65,82 +55,8 @@ const Services = () => {
     is_active: true,
   });
 
-  const { data: services, isLoading } = useQuery({
-    queryKey: ['admin-services'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('services')
-        .select('*')
-        .order('display_order', { ascending: true });
-      if (error) throw error;
-      return data as Service[];
-    },
-  });
-
-  const createMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
-      const maxOrder = services?.reduce((max, s) => Math.max(max, s.display_order || 0), 0) || 0;
-      const { error } = await supabase.from('services').insert({
-        title: data.title,
-        description: data.description,
-        icon: data.icon,
-        features: data.features.filter(f => f.trim()),
-        is_active: data.is_active,
-        display_order: maxOrder + 1,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-services'] });
-      toast.success('Service created successfully');
-      setIsDialogOpen(false);
-      resetForm();
-    },
-    onError: (error) => {
-      toast.error('Failed to create service: ' + error.message);
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: typeof formData }) => {
-      const { error } = await supabase
-        .from('services')
-        .update({
-          title: data.title,
-          description: data.description,
-          icon: data.icon,
-          features: data.features.filter(f => f.trim()),
-          is_active: data.is_active,
-        })
-        .eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-services'] });
-      toast.success('Service updated successfully');
-      setIsDialogOpen(false);
-      setEditingService(null);
-      resetForm();
-    },
-    onError: (error) => {
-      toast.error('Failed to update service: ' + error.message);
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('services').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-services'] });
-      toast.success('Service deleted successfully');
-      setDeleteId(null);
-    },
-    onError: (error) => {
-      toast.error('Failed to delete service: ' + error.message);
-    },
-  });
+  const { data: services = [], isLoading } = useServices();
+  const { createService, updateService, deleteService } = useServiceMutations();
 
   const resetForm = () => {
     setFormData({
@@ -152,13 +68,13 @@ const Services = () => {
     });
   };
 
-  const handleEdit = (service: Service) => {
+  const handleEdit = (service: any) => {
     setEditingService(service);
     setFormData({
       title: service.title,
       description: service.description || '',
       icon: service.icon,
-      features: service.features.length > 0 ? service.features : [''],
+      features: service.features && service.features.length > 0 ? service.features : [''],
       is_active: service.is_active ?? true,
     });
     setIsDialogOpen(true);
@@ -166,12 +82,32 @@ const Services = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const dataWithOrder = {
+      ...formData,
+      display_order: editingService?.display_order ?? (services.reduce((max: number, s: any) => Math.max(max, s.display_order || 0), 0) + 1)
+    };
+
     if (editingService) {
-      updateMutation.mutate({ id: editingService.id, data: formData });
+      updateService.mutate(
+        { id: editingService.id, data: formData },
+        {
+          onSuccess: () => {
+            setIsDialogOpen(false);
+            setEditingService(null);
+            resetForm();
+          },
+        }
+      );
     } else {
-      createMutation.mutate(formData);
+      createService.mutate(dataWithOrder, {
+        onSuccess: () => {
+          setIsDialogOpen(false);
+          resetForm();
+        },
+      });
     }
   };
+
 
   const addFeature = () => {
     setFormData(prev => ({ ...prev, features: [...prev.features, ''] }));
