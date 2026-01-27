@@ -6,8 +6,10 @@ import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout/Layout';
-import { SectionHeading } from '@/components/ui/SectionHeading';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { SectionHeading } from '@/components/ui/SectionHeading';
 
 interface TeamMember {
   id: string;
@@ -55,13 +57,13 @@ const About = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <span className="inline-block px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-sm font-medium mb-6">
+              <span className="inline-block px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-[12px] uppercase font-bold tracking-[0.2em] mb-6">
                 {getSetting('about_badge', 'About Us')}
               </span>
               <h1 className="font-sans text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight tracking-tight">
                 {getSetting('about_title', 'Crafting Digital Excellence')}
               </h1>
-              <p className="text-lg text-muted-foreground mb-8 leading-relaxed text-center px-4 sm:px-0">
+              <p className="text-lg md:text-xl text-muted-foreground/90 mb-8 leading-relaxed px-4 sm:px-0">
                 {getSetting('about_description', 'Oflex Creative is a digital design studio specializing in creating premium visual experiences. From AI-powered prompts to complete brand identities, we bring creative visions to life with precision and artistry.')}
               </p>
               <Button size="lg" asChild>
@@ -73,16 +75,20 @@ const About = () => {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="relative"
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="relative lg:ml-auto"
             >
-              <div className="aspect-[4/3] rounded-2xl overflow-hidden">
-                <img
-                  src={getSetting('about_image_url', 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=600&fit=crop')}
-                  alt="Creative team collaboration"
-                  className="w-full h-full object-cover"
+              <div className="relative aspect-square rounded-2xl overflow-hidden shadow-2xl">
+                <OptimizedImage
+                  src={getSetting('about_main_image', 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80')}
+                  alt="About Oflex"
+                  width={800}
+                  className="w-full h-full"
+                  imageClassName="object-cover"
+                  priority
                 />
               </div>
               <motion.div
@@ -205,9 +211,10 @@ const About = () => {
                 >
                   <div className="w-32 h-32 rounded-full overflow-hidden mx-auto mb-6 ring-4 ring-primary/20">
                     <img
-                      src={member.image_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop'}
+                      src={getOptimizedImageUrl(member.image_url || '', 200)}
                       alt={member.name}
                       className="w-full h-full object-cover"
+                      loading="lazy"
                     />
                   </div>
                   <h3 className="font-serif text-2xl font-bold text-foreground mb-2">{member.name}</h3>

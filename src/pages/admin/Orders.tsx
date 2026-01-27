@@ -30,8 +30,15 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminTable, ADMIN_TABLE_HEADER_CLASS } from '@/components/admin/AdminTable';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 
 
@@ -39,6 +46,7 @@ const Orders = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const { toast } = useToast();
+  const { currencySymbol } = useSiteSettings();
 
   const { data: orders = [], isLoading: loading } = useOrders();
   const { updateOrderStatus, deleteOrder } = useOrderMutations();
@@ -78,6 +86,75 @@ const Orders = () => {
       order.status.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const pendingOrders = filteredOrders.filter(o => o.status === 'pending');
+  const completedOrders = filteredOrders.filter(o => o.status === 'completed');
+  const cancelledOrders = filteredOrders.filter(o => o.status === 'cancelled');
+
+  const OrderList = ({ ordersList }: { ordersList: Order[] }) => {
+    if (ordersList.length === 0) {
+      return (
+        <div className="bg-card border border-border rounded-xl p-12 text-center mt-6">
+          <p className="text-muted-foreground">No orders found</p>
+        </div>
+      );
+    }
+
+    return (
+      <AdminTable minWidthClassName="min-w-[720px] mt-6">
+        <thead className={ADMIN_TABLE_HEADER_CLASS}>
+          <tr className="border-b border-border bg-muted/50">
+            <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Order ID</th>
+            <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Date</th>
+            <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Items</th>
+            <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Total</th>
+            <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Status</th>
+            <th className="text-right p-4 font-medium text-foreground whitespace-nowrap">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {ordersList.map((order) => (
+            <tr key={order.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+              <td className="p-4 whitespace-nowrap">
+                <span className="font-mono text-sm text-foreground">
+                  {order.id.slice(0, 8)}...
+                </span>
+              </td>
+              <td className="p-4 text-muted-foreground whitespace-nowrap">
+                {new Date(order.created_at).toLocaleDateString()}
+              </td>
+              <td className="p-4 text-muted-foreground whitespace-nowrap">
+                {order.order_items?.length || 0} items
+              </td>
+              <td className="p-4 font-medium text-foreground whitespace-nowrap">
+                {currencySymbol}{Number(order.total_amount).toFixed(2)}
+              </td>
+              <td className="p-4 whitespace-nowrap">
+                <span className={`px-2 py-1 text-xs rounded-full capitalize ${getStatusColor(order.status)}`}>
+                  {order.status}
+                </span>
+              </td>
+              <td className="p-4">
+                <div className="flex items-center justify-end gap-2">
+                  <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)}>
+                    <Eye className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => setOrderToDelete(order.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </AdminTable>
+    );
+  };
+
   return (
     <ProtectedRoute requireModerator>
       <AdminLayout>
@@ -85,92 +162,77 @@ const Orders = () => {
           <AdminPageHeader
             title="Orders"
             description="Manage customer orders"
-            icon={<ShoppingCart className="w-5 h-5" />}
+            icon={<ShoppingCart className="w-5 h-5 text-primary" />}
           />
 
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search orders..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 max-w-sm"
-            />
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+            <div className="relative w-full sm:max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by ID or Status..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="hidden sm:block text-sm text-muted-foreground">
+              Total {orders.length} orders
+            </div>
           </div>
 
-          {loading ? (
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
-              <div className="animate-pulse">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="p-4 border-b border-border last:border-0">
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1">
-                        <div className="h-4 bg-muted rounded w-32 mb-2"></div>
-                        <div className="h-3 bg-muted rounded w-24"></div>
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="bg-muted px-1 h-11">
+              <TabsTrigger value="all" className="data-[state=active]:bg-card px-6">
+                All Orders
+              </TabsTrigger>
+              <TabsTrigger value="pending" className="data-[state=active]:bg-card px-6 relative">
+                Pending
+                {pendingOrders.length > 0 && (
+                  <span className="ml-2 bg-chart-1/20 text-chart-1 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                    {pendingOrders.length}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="completed" className="data-[state=active]:bg-card px-6">
+                Completed
+              </TabsTrigger>
+              <TabsTrigger value="cancelled" className="data-[state=active]:bg-card px-6">
+                Cancelled
+              </TabsTrigger>
+            </TabsList>
+
+            {loading ? (
+              <div className="bg-card border border-border rounded-xl overflow-hidden mt-6">
+                <div className="animate-pulse">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="p-4 border-b border-border last:border-0">
+                      <div className="flex items-center gap-4">
+                        <div className="flex-1">
+                          <div className="h-4 bg-muted rounded w-32 mb-2"></div>
+                          <div className="h-3 bg-muted rounded w-24"></div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          ) : filteredOrders.length === 0 ? (
-            <div className="bg-card border border-border rounded-xl p-12 text-center">
-              <p className="text-muted-foreground">No orders found</p>
-            </div>
-          ) : (
-            <AdminTable minWidthClassName="min-w-[720px]">
-              <thead className={ADMIN_TABLE_HEADER_CLASS}>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Order ID</th>
-                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Date</th>
-                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Items</th>
-                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Total</th>
-                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Status</th>
-                  <th className="text-right p-4 font-medium text-foreground whitespace-nowrap">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredOrders.map((order) => (
-                  <tr key={order.id} className="border-b border-border last:border-0">
-                    <td className="p-4 whitespace-nowrap">
-                      <span className="font-mono text-sm text-foreground">
-                        {order.id.slice(0, 8)}...
-                      </span>
-                    </td>
-                    <td className="p-4 text-muted-foreground whitespace-nowrap">
-                      {new Date(order.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="p-4 text-muted-foreground whitespace-nowrap">
-                      {order.order_items?.length || 0} items
-                    </td>
-                    <td className="p-4 font-medium text-foreground whitespace-nowrap">
-                      ${Number(order.total_amount).toFixed(2)}
-                    </td>
-                    <td className="p-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs rounded-full capitalize ${getStatusColor(order.status)}`}>
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)}>
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => setOrderToDelete(order.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </AdminTable>
-          )}
+            ) : (
+              <>
+                <TabsContent value="all">
+                  <OrderList ordersList={filteredOrders} />
+                </TabsContent>
+                <TabsContent value="pending">
+                  <OrderList ordersList={pendingOrders} />
+                </TabsContent>
+                <TabsContent value="completed">
+                  <OrderList ordersList={completedOrders} />
+                </TabsContent>
+                <TabsContent value="cancelled">
+                  <OrderList ordersList={cancelledOrders} />
+                </TabsContent>
+              </>
+            )}
+          </Tabs>
 
           <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
             <DialogContent>
@@ -199,7 +261,7 @@ const Orders = () => {
                     <div>
                       <p className="text-sm text-muted-foreground">Total</p>
                       <p className="text-lg font-bold text-foreground">
-                        ${Number(selectedOrder.total_amount).toFixed(2)}
+                        {currencySymbol}{Number(selectedOrder.total_amount).toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -218,7 +280,7 @@ const Orders = () => {
                               <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                             </div>
                             <p className="font-medium text-foreground">
-                              ${Number(item.product_price).toFixed(2)}
+                              {currencySymbol}{Number(item.product_price).toFixed(2)}
                             </p>
                           </div>
                         ))}

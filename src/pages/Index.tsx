@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { HeroBannerSlider } from '@/components/HeroBannerSlider';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 
 
 
@@ -128,12 +129,16 @@ const Index = () => {
       <section className="relative min-h-[90vh] flex items-center overflow-hidden pt-20 pb-16">
         {/* Dynamic Background */}
         <div className="absolute inset-0 z-0">
-          <motion.div
-            initial={{ scale: 1.1, opacity: 0 }}
-            animate={{ scale: 1, opacity: 0.4 }}
-            transition={{ duration: 1.5 }}
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${getSetting('hero_background_url', 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=1920&h=1080&fit=crop')})` }}
+          <motion.img
+            initial={{ scale: 1.05, opacity: 0 }}
+            animate={{ scale: 1, opacity: 0.9 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            src={getOptimizedImageUrl(getSetting('hero_background_url', ''), 1600)}
+            alt="Hero background"
+            loading="eager"
+            decoding="sync"
+            className="absolute inset-0 w-full h-full object-cover object-center"
+            style={{ display: getSetting('hero_background_url') ? 'block' : 'none' }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/20" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/30 via-primary/5 to-transparent opacity-100" />
@@ -161,7 +166,7 @@ const Index = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg mx-auto lg:mx-0 leading-relaxed text-center px-4 sm:px-0"
+                className="text-xl md:text-2xl text-muted-foreground/90 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed text-center lg:text-left px-4 sm:px-0"
               >
                 {getSetting('hero_description', 'From AI prompts to stunning designs, we bring your creative visions to life. Explore our portfolio and discover premium digital products.')}
               </motion.p>
@@ -339,7 +344,8 @@ const Index = () => {
                         imageClassName="object-cover transition-transform duration-500 group-hover:scale-110"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src = 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=300&h=300&fit=crop';
+                          target.src = '';
+                          target.style.display = 'none';
                         }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -394,7 +400,7 @@ const Index = () => {
                 <div className="bg-card rounded-2xl border border-border overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300 h-full flex flex-col">
                   <div className="relative aspect-square overflow-hidden">
                     <OptimizedImage
-                      src={product.image_url || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=400&fit=crop'}
+                      src={product.image_url || ''}
                       alt={product.title}
                       width={400}
                       className="w-full h-full"
@@ -485,7 +491,7 @@ const Index = () => {
                   </p>
                   <div className="flex items-center gap-3">
                     <Avatar className="w-12 h-12 border border-border">
-                      <AvatarImage src={testimonial.avatar_url || ''} alt={testimonial.name} className="object-cover" />
+                      <AvatarImage src={getOptimizedImageUrl(testimonial.avatar_url || '', 100)} alt={testimonial.name} className="object-cover" />
                       <AvatarFallback className="bg-primary/10 text-primary font-medium">
                         {getInitials(testimonial.name)}
                       </AvatarFallback>
@@ -536,8 +542,8 @@ const Index = () => {
                     </span>
                   </h2>
 
-                  <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">
-                    {getSetting('home_cta_description', 'Join hundreds of satisfied clients who have transformed their digital presence. From concept to launch, we are your partners in creative excellence.')}
+                  <p className="text-lg md:text-xl text-muted-foreground/90 max-w-xl leading-relaxed">
+                    {getSetting('home_cta_description', "Join hundreds of satisfied clients who have transformed their digital presence. From concept to launch, we're your partners in creative excellence.")}
                   </p>
 
                   <div className="flex flex-col sm:flex-row gap-4 pt-4">

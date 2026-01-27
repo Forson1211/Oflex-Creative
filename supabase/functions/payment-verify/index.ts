@@ -1,8 +1,9 @@
+// @ts-nocheck
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-application-name',
 };
 
 Deno.serve(async (req: Request) => {
@@ -91,31 +92,54 @@ Deno.serve(async (req: Request) => {
       .update({ status: 'completed' })
       .eq('id', orderId);
 
-    // Fetch order items
-    const { data: orderItems } = await supabase
+    // Fetch order items with explicit typing
+    const { data: orderItemsData } = await supabase
       .from('order_items')
       .select('product_id, product_title')
       .eq('order_id', orderId);
 
-    // Fetch template links
-    const productIds = orderItems?.map(item => item.product_id).filter(Boolean) || [];
-    const { data: products } = await supabase
-      .from('products')
-      .select('id, template_link')
-      .in('id', productIds);
+    // Define types for better type safety
+    interface OrderItem {
+      product_id: string;
+      product_title: string;
+    }
 
-    const templateLinkMap = new Map(
-      (products || []).map(p => [p.id, p.template_link])
+    interface ProductData {
+      id: string;
+      template_link: string | null;
+      file_url: string | null;
+    }
+
+    const orderItems = (orderItemsData || []) as OrderItem[];
+
+    // Fetch template links and file urls
+    const productIds = orderItems.map((item) => item.product_id).filter(Boolean);
+
+    let products: ProductData[] = [];
+    if (productIds.length > 0) {
+      const { data: productsData } = await supabase
+        .from('products')
+        .select('id, template_link, file_url')
+        .in('id', productIds);
+      products = (productsData || []) as ProductData[];
+    }
+
+    const productMap = new Map<string, ProductData>(
+      products.map((p) => [p.id, p])
     );
 
     // Create purchase records
-    const purchaseRecords = orderItems?.map((item) => ({
-      user_id: user.id,
-      order_id: orderId,
-      product_id: item.product_id,
-      product_title: item.product_title,
-      template_link: templateLinkMap.get(item.product_id) || null,
-    })) || [];
+    const purchaseRecords = orderItems.map((item) => {
+      const product = productMap.get(item.product_id);
+      return {
+        user_id: user.id,
+        order_id: orderId,
+        product_id: item.product_id,
+        product_title: item.product_title,
+        template_link: product?.template_link || null,
+        file_url: product?.file_url || null,
+      };
+    });
 
     if (purchaseRecords.length > 0) {
       await supabase.from('purchases').insert(purchaseRecords);

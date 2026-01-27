@@ -9,12 +9,14 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { formatPriceWithConversion } from '@/lib/currency';
 import { getAbsoluteUrl } from '@/config/env';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
 
 interface Product {
   id: string;
@@ -38,6 +40,7 @@ const Checkout = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { currencySymbol } = useSiteSettings();
   const [searchParams] = useSearchParams();
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
@@ -450,13 +453,13 @@ const Checkout = () => {
                   <div key={item.id} className="flex gap-4">
                     <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                       {item.product?.image_url ? (
-                        <img
-                          src={item.product.image_url}
+                        <OptimizedImage
+                          src={item.product.image_url || 'https://images.unsplash.com/photo-1586717791821-3f44a563eb4c?auto=format&fit=crop&q=80'}
                           alt={item.product.title}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=100&h=100&fit=crop';
-                          }}
+                          width={150}
+                          className="w-full h-full"
+                          imageClassName="object-cover"
+                          priority
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
@@ -470,7 +473,7 @@ const Checkout = () => {
                     </div>
                     <div className="text-right">
                       <p className="font-medium text-foreground">
-                        ${((item.product?.price || 0) * item.quantity).toFixed(2)}
+                        {currencySymbol}{((item.product?.price || 0) * item.quantity).toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -480,17 +483,17 @@ const Checkout = () => {
 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal (USD)</span>
-                    <span className="text-foreground">${cartTotal.toFixed(2)}</span>
+                    <span className="text-muted-foreground">Subtotal ({currencySymbol})</span>
+                    <span className="text-foreground">{currencySymbol}{cartTotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Tax</span>
-                    <span className="text-foreground">$0.00</span>
+                    <span className="text-foreground">{currencySymbol}0.00</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between text-lg font-bold">
-                    <span className="text-foreground">Total (USD)</span>
-                    <span className="text-primary">${cartTotal.toFixed(2)}</span>
+                    <span className="text-foreground">Total ({currencySymbol})</span>
+                    <span className="text-primary">{currencySymbol}{cartTotal.toFixed(2)}</span>
                   </div>
                   {paymentMethod === 'paystack' && (
                     <div className="flex flex-col gap-1 bg-accent/50 rounded-lg p-3 mt-2">
@@ -572,7 +575,7 @@ const Checkout = () => {
                         You'll be redirected to Paystack to complete your payment using card, bank transfer, or mobile money.
                       </p>
                       <p className="text-sm font-medium text-primary">
-                        Amount: GH₵{amountInGhs} (≈ ${cartTotal.toFixed(2)} USD)
+                        Amount: GH₵{amountInGhs} (≈ {currencySymbol}{cartTotal.toFixed(2)})
                       </p>
                     </div>
                   )}
@@ -604,7 +607,7 @@ const Checkout = () => {
                       ) : (
                         <>
                           <Lock className="w-4 h-4 mr-2" />
-                          Pay ${cartTotal.toFixed(2)}
+                          Pay {currencySymbol}{cartTotal.toFixed(2)}
                         </>
                       )}
                     </Button>

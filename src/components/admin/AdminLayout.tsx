@@ -11,7 +11,7 @@ import {
   Menu,
   X,
   Home,
-  Image,
+  Image as ImageIcon,
   Briefcase,
   Palette,
   MessageSquare,
@@ -22,6 +22,14 @@ import {
   UserCog,
   Mail,
   Bell,
+  Star,
+  Zap,
+  Handshake,
+  Info,
+  Layout,
+  Store,
+  FileText,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -29,6 +37,7 @@ import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { useRealtimeOrders } from '@/hooks/useRealtimeOrders';
+import { useAdminStats } from '@/hooks/useAdminStats';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -38,15 +47,15 @@ interface AdminLayoutProps {
 const navItems = [
   { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, access: 'moderator' },
   { path: '/admin/hero-slides', label: 'Hero Slides', icon: Layers, access: 'moderator' },
-  { path: '/admin/store-slides', label: 'Store Slides', icon: Image, access: 'moderator' },
-  { path: '/admin/featured-projects', label: 'Featured Projects', icon: Image, access: 'moderator' },
+  { path: '/admin/store-slides', label: 'Store Slides', icon: Layout, access: 'moderator' },
+  { path: '/admin/featured-projects', label: 'Featured Projects', icon: Star, access: 'moderator' },
   { path: '/admin/portfolio', label: 'Portfolio', icon: Briefcase, access: 'moderator' },
-  { path: '/admin/services', label: 'Services', icon: Briefcase, access: 'moderator' },
+  { path: '/admin/services', label: 'Services', icon: Sparkles, access: 'moderator' },
   { path: '/admin/products', label: 'Products', icon: Package, access: 'moderator' },
   { path: '/admin/testimonials', label: 'Testimonials', icon: MessageSquare, access: 'moderator' },
   { path: '/admin/faqs', label: 'FAQs', icon: HelpCircle, access: 'moderator' },
-  { path: '/admin/about', label: 'About Page', icon: Users, access: 'moderator' },
-  { path: '/admin/trusted-partners', label: 'Trusted Partners', icon: Briefcase, access: 'moderator' },
+  { path: '/admin/about', label: 'About Page', icon: Info, access: 'moderator' },
+  { path: '/admin/trusted-partners', label: 'Trusted Partners', icon: Handshake, access: 'moderator' },
   { path: '/admin/orders', label: 'Orders', icon: ShoppingCart, access: 'moderator' },
   { path: '/admin/contact-messages', label: 'Contact Messages', icon: Mail, access: 'moderator' },
   { path: '/admin/users', label: 'User Management', icon: Users, access: 'admin' },
@@ -57,27 +66,20 @@ const navItems = [
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { signOut, user, isAdmin, isModerator, userRole } = useAuth();
   const { getSetting } = useSiteSettings();
+  const { data: adminStats } = useAdminStats();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [newOrderCount, setNewOrderCount] = useState(0);
 
   const logoUrl = getSetting('logo_url', '');
 
   const shouldEnableRealtime = isAdmin || isModerator;
 
-  const isOnOrdersPage = location.pathname.startsWith('/admin/orders');
-  const effectiveNewOrderCount = useMemo(
-    () => (isOnOrdersPage ? 0 : newOrderCount),
-    [isOnOrdersPage, newOrderCount]
-  );
+  const pendingOrderCount = adminStats?.pending_orders || 0;
 
   // Optimize real-time orders by adding caching and reducing redundant updates
   useRealtimeOrders({
     enabled: shouldEnableRealtime,
-    onNewOrder: () => {
-      setNewOrderCount((prev) => (isOnOrdersPage ? 0 : prev + 1));
-    },
   });
 
   const handleSignOut = async (e?: React.MouseEvent) => {
@@ -129,7 +131,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
           {/* Logo */}
           <div className="p-6 border-b border-border flex items-center justify-between">
             <Link to="/admin" className="flex items-center">
-              <img src={logoUrl || '/placeholder.svg'} alt="Admin" className="h-8 w-auto" />
+              <img src={logoUrl || "/placeholder.svg"} alt="Admin" className="h-8 w-auto" />
             </Link>
             <Button
               variant="ghost"
@@ -158,6 +160,11 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
                 >
                   <item.icon className="w-5 h-5" />
                   <span className="flex-1">{item.label}</span>
+                  {item.path === '/admin/orders' && pendingOrderCount > 0 && (
+                    <Badge variant="default" className="ml-auto text-[10px] px-1.5 h-5 bg-primary-foreground text-primary">
+                      {pendingOrderCount}
+                    </Badge>
+                  )}
                   {isAdminOnly && !isActive && (
                     <Lock className="w-3 h-3 text-muted-foreground/50" />
                   )}
@@ -206,16 +213,13 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
                 variant="ghost"
                 size="icon"
                 className="relative flex-shrink-0"
-                onClick={() => {
-                  setNewOrderCount(0);
-                  navigate('/admin/orders');
-                }}
-                aria-label="View new orders"
+                onClick={() => navigate('/admin/orders')}
+                aria-label="View pending orders"
               >
                 <Bell className="w-5 h-5" />
-                {effectiveNewOrderCount > 0 && (
+                {pendingOrderCount > 0 && (
                   <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[11px] leading-5 text-center font-medium">
-                    {effectiveNewOrderCount > 99 ? '99+' : effectiveNewOrderCount}
+                    {pendingOrderCount > 99 ? '99+' : pendingOrderCount}
                   </span>
                 )}
               </Button>

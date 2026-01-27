@@ -46,6 +46,7 @@ import {
 } from '@/components/ui/select';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { StoreHeroSlider } from '@/components/StoreHeroSlider';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
 
 interface Product {
   id: string;
@@ -74,7 +75,7 @@ const Store = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { getSetting } = useSiteSettings();
+  const { getSetting, currencySymbol } = useSiteSettings();
 
   // Fetch products using centralized hook
   const { data: products = [], isLoading: productsLoading } = useProducts({
@@ -258,7 +259,7 @@ const Store = () => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-primary text-sm font-medium mb-8 backdrop-blur-md shadow-xl"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-primary text-[12px] uppercase font-bold tracking-[0.2em] mb-8 backdrop-blur-md shadow-xl"
             >
               <Crown className="w-4 h-4 text-yellow-500" />
               <span className="text-foreground/80">{getSetting('store_badge', 'Premium Digital Assets')}</span>
@@ -277,9 +278,9 @@ const Store = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed text-center px-4 sm:px-0"
+              className="text-xl md:text-2xl text-muted-foreground/90 max-w-2xl mx-auto leading-relaxed"
             >
-              {getSetting('store_description', 'Elevate your projects with our curated collection of professional Canva templates, social media kits, and premium design resources.')}
+              {getSetting('store_description', 'High-quality design resources, AI prompt collections, and creative assets to supercharge your workflow.')}
             </motion.p>
 
             {/* Search and Cart - Glassmorphic Container */}
@@ -297,7 +298,7 @@ const Store = () => {
                     placeholder="Search for templates, assets..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 h-11 sm:h-12 text-sm sm:text-base placeholder:text-muted-foreground/70"
+                    className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 h-11 sm:h-12 text-base sm:text-lg placeholder:text-muted-foreground/70"
                   />
                 </div>
               </div>
@@ -306,7 +307,7 @@ const Store = () => {
                 <SheetTrigger asChild>
                   <Button size="lg" className="h-14 px-8 rounded-full shadow-lg shadow-primary/20 hover:scale-105 transition-transform bg-gradient-to-r from-primary to-primary/90">
                     <ShoppingCart className="w-5 h-5 mr-2" />
-                    <span className="font-semibold">Cart</span>
+                    <span className="font-bold text-[13px] uppercase tracking-wider">Cart</span>
                     {cartCount > 0 && (
                       <span className="ml-2 bg-white text-primary text-xs font-bold px-2 py-0.5 rounded-full">
                         {cartCount}
@@ -357,10 +358,12 @@ const Store = () => {
                               className="flex gap-4 p-4 border border-white/5 bg-white/5 rounded-2xl backdrop-blur-sm hover:bg-white/10 transition-colors"
                             >
                               {item.product?.image_url && (
-                                <img
+                                <OptimizedImage
                                   src={item.product.image_url}
                                   alt={item.product.title}
-                                  className="w-20 h-20 object-cover rounded-xl shadow-sm"
+                                  width={80}
+                                  className="w-20 h-20"
+                                  imageClassName="object-cover rounded-xl shadow-sm"
                                 />
                               )}
                               <div className="flex-1 min-w-0 flex flex-col justify-between">
@@ -577,11 +580,23 @@ const Store = () => {
                     {viewMode === 'grid' ? (
                       <GlassCard className="overflow-hidden p-0 group h-full flex flex-col">
                         <div className="relative aspect-[4/3] overflow-hidden">
-                          <img
-                            src={product.image_url || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=300&fit=crop'}
+                          <OptimizedImage
+                            src={product.image_url || ''}
                             alt={product.title}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            width={400}
+                            className="w-full h-full"
+                            imageClassName="object-cover transition-transform duration-500 group-hover:scale-105"
                           />
+                          <div className="absolute top-3 left-3 flex flex-col gap-2">
+                            <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm border-none text-[10px] py-0 px-2 h-5">
+                              {product.category}
+                            </Badge>
+                            {product.dimensions && (
+                              <Badge variant="outline" className="bg-black/50 backdrop-blur-sm border-none text-white text-[9px] py-0 px-1.5 h-4 w-fit">
+                                {product.dimensions}
+                              </Badge>
+                            )}
+                          </div>
                           <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                           <div className="absolute inset-0 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             <Button
@@ -602,7 +617,7 @@ const Store = () => {
                             </Button>
                           </div>
                           <span className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-background/90 backdrop-blur-sm text-foreground text-sm font-bold shadow-lg">
-                            ${product.price.toFixed(2)}
+                            {currencySymbol}{product.price.toFixed(2)}
                           </span>
                         </div>
                         <div className="p-5 flex-1 flex flex-col">
@@ -635,10 +650,12 @@ const Store = () => {
                       <GlassCard className="overflow-hidden p-0 group">
                         <div className="flex flex-col sm:flex-row">
                           <div className="relative w-full sm:w-48 h-48 sm:h-auto overflow-hidden flex-shrink-0">
-                            <img
-                              src={product.image_url || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=300&fit=crop'}
+                            <OptimizedImage
+                              src={product.image_url || ''}
                               alt={product.title}
-                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                              width={400}
+                              className="w-full h-full"
+                              imageClassName="object-cover transition-transform duration-500 group-hover:scale-105"
                             />
                           </div>
                           <div className="p-6 flex-1 flex flex-col justify-center">
@@ -650,8 +667,10 @@ const Store = () => {
                                 <h3 className="font-semibold text-foreground text-lg mb-2">{product.title}</h3>
                                 <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{product.description}</p>
                               </div>
-                              <div className="text-right">
-                                <span className="text-2xl font-bold text-primary">${product.price.toFixed(2)}</span>
+                              <div className="flex flex-col">
+                                <span className="text-xl font-bold text-foreground">
+                                  {currencySymbol}{product.price.toFixed(2)}
+                                </span>
                               </div>
                             </div>
                             <div className="flex gap-3 mt-auto">

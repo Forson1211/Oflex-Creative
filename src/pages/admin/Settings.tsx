@@ -167,6 +167,63 @@ const Settings = () => {
                     className="w-24"
                   />
                 </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="google_maps">Google Maps Embed URL</Label>
+                    <Input
+                      id="google_maps"
+                      value={settings.google_maps_embed_url || ''}
+                      onChange={(e) => {
+                        let val = e.target.value.trim();
+
+                        // Handle full iframe tag extraction
+                        if (val.includes('<iframe')) {
+                          const match = val.match(/src="([^"]+)"/);
+                          if (match && match[1]) val = match[1];
+                        }
+                        // Handle standard "place" or search URL conversion
+                        else if (val.includes('google.com/maps/place/')) {
+                          const parts = val.split('google.com/maps/place/');
+                          if (parts[1]) {
+                            const placeName = parts[1].split('/')[0];
+                            val = `https://maps.google.com/maps?q=${placeName}&output=embed`;
+                          }
+                        }
+                        else if (val.includes('google.com/maps/search/')) {
+                          const parts = val.split('google.com/maps/search/');
+                          if (parts[1]) {
+                            val = `https://maps.google.com/maps?q=${parts[1]}&output=embed`;
+                          }
+                        }
+
+                        updateSetting('google_maps_embed_url', val);
+                      }}
+                      placeholder="Paste Map link or iframe tag here..."
+                    />
+                    <p className="text-[10px] text-muted-foreground">
+                      💡 <strong>Tip:</strong> You can paste the address bar URL or the "Embed" code. We will fix it for you.
+                    </p>
+                  </div>
+
+                  {settings.google_maps_embed_url && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs">Live Preview</Label>
+                        <span className="text-[10px] text-green-500 font-medium">Valid Format Detected</span>
+                      </div>
+                      <div className="w-full h-32 rounded-lg overflow-hidden border border-border bg-black/20 flex items-center justify-center relative">
+                        <iframe
+                          src={settings.google_maps_embed_url}
+                          width="100%"
+                          height="100%"
+                          style={{ border: 0 }}
+                          allowFullScreen={true}
+                          loading="lazy"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 

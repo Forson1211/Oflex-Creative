@@ -209,12 +209,9 @@ const FeaturedProjects = () => {
                       </TableCell>
                       <TableCell>
                         <img
-                          src={project.image_url}
+                          src={project.image_url || 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80'}
                           alt={project.title}
                           className="w-16 h-12 object-cover rounded-lg"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=100&h=75&fit=crop';
-                          }}
                         />
                       </TableCell>
                       <TableCell className="font-medium">{project.title}</TableCell>

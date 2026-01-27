@@ -45,8 +45,8 @@ const Profile = () => {
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [fullName, setFullName] = useState('');
-  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
-  const { deleteOrder } = useOrderMutations();
+  const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
+  const { cancelOrder } = useOrderMutations();
 
   useEffect(() => {
     if (profile?.full_name) {
@@ -202,14 +202,24 @@ const Profile = () => {
                             Purchased on {new Date(purchase.purchased_at || '').toLocaleDateString()}
                           </p>
                         </div>
-                        {purchase.template_link && (
-                          <Button asChild size="sm">
-                            <a href={purchase.template_link} target="_blank" rel="noopener noreferrer">
-                              <Download className="w-4 h-4 mr-2" />
-                              Download
-                            </a>
-                          </Button>
-                        )}
+                        <div className="flex gap-2">
+                          {purchase.template_link && (
+                            <Button asChild size="sm" variant="outline">
+                              <a href={purchase.template_link} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="w-4 h-4 mr-2" />
+                                Open Template
+                              </a>
+                            </Button>
+                          )}
+                          {purchase.file_url && (
+                            <Button asChild size="sm">
+                              <a href={purchase.file_url} target="_blank" rel="noopener noreferrer" download>
+                                <Download className="w-4 h-4 mr-2" />
+                                Download File
+                              </a>
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </GlassCard>
                   ))}
@@ -261,14 +271,16 @@ const Profile = () => {
                             {order.status}
                           </Badge>
 
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="ml-2 h-6 w-6 text-muted-foreground hover:text-destructive transition-colors"
-                            onClick={() => setOrderToDelete(order.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          {order.status === 'pending' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="ml-2 h-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                              onClick={() => setOrderToCancel(order.id)}
+                            >
+                              Cancel
+                            </Button>
+                          )}
                         </div>
                       </div>
                       {order.order_items && order.order_items.length > 0 && (
@@ -291,26 +303,26 @@ const Profile = () => {
           </Tabs>
         </motion.div>
       </div>
-      <AlertDialog open={!!orderToDelete} onOpenChange={(open) => !open && setOrderToDelete(null)}>
+      <AlertDialog open={!!orderToCancel} onOpenChange={(open) => !open && setOrderToCancel(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Order?</AlertDialogTitle>
+            <AlertDialogTitle>Cancel Order?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this order? This action cannot be undone.
+              Are you sure you want to cancel this order? This will stop the order process.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Go Back</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => {
-                if (orderToDelete) {
-                  deleteOrder.mutate(orderToDelete);
-                  setOrderToDelete(null);
+                if (orderToCancel) {
+                  cancelOrder.mutate(orderToCancel);
+                  setOrderToCancel(null);
                 }
               }}
             >
-              Delete
+              Cancel Order
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -5,6 +5,8 @@ import { ArrowRight, Sparkles, Palette, Code, Zap, Layers, Wand2 } from 'lucide-
 import { supabase } from '@/integrations/supabase/client';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { Button } from '@/components/ui/button';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { Layout } from '@/components/layout/Layout';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -44,14 +46,14 @@ const Services = () => {
             animate={{ opacity: 1, y: 0 }}
             className="max-w-3xl mx-auto text-center"
           >
-            <span className="inline-block px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-sm font-medium mb-6">
-              {getSetting('services_badge', 'Our Services')}
+            <span className="inline-block px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-[12px] uppercase font-bold tracking-[0.2em] mb-6">
+              {getSetting('services_badge', 'Our Expertise')}
             </span>
             <h1 className="font-sans text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight tracking-tight">
-              {getSetting('services_title', 'Creative Solutions for Every Need')}
+              {getSetting('services_title', 'Comprehensive Creative Solutions')}
             </h1>
-            <p className="text-lg text-muted-foreground mb-8 text-center px-4 sm:px-0">
-              {getSetting('services_description', 'From AI-powered prompts to complete brand identities, we offer comprehensive creative services to elevate your brand and streamline your workflow.')}
+            <p className="text-xl md:text-2xl text-muted-foreground/90 mb-8 text-center px-4 sm:px-0">
+              {getSetting('services_description', 'We combine strategic thinking with creative excellence to deliver results that elevate your brand and engage your audience.')}
             </p>
           </motion.div>
         </div>
@@ -101,9 +103,9 @@ const Services = () => {
       <section className="py-20 bg-card">
         <div className="container mx-auto px-4">
           <SectionHeading
-            badge={getSetting('services_process_badge', 'Our Process')}
+            badge={getSetting('services_process_badge', 'Our Method')}
             title={getSetting('services_process_title', 'How We Work')}
-            description={getSetting('services_process_description', 'A streamlined approach to deliver exceptional results')}
+            description={getSetting('services_process_description', 'A transparent and collaborative approach to every project')}
           />
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -142,10 +144,10 @@ const Services = () => {
             className="max-w-3xl mx-auto text-center"
           >
             <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-6">
-              {getSetting('services_cta_title', 'Ready to Get Started?')}
+              {getSetting('services_cta_title', 'Have a Project in Mind?')}
             </h2>
             <p className="text-muted-foreground text-lg mb-8">
-              {getSetting('services_cta_description', "Let's discuss your project and find the perfect solution for your needs.")}
+              {getSetting('services_cta_description', "We're always excited to discuss new ideas and help bring them to life. Let's start building your next success story.")}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" asChild>

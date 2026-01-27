@@ -46,9 +46,9 @@ export function useSiteSettings() {
       if (error) throw error;
       return data as SiteSetting[];
     },
-    staleTime: 1000 * 60, // 1 minute
-    gcTime: 1000 * 60 * 30, // 30 minutes cache time
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 60, // 1 hour cache time
+    refetchOnWindowFocus: false,
   });
 
   const getSetting = useCallback((key: string, defaultValue: string = '') => {
@@ -79,9 +79,14 @@ export function useSiteSettings() {
     }
   }, [siteSettings, getSetting]);
 
+  const maintenanceMode = getSetting('maintenance_mode', 'false') === 'true';
+  const currencySymbol = getSetting('currency_symbol', '$');
+
   return {
     siteSettings,
     getSetting,
     isLoading,
+    maintenanceMode,
+    currencySymbol,
   };
 }

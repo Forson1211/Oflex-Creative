@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Calendar, CreditCard, Package, Download, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +33,7 @@ const OrderDetail = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { currencySymbol } = useSiteSettings();
 
     const { data: order, isLoading, error } = useQuery({
         queryKey: ['order', id],
@@ -150,10 +152,10 @@ const OrderDetail = () => {
                                             <div key={item.id} className="flex items-center justify-between py-4 border-b border-border last:border-0">
                                                 <div>
                                                     <p className="font-medium text-foreground">{item.product_title}</p>
-                                                    <p className="text-sm text-muted-foreground">Qty: {item.quantity} × ${item.product_price.toFixed(2)}</p>
+                                                    <p className="text-sm text-muted-foreground">Qty: {item.quantity} × {currencySymbol}{item.product_price.toFixed(2)}</p>
                                                 </div>
                                                 <p className="font-semibold text-foreground">
-                                                    ${(item.quantity * item.product_price).toFixed(2)}
+                                                    {currencySymbol}{(item.quantity * item.product_price).toFixed(2)}
                                                 </p>
                                             </div>
                                         ))}
@@ -184,16 +186,16 @@ const OrderDetail = () => {
                                     <div className="space-y-3 text-sm">
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Subtotal</span>
-                                            <span>${order.total_amount.toFixed(2)}</span>
+                                            <span>{currencySymbol}{order.total_amount.toFixed(2)}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Tax</span>
-                                            <span>$0.00</span>
+                                            <span>{currencySymbol}0.00</span>
                                         </div>
                                         <Separator />
                                         <div className="flex justify-between font-bold text-lg">
                                             <span>Total</span>
-                                            <span className="text-primary">${order.total_amount.toFixed(2)}</span>
+                                            <span className="text-primary">{currencySymbol}{order.total_amount.toFixed(2)}</span>
                                         </div>
                                     </div>
 

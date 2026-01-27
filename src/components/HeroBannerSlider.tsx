@@ -75,10 +75,12 @@ export const HeroBannerSlider = () => {
                 className="absolute inset-0"
               >
                 <motion.img
-                  src={slides[currentIndex]?.image_url}
+                  src={getOptimizedImageUrl(slides[currentIndex]?.image_url, 1200)}
+                  srcSet={generateSrcSet(slides[currentIndex]?.image_url)}
+                  sizes="100vw"
                   alt="Banner slide"
-                  loading="lazy"
-                  decoding="async"
+                  loading={currentIndex === 0 ? "eager" : "lazy"}
+                  decoding={currentIndex === 0 ? "sync" : "async"}
                   className={`w-full h-full ${imgFitClass} object-center`}
                   initial={{ scale: 1 }}
                   animate={{ scale: 1.05 }}

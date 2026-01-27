@@ -21,6 +21,7 @@ import {
 import { Plus, Minus, Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 
 
 const navLinks = [
@@ -148,24 +149,22 @@ export const Navbar = () => {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            {settingsLoading ? (
-              <div className="h-10 w-24 bg-muted animate-pulse rounded" />
-            ) : (
-              <motion.img
-                src={logoUrl || '/placeholder.svg'}
-                alt={getSetting('site_name', 'Oflex Creative')}
-                className="h-10 w-auto"
-                whileHover={{ scale: 1.05 }}
-                transition={{ duration: 0.2 }}
-              />
-            )}
+            <motion.img
+              src={getOptimizedImageUrl(logoUrl || "/placeholder.svg", 200)}
+              alt={getSetting('site_name', 'Oflex Creative')}
+              className="h-10 w-auto"
+              loading="eager"
+              decoding="sync"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
+            />
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-8">
             {navLinks.map((link) => (
               <Link key={link.path} to={link.path} className="relative group">
-                <span className={`text-sm font-medium transition-colors ${location.pathname === link.path
+                <span className={`text-[14px] uppercase font-bold tracking-wider transition-colors ${location.pathname === link.path
                   ? 'text-primary'
                   : 'text-muted-foreground hover:text-foreground'
                   }`}>
@@ -338,7 +337,7 @@ export const Navbar = () => {
                   <Link
                     to={link.path}
                     onClick={() => setIsOpen(false)}
-                    className={`block py-3 px-4 rounded-lg transition-colors ${location.pathname === link.path
+                    className={`block py-3 px-4 rounded-lg transition-colors text-[14px] uppercase font-bold tracking-wider ${location.pathname === link.path
                       ? 'bg-primary text-primary-foreground'
                       : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                       }`}

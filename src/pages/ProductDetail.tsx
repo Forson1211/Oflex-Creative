@@ -6,10 +6,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
 
 interface Product {
   id: string;
@@ -19,6 +21,9 @@ interface Product {
   image_url: string | null;
   description: string | null;
   template_link: string | null;
+  resolution: string | null;
+  dimensions: string | null;
+  file_size: string | null;
   is_active: boolean;
 }
 
@@ -35,6 +40,7 @@ const ProductDetail = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { currencySymbol } = useSiteSettings();
 
   // Fetch product details
   const { data: product, isLoading } = useQuery({
@@ -168,10 +174,13 @@ const ProductDetail = () => {
           >
             {/* Product Image */}
             <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
-              <img
-                src={product.image_url || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=800&fit=crop'}
+              <OptimizedImage
+                src={product.image_url || 'https://images.unsplash.com/photo-1586717791821-3f44a563eb4c?auto=format&fit=crop&q=80'}
                 alt={product.title}
-                className="w-full h-full object-cover"
+                width={800}
+                className="w-full h-full"
+                imageClassName="object-cover"
+                priority
               />
               {hasPurchased && (
                 <div className="absolute top-4 right-4">
@@ -214,13 +223,27 @@ const ProductDetail = () => {
                     <Check className="w-4 h-4 text-primary" />
                     Instant digital download
                   </li>
+                  {product.resolution && (
+                    <li className="flex items-center gap-2 text-muted-foreground">
+                      <Check className="w-4 h-4 text-primary" />
+                      {product.resolution} Resolution
+                    </li>
+                  )}
+                  {product.dimensions && (
+                    <li className="flex items-center gap-2 text-muted-foreground">
+                      <Check className="w-4 h-4 text-primary" />
+                      Size: {product.dimensions}
+                    </li>
+                  )}
+                  {product.file_size && (
+                    <li className="flex items-center gap-2 text-muted-foreground">
+                      <Check className="w-4 h-4 text-primary" />
+                      File Size: {product.file_size}
+                    </li>
+                  )}
                   <li className="flex items-center gap-2 text-muted-foreground">
                     <Check className="w-4 h-4 text-primary" />
-                    Lifetime access to template
-                  </li>
-                  <li className="flex items-center gap-2 text-muted-foreground">
-                    <Check className="w-4 h-4 text-primary" />
-                    Editable in Canva
+                    Editable in Canva / PSD
                   </li>
                   <li className="flex items-center gap-2 text-muted-foreground">
                     <Check className="w-4 h-4 text-primary" />
@@ -231,7 +254,7 @@ const ProductDetail = () => {
 
               <div className="mt-auto">
                 <div className="flex items-baseline gap-2 mb-6">
-                  <span className="text-4xl font-bold text-foreground">${product.price.toFixed(2)}</span>
+                  <span className="text-4xl font-bold text-foreground">{currencySymbol}{product.price.toFixed(2)}</span>
                   <span className="text-muted-foreground">one-time purchase</span>
                 </div>
 
@@ -278,8 +301,8 @@ const ProductDetail = () => {
             </div>
           </motion.div>
         </div>
-      </section>
-    </Layout>
+      </section >
+    </Layout >
   );
 };
 

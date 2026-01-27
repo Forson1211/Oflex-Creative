@@ -260,7 +260,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         data: {
           full_name: fullName,
         },
-        emailRedirectTo: `${window.location.origin}/auth`,
+        emailRedirectTo: getAbsoluteUrl('/'),
       },
     });
 
@@ -271,6 +271,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email,
+      options: {
+        emailRedirectTo: getAbsoluteUrl('/'),
+      },
     });
     return { error };
   };

@@ -46,6 +46,9 @@ const Products = () => {
     image_url: '',
     file_url: '',
     template_link: '',
+    resolution: '',
+    dimensions: '',
+    file_size: '',
     is_active: true,
   });
 
@@ -67,6 +70,9 @@ const Products = () => {
       image_url: '',
       file_url: '',
       template_link: '',
+      resolution: '',
+      dimensions: '',
+      file_size: '',
       is_active: true,
     });
     setEditingProduct(null);
@@ -82,6 +88,9 @@ const Products = () => {
       image_url: product.image_url || '',
       file_url: product.file_url || '',
       template_link: product.template_link || '',
+      resolution: product.resolution || '',
+      dimensions: product.dimensions || '',
+      file_size: product.file_size || '',
       is_active: product.is_active ?? true,
     });
     setIsDialogOpen(true);
@@ -103,6 +112,9 @@ const Products = () => {
       image_url: formData.image_url || null,
       file_url: formData.file_url || null,
       template_link: formData.template_link || null,
+      resolution: formData.resolution || null,
+      dimensions: formData.dimensions || null,
+      file_size: formData.file_size || null,
       is_active: formData.is_active,
     };
 
@@ -231,8 +243,49 @@ const Products = () => {
                     placeholder="https://..."
                   />
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="resolution">Resolution (e.g. 300 DPI)</Label>
+                    <Input
+                      id="resolution"
+                      value={formData.resolution}
+                      onChange={(e) => setFormData({ ...formData, resolution: e.target.value })}
+                      placeholder="High Res"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="dimensions">Dimensions (e.g. 2000x2000)</Label>
+                    <Input
+                      id="dimensions"
+                      value={formData.dimensions}
+                      onChange={(e) => setFormData({ ...formData, dimensions: e.target.value })}
+                      placeholder="Size"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="file_size">File Size</Label>
+                    <Input
+                      id="file_size"
+                      value={formData.file_size}
+                      onChange={(e) => setFormData({ ...formData, file_size: e.target.value })}
+                      placeholder="5 MB"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="template_link">Canva Template Link</Label>
+                    <Input
+                      id="template_link"
+                      type="url"
+                      value={formData.template_link}
+                      onChange={(e) => setFormData({ ...formData, template_link: e.target.value })}
+                      placeholder="https://www.canva.com/design/..."
+                    />
+                  </div>
+                </div>
                 <div className="space-y-2">
-                  <Label htmlFor="file_url">File URL (Download Link)</Label>
+                  <Label htmlFor="file_url">Direct Download Link</Label>
                   <Input
                     id="file_url"
                     type="url"
@@ -240,19 +293,6 @@ const Products = () => {
                     onChange={(e) => setFormData({ ...formData, file_url: e.target.value })}
                     placeholder="https://..."
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="template_link">Canva Template Link</Label>
-                  <Input
-                    id="template_link"
-                    type="url"
-                    value={formData.template_link}
-                    onChange={(e) => setFormData({ ...formData, template_link: e.target.value })}
-                    placeholder="https://www.canva.com/design/..."
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Canva template URL that buyers can access after purchase
-                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <input

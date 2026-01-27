@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/hooks/useAuth";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { SecurityCheck } from "@/components/auth/SecurityCheck";
+import { MaintenanceGuard } from "@/components/layout/MaintenanceGuard";
 
 // Lazy load pages for faster initial load
 const Index = lazy(() => import("./pages/Index"));
@@ -115,20 +116,22 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <SecurityCheck>
-        <ThemeProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter
-              future={{
-                v7_startTransition: true,
-                v7_relativeSplatPath: true,
-              }}
-            >
-              <AppContent />
-            </BrowserRouter>
-          </TooltipProvider>
-        </ThemeProvider>
+        <MaintenanceGuard>
+          <ThemeProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter
+                future={{
+                  v7_startTransition: true,
+                  v7_relativeSplatPath: true,
+                }}
+              >
+                <AppContent />
+              </BrowserRouter>
+            </TooltipProvider>
+          </ThemeProvider>
+        </MaintenanceGuard>
       </SecurityCheck>
     </AuthProvider>
   </QueryClientProvider>

@@ -8,6 +8,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/button';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 
 interface FeaturedProject {
   id: string;
@@ -60,14 +62,14 @@ const Portfolio = () => {
             animate={{ opacity: 1, y: 0 }}
             className="max-w-3xl mx-auto text-center"
           >
-            <span className="inline-block px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-sm font-medium mb-6">
-              {getSetting('portfolio_badge', 'Portfolio')}
+            <span className="inline-block px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-[12px] uppercase font-bold tracking-[0.2em] mb-6">
+              {getSetting('portfolio_badge', 'Our Work')}
             </span>
             <h1 className="font-sans text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight tracking-tight">
-              {getSetting('portfolio_title', 'Our Creative Work')}
+              {getSetting('portfolio_title', 'The Creative Portfolio')}
             </h1>
-            <p className="text-lg text-muted-foreground text-center px-4 sm:px-0">
-              {getSetting('portfolio_description', 'Explore our diverse portfolio of design projects, from brand identities to digital interfaces and AI-generated art.')}
+            <p className="text-xl md:text-2xl text-muted-foreground/90 text-center px-4 sm:px-0">
+              {getSetting('portfolio_description', 'A curated selection of our most impactful projects, showcasing our expertise in brand design, digital strategy, and AI-driven creative.')}
             </p>
           </motion.div>
         </div>
@@ -130,14 +132,12 @@ const Portfolio = () => {
                       onClick={() => setSelectedItem(item)}
                     >
                       <div className="relative aspect-[4/3] overflow-hidden">
-                        <img
+                        <OptimizedImage
                           src={item.image_url}
                           alt={item.title}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                          loading="lazy"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600&h=400&fit=crop';
-                          }}
+                          width={600}
+                          className="w-full h-full"
+                          imageClassName="transition-transform duration-500 group-hover:scale-110 object-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
                           <div className="w-full">
@@ -186,10 +186,12 @@ const Portfolio = () => {
                 <X className="w-6 h-6" />
               </Button>
               <div className="rounded-2xl overflow-hidden">
-                <img
+                <OptimizedImage
                   src={selectedItem.image_url}
                   alt={selectedItem.title}
+                  width={1200}
                   className="w-full h-auto"
+                  priority
                 />
               </div>
               <div className="mt-4 text-center">

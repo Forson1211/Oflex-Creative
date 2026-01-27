@@ -11,6 +11,7 @@ export interface Purchase {
     product_id: string;
     product_title: string;
     template_link: string | null;
+    file_url: string | null;
     purchased_at: string;
 }
 
@@ -33,9 +34,9 @@ export function usePurchases() {
                 .order('purchased_at', { ascending: false });
 
             if (error) throw error;
-            return data as Purchase[];
+            return data as unknown as Purchase[];
         },
-        staleTime: 1000 * 60 * 60, // 1 hour (purchases don't change often)
+        staleTime: 1000 * 10, // 10 seconds (check for new access more frequently)
         enabled: isAuthReady && !!user,
     });
 }

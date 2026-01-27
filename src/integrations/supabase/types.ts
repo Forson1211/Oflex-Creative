@@ -290,6 +290,9 @@ export type Database = {
           template_link: string | null
           title: string
           updated_at: string
+          resolution: string | null
+          dimensions: string | null
+          file_size: string | null
         }
         Insert: {
           category: string
@@ -303,6 +306,9 @@ export type Database = {
           template_link?: string | null
           title: string
           updated_at?: string
+          resolution?: string | null
+          dimensions?: string | null
+          file_size?: string | null
         }
         Update: {
           category?: string
@@ -316,6 +322,9 @@ export type Database = {
           template_link?: string | null
           title?: string
           updated_at?: string
+          resolution?: string | null
+          dimensions?: string | null
+          file_size?: string | null
         }
         Relationships: []
       }

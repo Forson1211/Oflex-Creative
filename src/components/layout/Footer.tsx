@@ -8,6 +8,7 @@ import {
   Facebook,
   Youtube,
   ExternalLink,
+  MapPin,
 } from "lucide-react";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,9 +24,45 @@ import { TrustedPartnersSection } from "@/components/layout/footer/TrustedPartne
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Mail, ArrowRight } from "lucide-react";
+import { getOptimizedImageUrl } from "@/lib/image-optimizer";
 
 export const Footer = () => {
   const { getSetting } = useSiteSettings();
+
+  // Helper to get a clean embed URL even if user pastes full iframe tag or a standard link
+  const getCleanMapUrl = (url: string) => {
+    if (!url) return '';
+
+    // 1. If it's a full iframe tag, extract the src
+    if (url.includes('<iframe')) {
+      const match = url.match(/src="([^"]+)"/);
+      if (match && match[1]) return match[1];
+    }
+
+    // 2. If it's a standard "place" or search URL, convert it to embed format
+    // Format: https://www.google.com/maps/place/Name+Of+Place/...
+    if (url.includes('google.com/maps/place/')) {
+      try {
+        const parts = url.split('google.com/maps/place/');
+        if (parts[1]) {
+          const placeName = parts[1].split('/')[0];
+          return `https://maps.google.com/maps?q=${placeName}&output=embed`;
+        }
+      } catch (e) {
+        console.error("Error parsing map URL:", e);
+      }
+    }
+
+    // 3. Fallback for search query format
+    if (url.includes('google.com/maps/search/')) {
+      const parts = url.split('google.com/maps/search/');
+      if (parts[1]) {
+        return `https://maps.google.com/maps?q=${parts[1]}&output=embed`;
+      }
+    }
+
+    return url.trim();
+  };
 
   // Fetch featured projects
   const { data: featuredProjects = [] } = useQuery({
@@ -67,7 +104,7 @@ export const Footer = () => {
           {/* Logo */}
           <Link to="/" className="inline-block">
             <img
-              src={logoUrl || "/placeholder.svg"}
+              src={getOptimizedImageUrl(logoUrl || "/placeholder.svg", 200)}
               alt={siteName}
               loading="lazy"
               decoding="async"
@@ -203,102 +240,79 @@ export const Footer = () => {
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
+
             </div>
 
             {/* Desktop Navigation Grid */}
             <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-8">
               <div>
-                <h4 className="font-semibold text-white mb-4">About</h4>
+                <h4 className="text-[15px] uppercase font-bold text-white tracking-widest mb-6">About</h4>
                 <div className="flex flex-col gap-3">
-                  <Link
-                    to="/about"
-                    className="text-sm text-white/70 hover:text-primary transition-colors"
-                  >
-                    Our Story
-                  </Link>
-                  <Link
-                    to="/about"
-                    className="text-sm text-white/70 hover:text-primary transition-colors"
-                  >
-                    Team
-                  </Link>
-                  <Link
-                    to="/contact"
-                    className="text-sm text-white/70 hover:text-primary transition-colors"
-                  >
-                    Contact
-                  </Link>
+                  <Link to="/about" className="text-[15px] text-white/70 hover:text-primary transition-colors">Our Story</Link>
+                  <Link to="/about" className="text-[15px] text-white/70 hover:text-primary transition-colors">Team</Link>
+                  <Link to="/contact" className="text-[15px] text-white/70 hover:text-primary transition-colors">Contact</Link>
                 </div>
               </div>
 
               <div>
-                <h4 className="font-semibold text-white mb-4">Discover</h4>
+                <h4 className="text-[15px] uppercase font-bold text-white tracking-widest mb-6">Discover</h4>
                 <div className="flex flex-col gap-3">
-                  <Link
-                    to="/portfolio"
-                    className="text-sm text-white/70 hover:text-primary transition-colors"
-                  >
-                    Portfolio
-                  </Link>
-                  <Link
-                    to="/store"
-                    className="text-sm text-white/70 hover:text-primary transition-colors"
-                  >
-                    Store
-                  </Link>
+                  <Link to="/portfolio" className="text-[15px] text-white/70 hover:text-primary transition-colors">Portfolio</Link>
+                  <Link to="/store" className="text-[15px] text-white/70 hover:text-primary transition-colors">Store</Link>
                 </div>
               </div>
 
               <div>
-                <h4 className="font-semibold text-white mb-4">Services</h4>
+                <h4 className="text-[15px] uppercase font-bold text-white tracking-widest mb-6">Services</h4>
                 <div className="flex flex-col gap-3">
-                  <Link
-                    to="/services"
-                    className="text-sm text-white/70 hover:text-primary transition-colors"
-                  >
-                    Prompt Engineering
-                  </Link>
-                  <Link
-                    to="/services"
-                    className="text-sm text-white/70 hover:text-primary transition-colors"
-                  >
-                    Digital Design
-                  </Link>
-                  <Link
-                    to="/services"
-                    className="text-sm text-white/70 hover:text-primary transition-colors"
-                  >
-                    Branding
-                  </Link>
+                  <Link to="/services" className="text-[15px] text-white/70 hover:text-primary transition-colors">Prompt Engineering</Link>
+                  <Link to="/services" className="text-[15px] text-white/70 hover:text-primary transition-colors">Digital Design</Link>
+                  <Link to="/services" className="text-[15px] text-white/70 hover:text-primary transition-colors">Branding</Link>
                 </div>
               </div>
 
               <div>
-                <h4 className="font-semibold text-white mb-4">Support</h4>
+                <h4 className="text-[15px] uppercase font-bold text-white tracking-widest mb-6">Support</h4>
                 <div className="flex flex-col gap-3">
-                  <Link
-                    to="#"
-                    className="text-sm text-white/70 hover:text-primary transition-colors"
-                  >
-                    Privacy Policy
-                  </Link>
-                  <Link
-                    to="#"
-                    className="text-sm text-white/70 hover:text-primary transition-colors"
-                  >
-                    Terms of Service
-                  </Link>
+                  <Link to="#" className="text-[15px] text-white/70 hover:text-primary transition-colors">Privacy Policy</Link>
+                  <Link to="#" className="text-[15px] text-white/70 hover:text-primary transition-colors">Terms of Service</Link>
                 </div>
               </div>
             </div>
+
+            {/* Location Map Section */}
+            {getSetting('google_maps_embed_url') && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="pt-6"
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <MapPin className="w-5 h-5 text-primary" />
+                  <h4 className="text-[15px] uppercase font-bold text-white tracking-widest">Our Location</h4>
+                </div>
+                <div className="w-full h-48 rounded-xl overflow-hidden border border-white/10 grayscale hover:grayscale-0 transition-all duration-500">
+                  <iframe
+                    src={getCleanMapUrl(getSetting('google_maps_embed_url'))}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen={true}
+                    loading="lazy"
+                    title="Store Location"
+                  />
+                </div>
+              </motion.div>
+            )}
           </div>
 
           {/* Right Column - Featured Projects */}
           <div className="lg:col-span-4 xl:col-span-5 lg:pl-8 lg:border-l lg:border-white/10 space-y-10">
             {/* Newsletter Subscription */}
             <div>
-              <h4 className="font-semibold text-white mb-4">Stay Updated</h4>
-              <p className="text-sm text-white/60 mb-4">
+              <h4 className="text-[15px] uppercase font-bold text-white tracking-widest mb-6">Stay Updated</h4>
+              <p className="text-[15px] text-white/70 leading-relaxed max-w-sm">
                 Subscribe to our newsletter for the latest design trends and updates.
               </p>
               <form className="flex gap-2" onSubmit={(e) => e.preventDefault()}>
@@ -329,7 +343,7 @@ export const Footer = () => {
                     >
                       <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-white/10">
                         <img
-                          src={project.image_url || "/placeholder.svg"}
+                          src={getOptimizedImageUrl(project.image_url || "/placeholder.svg", 100)}
                           alt={project.title}
                           loading="lazy"
                           decoding="async"

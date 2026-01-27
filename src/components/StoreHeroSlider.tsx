@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { getOptimizedImageUrl, generateSrcSet } from '@/lib/image-optimizer';
 
 interface StoreSlide {
   id: string;
@@ -77,8 +78,12 @@ export const StoreHeroSlider = () => {
               >
                 {/* Background Image with Ken Burns effect */}
                 <motion.img
-                  src={currentSlide?.image_url}
+                  src={getOptimizedImageUrl(currentSlide?.image_url, 1000)}
+                  srcSet={generateSrcSet(currentSlide?.image_url)}
+                  sizes="(max-width: 1200px) 100vw, 1200px"
                   alt="Store banner"
+                  loading={currentIndex === 0 ? "eager" : "lazy"}
+                  decoding={currentIndex === 0 ? "sync" : "async"}
                   className={`w-full h-full ${imgFitClass} object-center`}
                   initial={{ scale: 1 }}
                   animate={{ scale: 1.05 }}

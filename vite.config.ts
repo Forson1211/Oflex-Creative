@@ -20,6 +20,8 @@ export default defineConfig(({ mode }) => ({
     target: "esnext",
     minify: "esbuild",
     cssMinify: true,
+    sourcemap: false, // Disable sourcemaps in production for smaller bundle size
+    reportCompressedSize: false, // Speed up build time
     rollupOptions: {
       output: {
         manualChunks: {
@@ -40,6 +42,10 @@ export default defineConfig(({ mode }) => ({
           "vendor-utils": ["date-fns", "clsx", "tailwind-merge", "zod", "react-hook-form"],
           "vendor-data": ["@tanstack/react-query", "@supabase/supabase-js"],
         },
+        // Optimize chunk naming for better caching
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
       },
     },
     chunkSizeWarningLimit: 1000,

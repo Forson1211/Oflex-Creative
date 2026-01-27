@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 type RealtimeOrderPayload = {
   id: string;
@@ -19,6 +20,7 @@ type UseRealtimeOrdersOptions = {
 export function useRealtimeOrders(options: UseRealtimeOrdersOptions = {}) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { currencySymbol } = useSiteSettings();
 
   const { enabled = true, onNewOrder, onOrderUpdated } = options;
 
@@ -38,7 +40,7 @@ export function useRealtimeOrders(options: UseRealtimeOrdersOptions = {}) {
           // Invalidate queries to refresh data
           queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
           queryClient.invalidateQueries({ queryKey: ['recent-orders'] });
-          
+
           // Show notification
           const order = payload.new as RealtimeOrderPayload;
 
@@ -46,7 +48,7 @@ export function useRealtimeOrders(options: UseRealtimeOrdersOptions = {}) {
 
           toast({
             title: 'New order received',
-            description: `Order #${order.id.slice(0, 8)} • $${Number(order.total_amount).toFixed(2)}`,
+            description: `Order #${order.id.slice(0, 8)} • ${currencySymbol}${Number(order.total_amount).toFixed(2)}`,
           });
         }
       )

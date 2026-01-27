@@ -28,7 +28,7 @@ export const SectionHeading = ({
           initial={{ opacity: 0, scale: 0.9 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="inline-block px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-sm font-medium mb-4"
+          className="inline-block px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-[14px] uppercase font-bold tracking-[0.2em] mb-4"
         >
           {badge}
         </motion.span>

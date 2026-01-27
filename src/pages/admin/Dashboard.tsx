@@ -20,6 +20,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 interface Stats {
@@ -38,6 +39,7 @@ const Dashboard = () => {
   const { resetAnalytics } = useAdminActions();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { currencySymbol } = useSiteSettings();
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
 
   const handleRefresh = async () => {
@@ -84,7 +86,7 @@ const Dashboard = () => {
     },
     {
       label: 'Total Revenue',
-      value: `$${stats.totalRevenue.toFixed(2)}`,
+      value: `${currencySymbol}${stats.totalRevenue.toFixed(2)}`,
       icon: DollarSign,
       color: 'text-chart-3',
       bgColor: 'bg-chart-3/10',
@@ -298,7 +300,7 @@ const Dashboard = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium text-foreground">${Number(order.total_amount).toFixed(2)}</p>
+                        <p className="font-medium text-foreground">{currencySymbol}{Number(order.total_amount).toFixed(2)}</p>
                         <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${getStatusColor(order.status)}`}>
                           {order.status}
                         </span>

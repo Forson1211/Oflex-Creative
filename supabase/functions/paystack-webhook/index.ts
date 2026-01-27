@@ -1,9 +1,10 @@
+// @ts-nocheck
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { createHmac } from 'https://deno.land/std@0.177.0/node/crypto.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-paystack-signature',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-paystack-signature, x-application-name',
 };
 
 Deno.serve(async (req: Request) => {
@@ -94,25 +95,29 @@ Deno.serve(async (req: Request) => {
         throw itemsError;
       }
 
-      // Fetch template links for products
+      // Fetch template links and file urls for products
       const productIds = orderItems?.map(item => item.product_id).filter(Boolean) || [];
       const { data: products } = await supabase
         .from('products')
-        .select('id, template_link')
+        .select('id, template_link, file_url')
         .in('id', productIds);
 
-      const templateLinkMap = new Map(
-        (products || []).map(p => [p.id, p.template_link])
+      const productMap = new Map(
+        (products || []).map(p => [p.id, p])
       );
 
       // Create purchase records
-      const purchaseRecords = orderItems?.map((item) => ({
-        user_id: userId,
-        order_id: orderId,
-        product_id: item.product_id,
-        product_title: item.product_title,
-        template_link: templateLinkMap.get(item.product_id) || null,
-      })) || [];
+      const purchaseRecords = orderItems?.map((item) => {
+        const product = productMap.get(item.product_id);
+        return {
+          user_id: userId,
+          order_id: orderId,
+          product_id: item.product_id,
+          product_title: item.product_title,
+          template_link: product?.template_link || null,
+          file_url: product?.file_url || null,
+        };
+      }) || [];
 
       if (purchaseRecords.length > 0) {
         const { error: purchaseError } = await supabase
