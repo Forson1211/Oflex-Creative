@@ -9,6 +9,7 @@ import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import { BLOG_POSTS } from '@/data/blog-posts';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect } from 'react';
+import { SEO } from '@/components/layout/SEO';
 
 const BlogPostDetail = () => {
     const { id } = useParams();
@@ -44,6 +45,12 @@ const BlogPostDetail = () => {
 
     return (
         <Layout>
+            <SEO
+                title={post.title}
+                description={post.excerpt || post.title}
+                image={post.image}
+                pathname={`/blog/${id}`}
+            />
             {/* Post Header / Hero */}
             <article className="pt-24 pb-32">
                 <div className="container mx-auto px-4 max-w-4xl">

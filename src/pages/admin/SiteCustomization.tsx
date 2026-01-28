@@ -70,6 +70,11 @@ const SiteCustomization = () => {
     onSuccess: (url) => updateSetting('about_image_url', url),
   });
 
+  const { uploadImage: uploadOgImg, isUploading: isUploadingOgImg } = useImageUpload({
+    bucket: 'site-assets',
+    onSuccess: (url) => updateSetting('site_preview_image_url', url),
+  });
+
   // Refine the useQuery call to remove 'prefetch' and ensure proper typing
   const { data: siteSettings = [], isLoading } = useQuery<SiteSetting[]>({
     queryKey: ['site-settings-admin'],
@@ -231,7 +236,6 @@ const SiteCustomization = () => {
                         <p className="text-sm text-muted-foreground font-medium">Define your brand's basic information</p>
                       </div>
                     </div>
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-3">
                         <Label htmlFor="site_name" className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Site Name</Label>
@@ -251,6 +255,17 @@ const SiteCustomization = () => {
                           onChange={(e) => updateSetting('site_tagline', e.target.value)}
                         />
                       </div>
+                    </div>
+                    <div className="mt-8 space-y-3">
+                      <Label htmlFor="site_description" className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Site Description (SEO)</Label>
+                      <Textarea
+                        id="site_description"
+                        value={settings.site_description || ''}
+                        className="bg-background/50 border-border/50 focus:border-primary/50 transition-all rounded-xl resize-none"
+                        onChange={(e) => updateSetting('site_description', e.target.value)}
+                        placeholder="Premium Digital Products & Design Services for creative pioneers..."
+                        rows={3}
+                      />
                     </div>
                   </GlassCard>
 
@@ -913,6 +928,55 @@ const SiteCustomization = () => {
                       </div>
                     ))}
                   </div>
+
+                  <div className="mt-10 pt-10 border-t border-border/50">
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center shadow-inner text-primary">
+                        <ImageIcon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold text-foreground">Social Preview</h2>
+                        <p className="text-sm text-muted-foreground font-medium">This image appears when you share your site URL</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                      <div className="space-y-4">
+                        <Label className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Preview Image (OG Image)</Label>
+                        <ImageUpload
+                          value={settings.site_preview_image_url || ''}
+                          onChange={(url) => updateSetting('site_preview_image_url', url)}
+                          onUpload={uploadOgImg}
+                          isUploading={isUploadingOgImg}
+                          aspectRatio="video"
+                          className="rounded-2xl border-dashed border-2 p-2 hover:border-primary/50 transition-colors"
+                        />
+                        <p className="text-[10px] text-muted-foreground">Recommended size: 1200x630 pixels</p>
+                      </div>
+                      <div className="space-y-6 flex flex-col justify-center">
+                        <div className="space-y-3">
+                          <Label htmlFor="site_preview_image_url" className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Direct URL</Label>
+                          <Input
+                            id="site_preview_image_url"
+                            value={settings.site_preview_image_url || ''}
+                            className="bg-background/50 border-border/50 rounded-xl"
+                            onChange={(e) => updateSetting('site_preview_image_url', e.target.value)}
+                            placeholder="https://yourdomain.com/preview.png"
+                          />
+                        </div>
+                        {settings.site_preview_image_url && (
+                          <div className="relative group rounded-2xl overflow-hidden border border-border/10 shadow-lg aspect-video bg-muted/20">
+                            <img
+                              src={settings.site_preview_image_url}
+                              alt="OG Preview"
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </GlassCard>
 
                 <GlassCard className="p-6 sm:p-8 lg:p-10 border-primary/10">
@@ -959,9 +1023,9 @@ const SiteCustomization = () => {
               </div>
             </TabsContent>
           </Tabs>
-        </form>
-      </AdminLayout>
-    </ProtectedRoute>
+        </form >
+      </AdminLayout >
+    </ProtectedRoute >
   );
 };
 

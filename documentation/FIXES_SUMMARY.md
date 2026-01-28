@@ -52,7 +52,7 @@
 ### Quick Setup (Choose ONE option):
 
 #### Option 1: Make Yourself Admin (Recommended)
-1. Go to Supabase SQL Editor: https://rilcytjdydirhhtbrwet.supabase.co/project/rilcytjdydirhhtbrwet/sql
+1. Go to Supabase SQL Editor: https://your-project-id.supabase.co/project/your-project-id/sql
 2. Run this SQL (replace with your email):
 
 ```sql

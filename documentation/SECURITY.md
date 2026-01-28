@@ -13,8 +13,8 @@ These keys are stored in Supabase's secure vault and never exposed to browsers:
 
 ```
 SECRET KEYS (Never in code):
-├─ PAYSTACK_SECRET_KEY: sk_live_3c19a7dff24dad8094daf5cfb8ed32ebf7ab8883
-├─ APP_SERVICE_ROLE_KEY: eyJhbGci...bklRBzoArlpyw_Hg4S6_NpE7oybodbNj8VtKCzuHBkA
+├─ PAYSTACK_SECRET_KEY: sk_live_xxxxxxxxxxxxxxxxxxxxxxxx
+├─ APP_SERVICE_ROLE_KEY: eyJhbGci... (service_role_key)
 └─ SUPABASE_SERVICE_ROLE_KEY: (Auto-provided by Supabase)
 ```
 
@@ -28,9 +28,9 @@ These are safe to use in frontend because they have built-in restrictions:
 
 ```
 PUBLIC KEYS (Safe in frontend):
-├─ VITE_SUPABASE_URL: https://rilcytjdydirhhtbrwet.supabase.co
+├─ VITE_SUPABASE_URL: https://your-project-id.supabase.co
 ├─ VITE_SUPABASE_PUBLISHABLE_KEY: eyJhbGci... (anon key)
-└─ VITE_STRIPE_PUBLISHABLE_KEY: sb_publishable_...
+└─ VITE_STRIPE_PUBLISHABLE_KEY: pk_test_...
 ```
 
 **Protection**: Row Level Security (RLS) prevents unauthorized database access
@@ -95,7 +95,7 @@ PUBLIC KEYS (Safe in frontend):
 3. Update in Supabase: `supabase secrets set PAYSTACK_SECRET_KEY=new_key`
 
 ### Supabase:
-1. Go to: https://supabase.com/dashboard/project/rilcytjdydirhhtbrwet/settings/api
+1. Go to: https://supabase.com/dashboard/project/your-project-id/settings/api
 2. Click "Reset" next to Service Role Key
 3. Update in Edge Functions secrets
 

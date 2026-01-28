@@ -31,9 +31,9 @@ Expand the **"Environment Variables"** section and add these EXACTLY as they app
 
 | Key | Value (Copy from your local .env) |
 | :--- | :--- |
-| `VITE_SUPABASE_URL` | `https://rilcytjdydirhhtbrwet.supabase.co` |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | `eyJhb...` (The full long key) |
-| `VITE_SUPABASE_PROJECT_ID` | `rilcytjdydirhhtbrwet` |
+| `VITE_SUPABASE_URL` | `https://your-project-id.supabase.co` |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | `your_anon_key` |
+| `VITE_SUPABASE_PROJECT_ID` | `your_project_id` |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | `sb_publishable_...` |
 
 *(Note: Never paste the secrets/service_role keys here, only the ones starting with `VITE_`)*

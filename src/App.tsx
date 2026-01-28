@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { SecurityCheck } from "@/components/auth/SecurityCheck";
 import { MaintenanceGuard } from "@/components/layout/MaintenanceGuard";
+import { HelmetProvider } from 'react-helmet-async';
+import { SEO } from "@/components/layout/SEO";
 
 // Lazy load pages for faster initial load
 const Index = lazy(() => import("./pages/Index"));
@@ -150,6 +152,7 @@ const AppContent = () => {
 
   return (
     <Suspense fallback={<LoadingScreen />}>
+      <SEO />
       <AuthStatusHandler />
       <MaintenanceGuard>
         <Routes>
@@ -196,24 +199,26 @@ const AppContent = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <SecurityCheck>
-        <ThemeProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter
-              future={{
-                v7_startTransition: true,
-                v7_relativeSplatPath: true,
-              }}
-            >
-              <AppContent />
-            </BrowserRouter>
-          </TooltipProvider>
-        </ThemeProvider>
-      </SecurityCheck>
-    </AuthProvider>
+    <HelmetProvider>
+      <AuthProvider>
+        <SecurityCheck>
+          <ThemeProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter
+                future={{
+                  v7_startTransition: true,
+                  v7_relativeSplatPath: true,
+                }}
+              >
+                <AppContent />
+              </BrowserRouter>
+            </TooltipProvider>
+          </ThemeProvider>
+        </SecurityCheck>
+      </AuthProvider>
+    </HelmetProvider>
   </QueryClientProvider>
 );
 

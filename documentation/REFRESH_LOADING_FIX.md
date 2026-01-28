@@ -24,7 +24,7 @@ Instead of waiting for async verification, we now:
 ```tsx
 const hasCachedAuth = () => {
   const cachedRole = localStorage.getItem('userRole');
-  const cachedSession = localStorage.getItem('sb-rilcytjdydirhhtbrwet-auth-token');
+  const cachedSession = localStorage.getItem('sb-your-project-id-auth-token');
   return !!(cachedRole && cachedSession);
 };
 
@@ -37,7 +37,7 @@ const [isAuthReady, setIsAuthReady] = useState(hasCachedAuth());
 ```tsx
 const initializeFromCache = () => {
   try {
-    const cachedSessionStr = localStorage.getItem('sb-rilcytjdydirhhtbrwet-auth-token');
+    const cachedSessionStr = localStorage.getItem('sb-your-project-id-auth-token');
     if (cachedSessionStr) {
       const cachedSession = JSON.parse(cachedSessionStr);
       if (cachedSession?.currentSession?.user) {

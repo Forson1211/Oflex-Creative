@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
+import { SEO } from '@/components/layout/SEO';
 
 interface Product {
   id: string;
@@ -182,6 +183,12 @@ const ProductDetail = () => {
 
   return (
     <Layout>
+      <SEO
+        title={product.title}
+        description={product.description || undefined}
+        image={product.image_url || undefined}
+        pathname={`/product/${id}`}
+      />
       <section className="py-20">
         <div className="container mx-auto px-4">
           <Button

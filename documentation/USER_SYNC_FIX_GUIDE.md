@@ -9,7 +9,7 @@ When you click "Sync Users" in the Admin User Management page, you get an error 
 
 1. **Open Supabase Dashboard**
    - Go to: https://supabase.com/dashboard
-   - Select your project: `rilcytjdydirhhtbrwet`
+   - Select your project: `your-project-id`
 
 2. **Open SQL Editor**
    - Click "SQL Editor" in the left sidebar

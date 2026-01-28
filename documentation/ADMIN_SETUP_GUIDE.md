@@ -3,7 +3,7 @@
 ## Quick Fix: Make Your User an Admin
 
 ### Step 1: Access Supabase SQL Editor
-1. Go to: https://rilcytjdydirhhtbrwet.supabase.co/project/rilcytjdydirhhtbrwet/sql
+1. Go to: https://your-project-id.supabase.co/project/your-project-id/sql
 2. Log in to your Supabase dashboard
 
 ### Step 2: Run the Admin Setup Script
