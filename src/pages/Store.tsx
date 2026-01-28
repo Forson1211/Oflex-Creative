@@ -17,7 +17,8 @@ import {
   Tag,
   Package,
   Crown,
-  Palette
+  Palette,
+  Share2
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -76,6 +77,35 @@ const Store = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { getSetting, currencySymbol } = useSiteSettings();
+
+  const handleShare = async (product: Product) => {
+    const shareUrl = `${window.location.origin}/product/${product.id}`;
+    const shareData = {
+      title: product.title,
+      text: product.description || 'Check out this amazing product on Oflex Creative Studio!',
+      url: shareUrl,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        if (err instanceof Error && err.name !== 'AbortError') {
+          console.error('Error sharing:', err);
+        }
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: 'Link copied!',
+          description: 'Product link copied to clipboard.',
+        });
+      } catch (err) {
+        console.error('Error copying link:', err);
+      }
+    }
+  };
 
   // Fetch products using centralized hook
   const { data: products = [], isLoading: productsLoading } = useProducts({
@@ -609,6 +639,14 @@ const Store = () => {
                             </Button>
                             <Button
                               size="icon"
+                              variant="secondary"
+                              className="rounded-full shadow-lg"
+                              onClick={() => handleShare(product)}
+                            >
+                              <Share2 className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="icon"
                               className="rounded-full shadow-lg"
                               onClick={() => addToCartMutation.mutate(product.id)}
                               disabled={addToCartMutation.isPending}
@@ -687,6 +725,14 @@ const Store = () => {
                               >
                                 <Eye className="w-4 h-4 mr-2" />
                                 View Details
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="rounded-full hover:bg-primary/20"
+                                onClick={() => handleShare(product)}
+                              >
+                                <Share2 className="w-4 h-4" />
                               </Button>
                             </div>
                           </div>

@@ -186,6 +186,12 @@ export const Footer = () => {
                       >
                         Store
                       </Link>
+                      <Link
+                        to="/blog"
+                        className="text-sm text-white/70 hover:text-primary transition-colors"
+                      >
+                        Blog
+                      </Link>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
@@ -259,6 +265,7 @@ export const Footer = () => {
                 <div className="flex flex-col gap-3">
                   <Link to="/portfolio" className="text-[15px] text-white/70 hover:text-primary transition-colors">Portfolio</Link>
                   <Link to="/store" className="text-[15px] text-white/70 hover:text-primary transition-colors">Store</Link>
+                  <Link to="/blog" className="text-[15px] text-white/70 hover:text-primary transition-colors">Blog</Link>
                 </div>
               </div>
 

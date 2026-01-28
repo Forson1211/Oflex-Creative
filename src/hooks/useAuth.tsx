@@ -14,10 +14,11 @@ interface AuthContextType {
   isModerator: boolean;
   userRole: AppRole | null;
   signIn: (email: string, password: string) => Promise<{ error: Error | { message: string; status?: number } | null }>;
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<{ data: any; error: Error | null }>;
   resendSignupConfirmation: (email: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   resetPasswordForEmail: (email: string) => Promise<{ error: Error | null }>;
+  verifyOtp: (email: string, token: string) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -260,10 +261,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         data: {
           full_name: fullName,
         },
-        emailRedirectTo: getAbsoluteUrl('/'),
       },
     });
 
+    return { data, error };
+  };
+
+  const verifyOtp = async (email: string, token: string) => {
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: 'signup',
+    });
     return { error };
   };
 
@@ -272,7 +281,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       type: 'signup',
       email,
       options: {
-        emailRedirectTo: getAbsoluteUrl('/'),
+        emailRedirectTo: getAbsoluteUrl('/?signup_success=true'),
       },
     });
     return { error };
@@ -301,7 +310,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAuthReady, isAdmin, isModerator, userRole, signIn, signUp, resendSignupConfirmation, signOut, resetPasswordForEmail }}>
+    <AuthContext.Provider value={{ user, loading, isAuthReady, isAdmin, isModerator, userRole, signIn, signUp, resendSignupConfirmation, signOut, resetPasswordForEmail, verifyOtp }}>
       {children}
     </AuthContext.Provider>
   );

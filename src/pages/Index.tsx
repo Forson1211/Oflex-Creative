@@ -1,6 +1,7 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles, Palette, Code, Zap, Star, ShoppingBag, ShoppingCart, Users, Package, Briefcase } from 'lucide-react';
+import { ArrowRight, Sparkles, Palette, Code, Zap, Layers, Wand2, Star, ShoppingBag, ShoppingCart, Users, Package, Briefcase, Share2, ChevronRight } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -19,6 +20,16 @@ import { HeroBannerSlider } from '@/components/HeroBannerSlider';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
+import { useServices } from '@/hooks/useServices';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+  CarouselApi,
+} from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 
 
 
@@ -28,12 +39,14 @@ interface SiteStats {
   projectCount: number;
 }
 
-const services = [
-  { icon: Sparkles, title: 'Prompt Engineering', description: 'AI-powered creative prompts' },
-  { icon: Palette, title: 'Brand Design', description: 'Visual identity systems' },
-  { icon: Code, title: 'UI/UX Design', description: 'User-centered interfaces' },
-  { icon: Zap, title: 'AI Automation', description: 'Workflow optimization' },
-];
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Sparkles,
+  Palette,
+  Code,
+  Zap,
+  Layers,
+  Wand2,
+};
 
 const getInitials = (name: string) => {
   return name
@@ -49,6 +62,45 @@ const Index = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { getSetting } = useSiteSettings();
+  const [projectApi, setProjectApi] = useState<CarouselApi>();
+  const [currentProject, setCurrentProject] = useState(0);
+
+  useEffect(() => {
+    if (!projectApi) return;
+    setCurrentProject(projectApi.selectedScrollSnap());
+    projectApi.on("select", () => {
+      setCurrentProject(projectApi.selectedScrollSnap());
+    });
+  }, [projectApi]);
+
+  const handleShare = async (product: any) => {
+    const shareUrl = `${window.location.origin}/product/${product.id}`;
+    const shareData = {
+      title: product.title,
+      text: product.description || 'Check out this amazing product on Oflex Creative Studio!',
+      url: shareUrl,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        if (err instanceof Error && err.name !== 'AbortError') {
+          console.error('Error sharing:', err);
+        }
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: 'Link copied!',
+          description: 'Product link copied to clipboard.',
+        });
+      } catch (err) {
+        console.error('Error copying link:', err);
+      }
+    }
+  };
 
   // Fetch site stats
   const { data: siteStats } = useQuery({
@@ -76,6 +128,10 @@ const Index = () => {
 
   // Fetch testimonials using centralized hook
   const { data: testimonials = [] } = useTestimonials();
+
+  // Fetch services from Supabase
+  const { data: allServices = [] } = useServices();
+  const dynamicServices = allServices.filter(s => s.is_active).slice(0, 4);
 
   // Add to cart mutation
   const addToCartMutation = useMutation({
@@ -293,84 +349,172 @@ const Index = () => {
           />
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {services.map((service, index) => (
-              <motion.div
-                key={service.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <GlassCard className="text-center h-full">
-                  <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <service.icon className="w-7 h-7 text-primary" />
-                  </div>
-                  <h3 className="font-semibold text-foreground mb-2">{service.title}</h3>
-                  <p className="text-sm text-muted-foreground">{service.description}</p>
-                </GlassCard>
-              </motion.div>
-            ))}
+            {(dynamicServices.length > 0 ? dynamicServices : [
+              { icon: 'Sparkles', title: 'Prompt Engineering', description: 'AI-powered creative prompts' },
+              { icon: 'Palette', title: 'Brand Design', description: 'Visual identity systems' },
+              { icon: 'Code', title: 'UI/UX Design', description: 'User-centered interfaces' },
+              { icon: 'Zap', title: 'AI Automation', description: 'Workflow optimization' },
+            ]).map((service, index) => {
+              const IconComponent = typeof service.icon === 'string' ? (iconMap[service.icon] || Sparkles) : service.icon;
+              return (
+                <motion.div
+                  key={service.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <GlassCard className="text-center h-full">
+                    <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                      <IconComponent className="w-7 h-7 text-primary" />
+                    </div>
+                    <h3 className="font-semibold text-foreground mb-2">{service.title}</h3>
+                    <p className="text-sm text-muted-foreground">{service.description}</p>
+                  </GlassCard>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* Featured Works - Larger on desktop, vertical on mobile */}
-      <section className="py-16">
+      {/* Featured Works - Premium Wide Layout */}
+      <section className="py-24 relative overflow-hidden">
         <div className="container mx-auto px-4">
           <SectionHeading
             badge={getSetting('home_portfolio_badge', 'Our Work')}
-            title={getSetting('home_portfolio_title', 'Featured Projects')}
+            title={getSetting('home_portfolio_title', 'Premium Showcase')}
             description={getSetting('home_portfolio_description', 'A glimpse into our creative portfolio')}
           />
 
-          {/* Grid: 1 column on mobile (vertical), 3 columns on desktop (larger) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredProjects.map((project, index) => (
-              <motion.div
-                key={project.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Link to="/portfolio">
-                  <GlassCard className="overflow-hidden p-0 group">
-                    <div className="relative aspect-[4/3] overflow-hidden">
-                      <OptimizedImage
-                        src={project.image_url}
-                        alt={project.title}
-                        width={600}
-                        className="w-full h-full"
-                        imageClassName="object-cover transition-transform duration-500 group-hover:scale-110"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = '';
-                          target.style.display = 'none';
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <span className="inline-block px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-medium mb-2">
-                          {project.category}
-                        </span>
-                        <h3 className="text-base font-semibold text-foreground line-clamp-1">{project.title}</h3>
-                      </div>
-                    </div>
-                  </GlassCard>
-                </Link>
-              </motion.div>
-            ))}
+          <div className="relative mt-8">
+            <Carousel
+              setApi={setProjectApi}
+              opts={{
+                align: "start",
+                loop: true,
+                duration: 60,
+              }}
+              plugins={[
+                Autoplay({
+                  delay: 6000,
+                  stopOnInteraction: false,
+                }),
+              ]}
+              className="w-full"
+            >
+              <CarouselContent>
+                {featuredProjects.map((project, index) => {
+                  const isActive = currentProject === index;
+                  return (
+                    <CarouselItem key={project.id}>
+                      <Link to="/portfolio" className="block group font-sans">
+                        <GlassCard className="p-0 border-white/10 overflow-hidden bg-[#1a1a1a]/90 backdrop-blur-xl">
+                          <div className="grid lg:grid-cols-2 lg:h-[480px] gap-0">
+                            {/* Image Side */}
+                            <div className="relative aspect-video lg:aspect-auto overflow-hidden">
+                              <motion.div
+                                animate={{ scale: isActive ? 1.05 : 1 }}
+                                transition={{ duration: 6, ease: "linear" }}
+                                className="w-full h-full"
+                              >
+                                <OptimizedImage
+                                  src={project.image_url}
+                                  alt={project.title}
+                                  width={1200}
+                                  className="w-full h-full"
+                                  imageClassName="object-cover transition-transform duration-700 group-hover:scale-110"
+                                />
+                              </motion.div>
+                              <div className="absolute top-6 left-6">
+                                <motion.div
+                                  initial={{ opacity: 0, x: -20 }}
+                                  animate={isActive ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+                                  transition={{ duration: 0.6, delay: 0.2 }}
+                                >
+                                  <Badge className="bg-yellow-500/90 text-black px-4 py-1.5 rounded-full border-none shadow-xl font-bold text-xs uppercase tracking-wider">
+                                    Featured Project
+                                  </Badge>
+                                </motion.div>
+                              </div>
+                            </div>
+
+                            {/* Content Side */}
+                            <div className="p-8 md:p-12 lg:p-16 flex flex-col justify-center bg-white/[0.02] text-white">
+                              <motion.div
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={isActive ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
+                                transition={{ duration: 0.8, delay: 0.2 }}
+                                className="flex items-center gap-2 mb-6"
+                              >
+                                <span className="text-xs font-bold text-primary tracking-[0.2em] uppercase">{project.category}</span>
+                                <span className="w-1 h-1 bg-primary/30 rounded-full" />
+                                <span className="text-xs font-bold text-white/50 tracking-[0.2em] uppercase">Digital Excellence</span>
+                              </motion.div>
+
+                              <motion.h3
+                                initial={{ opacity: 0, y: 30 }}
+                                animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+                                transition={{ duration: 0.8, delay: 0.3 }}
+                                className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 tracking-tight text-white group-hover:text-primary transition-colors duration-300 leading-tight"
+                              >
+                                {project.title}
+                              </motion.h3>
+
+                              <motion.p
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                                transition={{ duration: 0.8, delay: 0.4 }}
+                                className="text-lg text-white/70 leading-relaxed mb-10 line-clamp-3"
+                              >
+                                {project.description || "A premium digital experience crafted with precision and creative excellence to elevate brand identity and user engagement."}
+                              </motion.p>
+
+                              <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                                transition={{ duration: 0.8, delay: 0.5 }}
+                                className="flex items-center justify-between mt-auto"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
+                                    <Users className="w-6 h-6 text-primary" />
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-bold text-white">Premium Client</span>
+                                    <span className="text-[10px] uppercase tracking-widest text-white/50">Digital Strategy</span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest group/btn">
+                                  <span>View Project</span>
+                                  <ChevronRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
+                                </div>
+                              </motion.div>
+                            </div>
+                          </div>
+                        </GlassCard>
+                      </Link>
+                    </CarouselItem>
+                  );
+                })}
+              </CarouselContent>
+              <div className="hidden md:block">
+                <CarouselPrevious className="left-8 z-20 border-white/10 bg-black/40 backdrop-blur-md hover:bg-black/60 text-white" />
+                <CarouselNext className="right-8 z-20 border-white/10 bg-black/40 backdrop-blur-md hover:bg-black/60 text-white" />
+              </div>
+            </Carousel>
           </div>
 
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="text-center mt-12"
+            className="text-center mt-16"
           >
-            <Button variant="outline" size="lg" asChild>
+            <Button variant="outline" size="lg" className="rounded-full px-12 h-14 border-white/10 bg-white/5 hover:bg-white/10" asChild>
               <Link to="/portfolio">
-                View All Projects
+                Explore Full Portfolio
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
             </Button>
@@ -408,7 +552,7 @@ const Index = () => {
                     />
 
                     {/* Overlay on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end justify-center pb-6">
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end justify-center pb-6 gap-2">
                       <motion.button
                         onClick={(e) => {
                           e.preventDefault();
@@ -420,6 +564,17 @@ const Index = () => {
                       >
                         <ShoppingCart className="w-4 h-4" />
                         Add to Cart
+                      </motion.button>
+                      <motion.button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleShare(product);
+                        }}
+                        className="p-3 rounded-full bg-background/80 backdrop-blur-md text-foreground border border-white/10 hover:bg-background transition-colors shadow-lg"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Share2 className="w-4 h-4" />
                       </motion.button>
                     </div>
                   </div>
@@ -471,39 +626,69 @@ const Index = () => {
             description={getSetting('home_testimonials_description', "Hear from those who've experienced our work")}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={testimonial.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <GlassCard hover={false} className="h-full">
-                  <div className="flex items-center gap-1 mb-4">
-                    {[...Array(testimonial.rating || 5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-primary text-primary" />
-                    ))}
-                  </div>
-                  <p className="text-muted-foreground mb-6 leading-relaxed">
-                    "{testimonial.content}"
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-12 h-12 border border-border">
-                      <AvatarImage src={getOptimizedImageUrl(testimonial.avatar_url || '', 100)} alt={testimonial.name} className="object-cover" />
-                      <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                        {getInitials(testimonial.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-semibold text-foreground">{testimonial.name}</p>
-                      <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-                    </div>
-                  </div>
-                </GlassCard>
-              </motion.div>
-            ))}
+          <div className="relative max-w-5xl mx-auto px-12">
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              plugins={[
+                Autoplay({
+                  delay: 4000,
+                }),
+              ]}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-4">
+                {testimonials.map((testimonial, index) => (
+                  <CarouselItem key={testimonial.id || index} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.1 }}
+                      className="h-full py-2"
+                    >
+                      <GlassCard hover={false} className="h-full flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center gap-1 mb-4">
+                            {[...Array(testimonial.rating || 5)].map((_, i) => (
+                              <Star key={i} className="w-4 h-4 fill-primary text-primary" />
+                            ))}
+                          </div>
+                          <p className="text-muted-foreground mb-6 leading-relaxed italic">
+                            "{testimonial.content}"
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3 mt-auto">
+                          <Avatar className="w-12 h-12 border border-border">
+                            <AvatarImage src={getOptimizedImageUrl(testimonial.avatar_url || '', 100)} alt={testimonial.name} className="object-cover" />
+                            <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                              {getInitials(testimonial.name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="text-left">
+                            <p className="font-semibold text-foreground text-sm">{testimonial.name}</p>
+                            <p className="text-[11px] text-muted-foreground uppercase tracking-wider">{testimonial.role}</p>
+                          </div>
+                        </div>
+                      </GlassCard>
+                    </motion.div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <div className="hidden md:block">
+                <CarouselPrevious className="-left-12 border-primary/20 hover:bg-primary/10" />
+                <CarouselNext className="-right-12 border-primary/20 hover:bg-primary/10" />
+              </div>
+
+              {/* Mobile pagination dots */}
+              <div className="flex justify-center gap-2 mt-8 md:hidden">
+                {testimonials.map((_, i) => (
+                  <div key={i} className="w-2 h-2 rounded-full bg-primary/20" />
+                ))}
+              </div>
+            </Carousel>
           </div>
         </div>
       </section>

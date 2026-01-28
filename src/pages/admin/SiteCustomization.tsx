@@ -14,20 +14,34 @@ import {
   Palette,
   Type,
   Layout,
+  Search,
+  Check,
+  ChevronRight,
+  Globe,
+  Image as ImageIcon,
   Save,
   Loader2,
-  Image,
-  Mail,
-  Phone,
+  FileText,
   MapPin,
   Share2,
   Instagram,
   Twitter,
   Facebook,
   Linkedin,
-  FileText
+  Mail,
+  Phone,
+  Sparkles,
+  Briefcase,
+  ShoppingCart,
+  MessageSquare,
+  Zap,
+  Store,
+  Info
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { cn } from '@/lib/utils';
+
 
 interface SiteSetting {
   id: string;
@@ -56,7 +70,8 @@ const SiteCustomization = () => {
     onSuccess: (url) => updateSetting('about_image_url', url),
   });
 
-  const { data: siteSettings = [], isLoading } = useQuery({
+  // Refine the useQuery call to remove 'prefetch' and ensure proper typing
+  const { data: siteSettings = [], isLoading } = useQuery<SiteSetting[]>({
     queryKey: ['site-settings-admin'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -66,8 +81,10 @@ const SiteCustomization = () => {
       if (error) throw error;
       return data as SiteSetting[];
     },
+    staleTime: 1000 * 60 * 5, // Cache data for 5 minutes
   });
 
+  // Ensure proper typing for siteSettings in useEffect
   useEffect(() => {
     if (siteSettings.length > 0) {
       const settingsObj: Record<string, string> = {};
@@ -78,15 +95,16 @@ const SiteCustomization = () => {
     }
   }, [siteSettings]);
 
+  // Ensure proper typing for siteSettings in saveMutation
   const saveMutation = useMutation({
     mutationFn: async () => {
       const updates = Object.entries(settings).map(([key, value]) => {
-        const original = siteSettings.find(s => s.setting_key === key);
+        const original = siteSettings.find((s) => s.setting_key === key);
         return {
           setting_key: key,
           setting_value: value,
           setting_type: original?.setting_type || 'text',
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         };
       });
 
@@ -132,961 +150,812 @@ const SiteCustomization = () => {
     <ProtectedRoute requireAdmin>
       <AdminLayout>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Site Customization</h1>
-              <p className="text-muted-foreground">Customize your website content and appearance</p>
+          <div className="relative mb-12">
+            <div className="absolute -top-10 -left-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl" />
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20 flex items-center gap-1.5">
+                    <Palette className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Customizer</span>
+                  </div>
+                  <div className="h-px w-8 bg-border/40" />
+                </div>
+                <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight">
+                  Design <span className="text-primary">Studio</span>
+                </h1>
+                <p className="text-muted-foreground text-sm max-w-md font-medium leading-relaxed">
+                  Refine your agency's visual identity with precision controls.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Button
+                  type="submit"
+                  disabled={saveMutation.isPending}
+                  className="h-10 px-6 rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-300 font-bold text-xs uppercase tracking-wider group"
+                >
+                  {saveMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform" />
+                  )}
+                  Save Changes
+                </Button>
+              </div>
             </div>
-            <Button type="submit" disabled={saveMutation.isPending} className="sm:self-auto self-start">
-              {saveMutation.isPending ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4 mr-2" />
-              )}
-              Save All Changes
-            </Button>
           </div>
 
-          <Tabs defaultValue="general" className="space-y-6">
-            <TabsList className="flex w-full justify-start gap-1 overflow-x-auto sm:grid sm:grid-cols-6">
-              <TabsTrigger value="general" className="whitespace-nowrap">
-                General
-              </TabsTrigger>
-              <TabsTrigger value="hero" className="whitespace-nowrap">
-                Hero Section
-              </TabsTrigger>
-              <TabsTrigger value="homepage" className="whitespace-nowrap">
-                Homepage
-              </TabsTrigger>
-              <TabsTrigger value="pages" className="whitespace-nowrap">
-                Pages
-              </TabsTrigger>
-              <TabsTrigger value="contact" className="whitespace-nowrap">
-                Contact
-              </TabsTrigger>
-              <TabsTrigger value="social" className="whitespace-nowrap">
-                Social & Footer
-              </TabsTrigger>
-            </TabsList>
+          <Tabs defaultValue="general" className="space-y-10">
+            <div className="sticky top-16 z-20 -mx-3 sm:-mx-6 lg:-mx-10 px-3 sm:px-6 lg:px-10 py-1.5 bg-background/60 backdrop-blur-xl border-b border-border/5">
+              <TabsList className="bg-transparent p-0 flex h-auto w-full gap-1 justify-start overflow-x-auto no-scrollbar rounded-none border-none">
+                {[
+                  { id: 'general', label: 'General', icon: Layout },
+                  { id: 'hero', label: 'Hero', icon: Type },
+                  { id: 'homepage', label: 'Home', icon: Globe },
+                  { id: 'pages', label: 'Pages', icon: FileText },
+                  { id: 'contact', label: 'Contact', icon: MapPin },
+                  { id: 'social', label: 'Social', icon: Share2 },
+                ].map((tab) => (
+                  <TabsTrigger
+                    key={tab.id}
+                    value={tab.id}
+                    className="
+                      flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all duration-300
+                      data-[state=active]:bg-primary/10 data-[state=active]:text-primary
+                      data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground
+                      whitespace-nowrap relative
+                      after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-0 after:h-0.5 after:bg-primary after:transition-all after:duration-300
+                      data-[state=active]:after:w-[40%]
+                    "
+                  >
+                    <tab.icon className="w-3.5 h-3.5" />
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
 
             {/* General Settings Tab */}
-            <TabsContent value="general" className="space-y-6">
-              <div className="bg-card border border-border rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Layout className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-foreground">General Settings</h2>
-                    <p className="text-sm text-muted-foreground">Basic site information</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="site_name">Site Name</Label>
-                    <Input
-                      id="site_name"
-                      value={settings.site_name || ''}
-                      onChange={(e) => updateSetting('site_name', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="site_tagline">Site Tagline</Label>
-                    <Input
-                      id="site_tagline"
-                      value={settings.site_tagline || ''}
-                      onChange={(e) => updateSetting('site_tagline', e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Logo Upload */}
-              <div className="bg-card border border-border rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center">
-                    <Image className="w-5 h-5 text-accent-foreground" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-foreground">Site Logo</h2>
-                    <p className="text-sm text-muted-foreground">Upload your brand logo</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label>Logo Image</Label>
-                    <ImageUpload
-                      value={settings.logo_url || ''}
-                      onChange={(url) => updateSetting('logo_url', url)}
-                      onUpload={uploadLogo}
-                      isUploading={isUploadingLogo}
-                      aspectRatio="auto"
-                      className="mt-2"
-                    />
-                  </div>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="logo_url">Or enter logo URL</Label>
-                      <Input
-                        id="logo_url"
-                        value={settings.logo_url || ''}
-                        onChange={(e) => updateSetting('logo_url', e.target.value)}
-                        placeholder="https://..."
-                      />
+            <TabsContent value="general" className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+                <div className="lg:col-span-2 space-y-6 sm:space-y-8">
+                  <GlassCard className="p-6 sm:p-8 border-primary/10 bg-gradient-to-br from-card/90 to-card/50">
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center shadow-inner">
+                        <Layout className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold text-foreground">Core Identity</h2>
+                        <p className="text-sm text-muted-foreground font-medium">Define your brand's basic information</p>
+                      </div>
                     </div>
-                    {settings.logo_url && (
-                      <div className="p-4 bg-muted/50 rounded-lg">
-                        <p className="text-xs text-muted-foreground mb-2">Preview:</p>
-                        <img
-                          src={settings.logo_url}
-                          alt="Logo preview"
-                          className="h-12 w-auto"
-                          onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-3">
+                        <Label htmlFor="site_name" className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Site Name</Label>
+                        <Input
+                          id="site_name"
+                          value={settings.site_name || ''}
+                          className="h-12 bg-background/50 border-border/50 focus:border-primary/50 transition-all rounded-xl"
+                          onChange={(e) => updateSetting('site_name', e.target.value)}
                         />
                       </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Appearance */}
-              <div className="bg-card border border-border rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Palette className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-foreground">Appearance</h2>
-                    <p className="text-sm text-muted-foreground">Colors and visual styling</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="primary_color">Primary Color</Label>
-                    <div className="flex flex-col gap-2 sm:flex-row">
-                      <Input
-                        id="primary_color"
-                        type="color"
-                        value={settings.primary_color || '#8B5CF6'}
-                        onChange={(e) => updateSetting('primary_color', e.target.value)}
-                        className="w-16 h-10 p-1"
-                      />
-                      <Input
-                        value={settings.primary_color || '#8B5CF6'}
-                        onChange={(e) => updateSetting('primary_color', e.target.value)}
-                        className="flex-1"
-                      />
+                      <div className="space-y-3">
+                        <Label htmlFor="site_tagline" className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Site Tagline</Label>
+                        <Input
+                          id="site_tagline"
+                          value={settings.site_tagline || ''}
+                          className="h-12 bg-background/50 border-border/50 focus:border-primary/50 transition-all rounded-xl"
+                          onChange={(e) => updateSetting('site_tagline', e.target.value)}
+                        />
+                      </div>
                     </div>
-                  </div>
+                  </GlassCard>
+
+                  <GlassCard className="p-6 sm:p-8 border-accent/10">
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="w-12 h-12 rounded-2xl bg-accent/20 flex items-center justify-center shadow-inner">
+                        <FileText className="w-6 h-6 text-accent-foreground" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold text-foreground">Brand Logo</h2>
+                        <p className="text-sm text-muted-foreground font-medium">Visual representation of your brand</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                      <div className="space-y-4">
+                        <Label className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Logo Upload</Label>
+                        <ImageUpload
+                          value={settings.logo_url || ''}
+                          onChange={(url) => updateSetting('logo_url', url)}
+                          onUpload={uploadLogo}
+                          isUploading={isUploadingLogo}
+                          aspectRatio="auto"
+                          className="rounded-2xl border-dashed border-2 p-2 hover:border-primary/50 transition-colors"
+                        />
+                      </div>
+                      <div className="space-y-6 flex flex-col justify-center">
+                        <div className="space-y-3">
+                          <Label htmlFor="logo_url" className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Direct URL</Label>
+                          <Input
+                            id="logo_url"
+                            value={settings.logo_url || ''}
+                            className="bg-background/50 border-border/50 rounded-xl"
+                            onChange={(e) => updateSetting('logo_url', e.target.value)}
+                            placeholder="https://yourdomain.com/logo.png"
+                          />
+                        </div>
+                        {settings.logo_url && (
+                          <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10 flex items-center justify-center min-h-[100px]">
+                            <img
+                              src={settings.logo_url}
+                              alt="Logo preview"
+                              className="max-h-16 w-auto object-contain drop-shadow-sm"
+                              onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </GlassCard>
+                </div>
+
+                <div className="space-y-6 sm:space-y-8">
+                  <GlassCard className="p-6 sm:p-8 border-primary/10 lg:sticky lg:top-40">
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center shadow-inner">
+                        <Palette className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold text-foreground">Visual Style</h2>
+                        <p className="text-sm text-muted-foreground font-medium">Colors and themes</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-8">
+                      <div className="space-y-4">
+                        <Label htmlFor="primary_color" className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Global Primary Color</Label>
+                        <div className="flex flex-col gap-4">
+                          <div className="flex items-center gap-3 p-3 bg-background/50 border border-border/50 rounded-2xl">
+                            <Input
+                              id="primary_color"
+                              type="color"
+                              value={settings.primary_color || '#8B5CF6'}
+                              onChange={(e) => updateSetting('primary_color', e.target.value)}
+                              className="w-14 h-14 p-1 rounded-xl border-none cursor-pointer overflow-hidden"
+                            />
+                            <div className="flex-1">
+                              <Input
+                                value={settings.primary_color || '#8B5CF6'}
+                                onChange={(e) => updateSetting('primary_color', e.target.value)}
+                                className="bg-transparent border-none text-lg font-mono focus-visible:ring-0"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex gap-2 flex-wrap">
+                            {['#8B5CF6', '#3B82F6', '#EF4444', '#10B981', '#F59E0B'].map(color => (
+                              <button
+                                key={color}
+                                type="button"
+                                onClick={() => updateSetting('primary_color', color)}
+                                className="w-8 h-8 rounded-full border border-border/50 transition-transform hover:scale-125"
+                                style={{ backgroundColor: color }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </GlassCard>
                 </div>
               </div>
             </TabsContent>
 
             {/* Hero Section Tab */}
-            <TabsContent value="hero" className="space-y-6">
-              <div className="bg-card border border-border rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center">
-                    <Type className="w-5 h-5 text-accent-foreground" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-foreground">Hero Section</h2>
-                    <p className="text-sm text-muted-foreground">Customize the homepage hero banner</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="hero_title">Hero Title (Line 1)</Label>
-                      <Input
-                        id="hero_title"
-                        value={settings.hero_title || ''}
-                        onChange={(e) => updateSetting('hero_title', e.target.value)}
-                        placeholder="Crafting Digital"
-                      />
+            <TabsContent value="hero" className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8">
+                <GlassCard className="p-6 sm:p-8 lg:p-10">
+                  <div className="flex items-center gap-4 mb-8 sm:mb-10">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-accent/20 flex items-center justify-center shadow-inner">
+                      <Type className="w-5 h-5 sm:w-6 sm:h-6 text-accent-foreground" />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="hero_subtitle">Hero Subtitle (Line 2 - Highlighted)</Label>
-                      <Input
-                        id="hero_subtitle"
-                        value={settings.hero_subtitle || ''}
-                        onChange={(e) => updateSetting('hero_subtitle', e.target.value)}
-                        placeholder="Experiences"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="hero_description">Hero Description</Label>
-                    <Textarea
-                      id="hero_description"
-                      value={settings.hero_description || ''}
-                      onChange={(e) => updateSetting('hero_description', e.target.value)}
-                      rows={3}
-                      placeholder="From AI prompts to stunning designs..."
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border">
-                    <div className="space-y-2">
-                      <Label htmlFor="hero_button1_text">Primary Button Text</Label>
-                      <Input
-                        id="hero_button1_text"
-                        value={settings.hero_button1_text || ''}
-                        onChange={(e) => updateSetting('hero_button1_text', e.target.value)}
-                        placeholder="View Portfolio"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="hero_button2_text">Secondary Button Text</Label>
-                      <Input
-                        id="hero_button2_text"
-                        value={settings.hero_button2_text || ''}
-                        onChange={(e) => updateSetting('hero_button2_text', e.target.value)}
-                        placeholder="Visit Store"
-                      />
+                    <div>
+                      <h2 className="text-xl font-bold text-foreground">Content Strategy</h2>
+                      <p className="text-sm text-muted-foreground font-medium">Headline and messaging control</p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border">
-                    <div className="space-y-2">
-                      <Label htmlFor="hero_stat1_label">Stat 1 Label</Label>
-                      <Input
-                        id="hero_stat1_label"
-                        value={settings.hero_stat1_label || ''}
-                        onChange={(e) => updateSetting('hero_stat1_label', e.target.value)}
-                        placeholder="Digital Products Available"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="hero_stat2_label">Stat 2 Label</Label>
-                      <Input
-                        id="hero_stat2_label"
-                        value={settings.hero_stat2_label || ''}
-                        onChange={(e) => updateSetting('hero_stat2_label', e.target.value)}
-                        placeholder="Happy Clients"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="hero_stat3_label">Stat 3 Label</Label>
-                      <Input
-                        id="hero_stat3_label"
-                        value={settings.hero_stat3_label || ''}
-                        onChange={(e) => updateSetting('hero_stat3_label', e.target.value)}
-                        placeholder="Completed Projects"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Hero Background Image */}
-              <div className="bg-card border border-border rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Image className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-foreground">Hero Background</h2>
-                    <p className="text-sm text-muted-foreground">Upload a background image for the hero section</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label>Background Image</Label>
-                    <ImageUpload
-                      value={settings.hero_background_url || ''}
-                      onChange={(url) => updateSetting('hero_background_url', url)}
-                      onUpload={uploadHeroBg}
-                      isUploading={isUploadingHeroBg}
-                      aspectRatio="video"
-                      className="mt-2"
-                    />
-                  </div>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="hero_background_url">Or enter image URL</Label>
-                      <Input
-                        id="hero_background_url"
-                        value={settings.hero_background_url || ''}
-                        onChange={(e) => updateSetting('hero_background_url', e.target.value)}
-                        placeholder="https://..."
-                      />
-                    </div>
-                    {settings.hero_background_url && (
-                      <div className="p-4 bg-muted/50 rounded-lg">
-                        <p className="text-xs text-muted-foreground mb-2">Preview:</p>
-                        <img
-                          src={settings.hero_background_url}
-                          alt="Hero background preview"
-                          className="w-full h-24 object-cover rounded-lg"
-                          onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
+                  <div className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                        <Label htmlFor="hero_title" className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Main Title</Label>
+                        <Input
+                          id="hero_title"
+                          value={settings.hero_title || ''}
+                          className="h-12 bg-background/50 rounded-xl"
+                          onChange={(e) => updateSetting('hero_title', e.target.value)}
+                          placeholder="Crafting Digital"
                         />
                       </div>
-                    )}
+                      <div className="space-y-3">
+                        <Label htmlFor="hero_subtitle" className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Highlight Text</Label>
+                        <Input
+                          id="hero_subtitle"
+                          value={settings.hero_subtitle || ''}
+                          className="h-12 bg-background/50 rounded-xl border-primary/30"
+                          onChange={(e) => updateSetting('hero_subtitle', e.target.value)}
+                          placeholder="Experiences"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="hero_description" className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Main Description</Label>
+                      <Textarea
+                        id="hero_description"
+                        value={settings.hero_description || ''}
+                        onChange={(e) => updateSetting('hero_description', e.target.value)}
+                        rows={4}
+                        className="bg-background/50 rounded-xl resize-none py-4"
+                        placeholder="From AI prompts to stunning designs..."
+                      />
+                    </div>
+
+                    <div className="pt-8 border-t border-border/50">
+                      <Label className="block text-sm font-bold text-foreground mb-6 uppercase tracking-widest text-center underline decoration-primary/30 underline-offset-8">Action Buttons</Label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-3">
+                          <Label htmlFor="hero_button1_text" className="text-xs font-bold text-muted-foreground uppercase tracking-tighter">Primary Text</Label>
+                          <Input
+                            id="hero_button1_text"
+                            value={settings.hero_button1_text || ''}
+                            className="bg-background/50 rounded-xl"
+                            onChange={(e) => updateSetting('hero_button1_text', e.target.value)}
+                            placeholder="View Portfolio"
+                          />
+                        </div>
+                        <div className="space-y-3">
+                          <Label htmlFor="hero_button2_text" className="text-xs font-bold text-muted-foreground uppercase tracking-tighter">Secondary Text</Label>
+                          <Input
+                            id="hero_button2_text"
+                            value={settings.hero_button2_text || ''}
+                            className="bg-background/50 rounded-xl"
+                            onChange={(e) => updateSetting('hero_button2_text', e.target.value)}
+                            placeholder="Visit Store"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
+                </GlassCard>
+
+                <div className="space-y-6 sm:space-y-8">
+                  <GlassCard className="p-6 sm:p-8 border-primary/10">
+                    <div className="flex items-center gap-4 mb-6 sm:mb-8">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-primary/20 flex items-center justify-center shadow-inner text-primary">
+                        <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold text-foreground">Social Proof</h2>
+                        <p className="text-sm text-muted-foreground font-medium">Engagement statistics</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {[1, 2, 3].map(num => (
+                        <div key={num} className="space-y-3">
+                          <Label htmlFor={`hero_stat${num}_label`} className="text-xs font-bold text-foreground/70 uppercase tracking-tighter">Stat {num} Label</Label>
+                          <Input
+                            id={`hero_stat${num}_label`}
+                            value={settings[`hero_stat${num}_label`] || ''}
+                            className="bg-background/50 rounded-xl"
+                            onChange={(e) => updateSetting(`hero_stat${num}_label`, e.target.value)}
+                            placeholder={num === 1 ? "Digital Products" : num === 2 ? "Happy Clients" : "Completed Projects"}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </GlassCard>
+
+                  <GlassCard className="p-6 sm:p-8">
+                    <div className="flex items-center gap-4 mb-6 sm:mb-8">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-primary/20 flex items-center justify-center shadow-inner text-primary">
+                        <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold text-foreground">Imagery</h2>
+                        <p className="text-sm text-muted-foreground font-medium">Background visuals</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-8">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                          <Label className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Background Image</Label>
+                          <ImageUpload
+                            value={settings.hero_background_url || ''}
+                            onChange={(url) => updateSetting('hero_background_url', url)}
+                            onUpload={uploadHeroBg}
+                            isUploading={isUploadingHeroBg}
+                            aspectRatio="video"
+                            className="rounded-2xl border-dashed border-2 hover:border-primary/50 transition-colors"
+                          />
+                        </div>
+                        <div className="space-y-6 flex flex-col justify-center">
+                          <div className="space-y-3">
+                            <Label htmlFor="hero_background_url" className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Or Direct URL</Label>
+                            <Input
+                              id="hero_background_url"
+                              value={settings.hero_background_url || ''}
+                              className="bg-background/50 rounded-xl"
+                              onChange={(e) => updateSetting('hero_background_url', e.target.value)}
+                              placeholder="https://..."
+                            />
+                          </div>
+                          {settings.hero_background_url && (
+                            <div className="relative group rounded-2xl overflow-hidden border border-border/50 shadow-2xl">
+                              <img
+                                src={settings.hero_background_url}
+                                alt="Hero preview"
+                                className="w-full h-40 object-cover group-hover:scale-110 transition-transform duration-700"
+                                onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
+                              />
+                              <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent text-[10px] text-white/70 font-mono truncate">
+                                {settings.hero_background_url}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </GlassCard>
                 </div>
               </div>
             </TabsContent>
 
             {/* Homepage Tab */}
-            <TabsContent value="homepage" className="space-y-6">
-              <div className="bg-card border border-border rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Layout className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-foreground">Homepage Sections</h2>
-                    <p className="text-sm text-muted-foreground">Customize section titles and subtitles on the homepage</p>
-                  </div>
-                </div>
+            <TabsContent value="homepage" className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+                {[
+                  { id: 'services', label: 'Services', icon: Sparkles, color: 'primary' },
+                  { id: 'portfolio', label: 'Portfolio', icon: Briefcase, color: 'accent' },
+                  { id: 'store', label: 'Store', icon: ShoppingCart, color: 'primary' },
+                  { id: 'testimonials', label: 'Testimonials', icon: MessageSquare, color: 'accent' },
+                  { id: 'cta', label: 'CTA Bottom', icon: Zap, color: 'primary' }
+                ].map((section) => (
+                  <GlassCard key={section.id} className={cn("p-6 sm:p-8", section.id === 'cta' && "md:col-span-2")}>
+                    <div className="flex items-center gap-4 mb-6 sm:mb-8">
+                      <div className={cn(
+                        "w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shadow-inner",
+                        section.color === 'primary' ? "bg-primary/20 text-primary" : "bg-accent/20 text-accent-foreground"
+                      )}>
+                        <section.icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                      </div>
+                      <div>
+                        <h2 className="text-lg sm:text-xl font-bold text-foreground">{section.label} Section</h2>
+                        <p className="text-[10px] sm:text-sm text-muted-foreground font-medium uppercase tracking-wider">Headlines & Tags</p>
+                      </div>
+                    </div>
 
-                <div className="space-y-8">
-                  {/* Services Section */}
-                  <div className="space-y-4 pt-4 border-t border-border">
-                    <h3 className="font-medium text-foreground">Services Section</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="home_services_badge">Badge Text</Label>
-                        <Input
-                          id="home_services_badge"
-                          value={settings.home_services_badge || ''}
-                          onChange={(e) => updateSetting('home_services_badge', e.target.value)}
-                          placeholder="What We Do"
-                        />
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div className="space-y-3">
+                          <Label htmlFor={`home_${section.id}_badge`} className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Badge Text</Label>
+                          <Input
+                            id={`home_${section.id}_badge`}
+                            value={settings[`home_${section.id}_badge`] || ''}
+                            className="bg-background/50 rounded-xl"
+                            onChange={(e) => updateSetting(`home_${section.id}_badge`, e.target.value)}
+                            placeholder="What We Do"
+                          />
+                        </div>
+                        <div className="space-y-3">
+                          <Label htmlFor={`home_${section.id}_title`} className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Section Title</Label>
+                          <Input
+                            id={`home_${section.id}_title`}
+                            value={settings[`home_${section.id}_title`] || ''}
+                            className="bg-background/50 rounded-xl"
+                            onChange={(e) => updateSetting(`home_${section.id}_title`, e.target.value)}
+                            placeholder="Our Services"
+                          />
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="home_services_title">Section Title</Label>
-                        <Input
-                          id="home_services_title"
-                          value={settings.home_services_title || ''}
-                          onChange={(e) => updateSetting('home_services_title', e.target.value)}
-                          placeholder="Our Services"
-                        />
-                      </div>
-                      <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="home_services_description">Section Description</Label>
+                      <div className="space-y-3">
+                        <Label htmlFor={`home_${section.id}_description`} className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Section Description</Label>
                         <Textarea
-                          id="home_services_description"
-                          value={settings.home_services_description || ''}
-                          onChange={(e) => updateSetting('home_services_description', e.target.value)}
+                          id={`home_${section.id}_description`}
+                          value={settings[`home_${section.id}_description`] || ''}
+                          className="bg-background/50 rounded-xl resize-none"
+                          onChange={(e) => updateSetting(`home_${section.id}_description`, e.target.value)}
                           rows={2}
                         />
                       </div>
                     </div>
-                  </div>
-
-                  {/* Portfolio Section */}
-                  <div className="space-y-4 pt-4 border-t border-border">
-                    <h3 className="font-medium text-foreground">Portfolio Section</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="home_portfolio_badge">Badge Text</Label>
-                        <Input
-                          id="home_portfolio_badge"
-                          value={settings.home_portfolio_badge || ''}
-                          onChange={(e) => updateSetting('home_portfolio_badge', e.target.value)}
-                          placeholder="Our Work"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="home_portfolio_title">Section Title</Label>
-                        <Input
-                          id="home_portfolio_title"
-                          value={settings.home_portfolio_title || ''}
-                          onChange={(e) => updateSetting('home_portfolio_title', e.target.value)}
-                          placeholder="Featured Projects"
-                        />
-                      </div>
-                      <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="home_portfolio_description">Section Description</Label>
-                        <Textarea
-                          id="home_portfolio_description"
-                          value={settings.home_portfolio_description || ''}
-                          onChange={(e) => updateSetting('home_portfolio_description', e.target.value)}
-                          rows={2}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Store Section */}
-                  <div className="space-y-4 pt-4 border-t border-border">
-                    <h3 className="font-medium text-foreground">Store Section</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="home_store_badge">Badge Text</Label>
-                        <Input
-                          id="home_store_badge"
-                          value={settings.home_store_badge || ''}
-                          onChange={(e) => updateSetting('home_store_badge', e.target.value)}
-                          placeholder="Digital Store"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="home_store_title">Section Title</Label>
-                        <Input
-                          id="home_store_title"
-                          value={settings.home_store_title || ''}
-                          onChange={(e) => updateSetting('home_store_title', e.target.value)}
-                          placeholder="Featured Products"
-                        />
-                      </div>
-                      <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="home_store_description">Section Description</Label>
-                        <Textarea
-                          id="home_store_description"
-                          value={settings.home_store_description || ''}
-                          onChange={(e) => updateSetting('home_store_description', e.target.value)}
-                          rows={2}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Testimonials Section */}
-                  <div className="space-y-4 pt-4 border-t border-border">
-                    <h3 className="font-medium text-foreground">Testimonials Section</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="home_testimonials_badge">Badge Text</Label>
-                        <Input
-                          id="home_testimonials_badge"
-                          value={settings.home_testimonials_badge || ''}
-                          onChange={(e) => updateSetting('home_testimonials_badge', e.target.value)}
-                          placeholder="Testimonials"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="home_testimonials_title">Section Title</Label>
-                        <Input
-                          id="home_testimonials_title"
-                          value={settings.home_testimonials_title || ''}
-                          onChange={(e) => updateSetting('home_testimonials_title', e.target.value)}
-                          placeholder="What Clients Say"
-                        />
-                      </div>
-                      <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="home_testimonials_description">Section Description</Label>
-                        <Textarea
-                          id="home_testimonials_description"
-                          value={settings.home_testimonials_description || ''}
-                          onChange={(e) => updateSetting('home_testimonials_description', e.target.value)}
-                          rows={2}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* CTA Section */}
-                  <div className="space-y-4 pt-4 border-t border-border">
-                    <h3 className="font-medium text-foreground">CTA Section (Bottom)</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="home_cta_badge">Badge Text</Label>
-                        <Input
-                          id="home_cta_badge"
-                          value={settings.home_cta_badge || ''}
-                          onChange={(e) => updateSetting('home_cta_badge', e.target.value)}
-                          placeholder="🚀 Let's Build Something Amazing"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="home_cta_title">Section Title</Label>
-                        <Input
-                          id="home_cta_title"
-                          value={settings.home_cta_title || ''}
-                          onChange={(e) => updateSetting('home_cta_title', e.target.value)}
-                          placeholder="Ready to elevate your brand?"
-                        />
-                      </div>
-                      <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="home_cta_description">Section Description</Label>
-                        <Textarea
-                          id="home_cta_description"
-                          value={settings.home_cta_description || ''}
-                          onChange={(e) => updateSetting('home_cta_description', e.target.value)}
-                          rows={2}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  </GlassCard>
+                ))}
               </div>
             </TabsContent>
 
             {/* Pages Tab */}
-            <TabsContent value="pages" className="space-y-6">
-              {/* Services Page */}
-              <div className="bg-card border border-border rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-foreground">Services Page</h2>
-                    <p className="text-sm text-muted-foreground">Customize the services page headers</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="services_badge">Hero Badge</Label>
-                      <Input
-                        id="services_badge"
-                        value={settings.services_badge || ''}
-                        onChange={(e) => updateSetting('services_badge', e.target.value)}
-                        placeholder="Our Services"
-                      />
+            <TabsContent value="pages" className="space-y-6 sm:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+                {/* Services Page */}
+                <GlassCard className="p-6 sm:p-8 border-primary/10">
+                  <div className="flex items-center gap-4 mb-6 sm:mb-8">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-primary/10 flex items-center justify-center shadow-inner text-primary">
+                      <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="services_title">Hero Title</Label>
-                      <Input
-                        id="services_title"
-                        value={settings.services_title || ''}
-                        onChange={(e) => updateSetting('services_title', e.target.value)}
-                        placeholder="Creative Solutions for Every Need"
-                      />
+                    <div>
+                      <h2 className="text-xl font-bold text-foreground">Services Page</h2>
+                      <p className="text-sm text-muted-foreground font-medium">Hero and process sections</p>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="services_description">Hero Description</Label>
-                    <Textarea
-                      id="services_description"
-                      value={settings.services_description || ''}
-                      onChange={(e) => updateSetting('services_description', e.target.value)}
-                      rows={2}
-                    />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border">
-                    <div className="space-y-2">
-                      <Label htmlFor="services_process_badge">Process Badge</Label>
-                      <Input
-                        id="services_process_badge"
-                        value={settings.services_process_badge || ''}
-                        onChange={(e) => updateSetting('services_process_badge', e.target.value)}
-                        placeholder="Our Process"
-                      />
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <Label htmlFor="services_badge" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Hero Badge</Label>
+                        <Input
+                          id="services_badge"
+                          value={settings.services_badge || ''}
+                          className="bg-background/50 rounded-xl"
+                          onChange={(e) => updateSetting('services_badge', e.target.value)}
+                          placeholder="Our Services"
+                        />
+                      </div>
+                      <div className="space-y-3">
+                        <Label htmlFor="services_title" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Hero Title</Label>
+                        <Input
+                          id="services_title"
+                          value={settings.services_title || ''}
+                          className="bg-background/50 rounded-xl"
+                          onChange={(e) => updateSetting('services_title', e.target.value)}
+                          placeholder="Creative Solutions"
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="services_process_title">Process Title</Label>
-                      <Input
-                        id="services_process_title"
-                        value={settings.services_process_title || ''}
-                        onChange={(e) => updateSetting('services_process_title', e.target.value)}
-                        placeholder="How We Work"
-                      />
-                    </div>
-                    <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="services_process_description">Process Description</Label>
+                    <div className="space-y-3">
+                      <Label htmlFor="services_description" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Hero Description</Label>
                       <Textarea
-                        id="services_process_description"
-                        value={settings.services_process_description || ''}
-                        onChange={(e) => updateSetting('services_process_description', e.target.value)}
+                        id="services_description"
+                        value={settings.services_description || ''}
+                        className="bg-background/50 rounded-xl resize-none"
+                        onChange={(e) => updateSetting('services_description', e.target.value)}
                         rows={2}
                       />
                     </div>
-                  </div>
-                </div>
-              </div>
 
-              {/* Store Page */}
-              <div className="bg-card border border-border rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-foreground">Store Page</h2>
-                    <p className="text-sm text-muted-foreground">Customize the store page header</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="store_badge">Hero Badge</Label>
-                      <Input
-                        id="store_badge"
-                        value={settings.store_badge || ''}
-                        onChange={(e) => updateSetting('store_badge', e.target.value)}
-                        placeholder="Creator Store"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="store_title">Hero Title</Label>
-                      <Input
-                        id="store_title"
-                        value={settings.store_title || ''}
-                        onChange={(e) => updateSetting('store_title', e.target.value)}
-                        placeholder="Premium Digital Products"
-                      />
+                    <div className="pt-6 border-t border-border/50 space-y-4">
+                      <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-4 text-center">Work Process Section</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Input
+                            id="services_process_badge"
+                            value={settings.services_process_badge || ''}
+                            className="bg-background/50 rounded-xl text-xs"
+                            onChange={(e) => updateSetting('services_process_badge', e.target.value)}
+                            placeholder="Process Badge"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Input
+                            id="services_process_title"
+                            value={settings.services_process_title || ''}
+                            className="bg-background/50 rounded-xl font-bold text-xs"
+                            onChange={(e) => updateSetting('services_process_title', e.target.value)}
+                            placeholder="Process Title"
+                          />
+                        </div>
+                        <div className="space-y-2 sm:col-span-2">
+                          <Textarea
+                            id="services_process_description"
+                            value={settings.services_process_description || ''}
+                            className="bg-background/50 rounded-xl text-xs"
+                            onChange={(e) => updateSetting('services_process_description', e.target.value)}
+                            placeholder="Describe your process..."
+                            rows={2}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="store_description">Hero Description</Label>
-                    <Textarea
-                      id="store_description"
-                      value={settings.store_description || ''}
-                      onChange={(e) => updateSetting('store_description', e.target.value)}
-                      rows={2}
-                    />
-                  </div>
-                </div>
-              </div>
+                </GlassCard>
 
-              {/* Contact Page */}
-              <div className="bg-card border border-border rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center">
-                    <Mail className="w-5 h-5 text-accent-foreground" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-foreground">Contact Page</h2>
-                    <p className="text-sm text-muted-foreground">Customize the contact page header</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="contact_page_title">Contact Page Title</Label>
-                    <Input
-                      id="contact_page_title"
-                      value={settings.contact_page_title || ''}
-                      onChange={(e) => updateSetting('contact_page_title', e.target.value)}
-                      placeholder="Get in Touch"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contact_page_description">Contact Page Description</Label>
-                    <Textarea
-                      id="contact_page_description"
-                      value={settings.contact_page_description || ''}
-                      onChange={(e) => updateSetting('contact_page_description', e.target.value)}
-                      rows={3}
-                      placeholder="Have a project in mind? Let's discuss..."
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* About Page */}
-              <div className="bg-card border border-border rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-accent-foreground" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-foreground">About Page</h2>
-                    <p className="text-sm text-muted-foreground">Customize the about page content</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="about_badge">Hero Badge</Label>
-                      <Input
-                        id="about_badge"
-                        value={settings.about_badge || ''}
-                        onChange={(e) => updateSetting('about_badge', e.target.value)}
-                        placeholder="About Us"
-                      />
+                {/* About Page */}
+                <GlassCard className="p-6 sm:p-8 border-accent/10">
+                  <div className="flex items-center gap-4 mb-6 sm:mb-8">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-accent/10 flex items-center justify-center shadow-inner text-accent-foreground">
+                      <Info className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="about_title_page">Hero Title</Label>
-                      <Input
-                        id="about_title_page"
-                        value={settings.about_title || ''}
-                        onChange={(e) => updateSetting('about_title', e.target.value)}
-                        placeholder="Crafting Digital Excellence"
-                      />
+                    <div>
+                      <h2 className="text-xl font-bold text-foreground">About Page</h2>
+                      <p className="text-sm text-muted-foreground font-medium">Your story and achievements</p>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="about_description_page">Hero Description</Label>
-                    <Textarea
-                      id="about_description_page"
-                      value={settings.about_description || ''}
-                      onChange={(e) => updateSetting('about_description', e.target.value)}
-                      rows={2}
-                    />
-                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border">
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="about_story_title">Story Section Title</Label>
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <Label htmlFor="about_badge" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Hero Badge</Label>
                         <Input
-                          id="about_story_title"
-                          value={settings.about_story_title || ''}
-                          onChange={(e) => updateSetting('about_story_title', e.target.value)}
-                          placeholder="The Journey So Far"
+                          id="about_badge"
+                          value={settings.about_badge || ''}
+                          className="bg-background/50 rounded-xl"
+                          onChange={(e) => updateSetting('about_badge', e.target.value)}
+                          placeholder="About Us"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="about_story">Our Story Content</Label>
+                      <div className="space-y-3">
+                        <Label htmlFor="about_title_page" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Hero Title</Label>
+                        <Input
+                          id="about_title_page"
+                          value={settings.about_title || ''}
+                          className="bg-background/50 rounded-xl"
+                          onChange={(e) => updateSetting('about_title', e.target.value)}
+                          placeholder="Our Story"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-border/50">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="about_story_title" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Story Title</Label>
+                          <Input
+                            id="about_story_title"
+                            value={settings.about_story_title || ''}
+                            className="bg-background/50 rounded-xl font-bold"
+                            onChange={(e) => updateSetting('about_story_title', e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="about_story" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Our Narrative</Label>
+                          <Textarea
+                            id="about_story"
+                            value={settings.about_story || ''}
+                            className="bg-background/50 rounded-xl text-xs leading-relaxed"
+                            onChange={(e) => updateSetting('about_story', e.target.value)}
+                            rows={8}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-bold text-center block">Years Exp.</Label>
+                            <Input
+                              value={settings.about_years_experience || ''}
+                              className="bg-background/50 rounded-xl text-center font-black"
+                              onChange={(e) => updateSetting('about_years_experience', e.target.value)}
+                              placeholder="5+"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-bold text-center block">Projects</Label>
+                            <Input
+                              value={settings.about_projects_completed || ''}
+                              className="bg-background/50 rounded-xl text-center font-black"
+                              onChange={(e) => updateSetting('about_projects_completed', e.target.value)}
+                              placeholder="200+"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Page Image</Label>
+                          <ImageUpload
+                            value={settings.about_image_url || ''}
+                            onChange={(url) => updateSetting('about_image_url', url)}
+                            onUpload={uploadAboutImg}
+                            isUploading={isUploadingAboutImg}
+                            aspectRatio="video"
+                            className="rounded-xl border-dashed border-2"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </GlassCard>
+
+                {/* Smaller Page Configs */}
+                <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mt-2 sm:mt-4">
+                  {[
+                    { id: 'portfolio', label: 'Portfolio', icon: Briefcase, color: 'primary' },
+                    { id: 'store', label: 'Store', icon: Store, color: 'accent' },
+                    { id: 'contact_page', label: 'Contact', icon: Mail, color: 'primary' }
+                  ].map(p => (
+                    <GlassCard key={p.id} className={cn("p-6 sm:p-8", p.color === 'primary' ? "border-primary/10" : "border-accent/10")}>
+                      <div className="flex items-center gap-4 mb-4 sm:mb-6">
+                        <div className={cn(
+                          "w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shadow-inner",
+                          p.color === 'primary' ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent-foreground"
+                        )}>
+                          <p.icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </div>
+                        <h2 className="text-base sm:text-lg font-bold text-foreground">{p.label} Hero</h2>
+                      </div>
+                      <div className="space-y-4">
+                        {p.id !== 'contact_page' && (
+                          <Input
+                            value={settings[`${p.id}_badge`] || ''}
+                            className="bg-background/50 rounded-xl text-xs"
+                            onChange={(e) => updateSetting(`${p.id}_badge`, e.target.value)}
+                            placeholder="Badge text"
+                          />
+                        )}
+                        <Input
+                          value={settings[`${p.id}_title`] || ''}
+                          className="bg-background/50 rounded-xl font-bold"
+                          onChange={(e) => updateSetting(`${p.id}_title`, e.target.value)}
+                          placeholder="Main heading"
+                        />
                         <Textarea
-                          id="about_story"
-                          value={settings.about_story || ''}
-                          onChange={(e) => updateSetting('about_story', e.target.value)}
-                          rows={6}
+                          value={settings[`${p.id}_description`] || ''}
+                          className="bg-background/50 rounded-xl text-xs"
+                          onChange={(e) => updateSetting(`${p.id}_description`, e.target.value)}
+                          placeholder="Description text..."
+                          rows={4}
                         />
                       </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="about_years_experience">Years Experience</Label>
-                          <Input
-                            id="about_years_experience"
-                            value={settings.about_years_experience || ''}
-                            onChange={(e) => updateSetting('about_years_experience', e.target.value)}
-                            placeholder="5+"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="about_projects_completed">Projects Completed</Label>
-                          <Input
-                            id="about_projects_completed"
-                            value={settings.about_projects_completed || ''}
-                            onChange={(e) => updateSetting('about_projects_completed', e.target.value)}
-                            placeholder="200+"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>About Page Image</Label>
-                        <ImageUpload
-                          value={settings.about_image_url || ''}
-                          onChange={(url) => updateSetting('about_image_url', url)}
-                          onUpload={uploadAboutImg}
-                          isUploading={isUploadingAboutImg}
-                          aspectRatio="video"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Portfolio Page */}
-              <div className="bg-card border border-border rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-foreground">Portfolio Page</h2>
-                    <p className="text-sm text-muted-foreground">Customize the portfolio page header</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="portfolio_badge">Hero Badge</Label>
-                      <Input
-                        id="portfolio_badge"
-                        value={settings.portfolio_badge || ''}
-                        onChange={(e) => updateSetting('portfolio_badge', e.target.value)}
-                        placeholder="Our Work"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="portfolio_title">Hero Title</Label>
-                      <Input
-                        id="portfolio_title"
-                        value={settings.portfolio_title || ''}
-                        onChange={(e) => updateSetting('portfolio_title', e.target.value)}
-                        placeholder="Our Creative Portfolio"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="portfolio_description">Hero Description</Label>
-                    <Textarea
-                      id="portfolio_description"
-                      value={settings.portfolio_description || ''}
-                      onChange={(e) => updateSetting('portfolio_description', e.target.value)}
-                      rows={2}
-                    />
-                  </div>
+                    </GlassCard>
+                  ))}
                 </div>
               </div>
             </TabsContent>
 
             {/* Contact Tab */}
-            <TabsContent value="contact" className="space-y-6">
-              <div className="bg-card border border-border rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Mail className="w-5 h-5 text-primary" />
+            <TabsContent value="contact" className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+                <GlassCard className="md:col-span-2 p-6 sm:p-8 lg:p-10 border-primary/10">
+                  <div className="flex items-center gap-4 mb-8 sm:mb-10">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-primary/10 flex items-center justify-center shadow-inner text-primary">
+                      <MapPin className="w-5 h-5 sm:w-6 sm:h-6" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-foreground">Business Presence</h2>
+                      <p className="text-sm text-muted-foreground font-medium">Where your clients can find you</p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-foreground">Contact Information</h2>
-                    <p className="text-sm text-muted-foreground">Your business contact details</p>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="contact_email" className="flex items-center gap-2">
-                      <Mail className="w-4 h-4" />
-                      Email Address
-                    </Label>
-                    <Input
-                      id="contact_email"
-                      type="email"
-                      value={settings.contact_email || ''}
-                      onChange={(e) => updateSetting('contact_email', e.target.value)}
-                      placeholder="hello@example.com"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                      <Label htmlFor="contact_email" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                        <Mail className="w-3 h-3" />
+                        Official Email
+                      </Label>
+                      <Input
+                        id="contact_email"
+                        type="email"
+                        value={settings.contact_email || ''}
+                        className="bg-background/50 rounded-xl h-12"
+                        onChange={(e) => updateSetting('contact_email', e.target.value)}
+                        placeholder="hello@oflex.com"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="phone_number" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                        <Phone className="w-3 h-3" />
+                        Business Phone
+                      </Label>
+                      <Input
+                        id="phone_number"
+                        value={settings.phone_number || ''}
+                        className="bg-background/50 rounded-xl h-12"
+                        onChange={(e) => updateSetting('phone_number', e.target.value)}
+                        placeholder="+233 ..."
+                      />
+                    </div>
+                    <div className="space-y-3 sm:col-span-2">
+                      <Label htmlFor="address" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                        <MapPin className="w-3 h-3" />
+                        Physical Address
+                      </Label>
+                      <Input
+                        id="address"
+                        value={settings.address || ''}
+                        className="bg-background/50 rounded-xl h-12"
+                        onChange={(e) => updateSetting('address', e.target.value)}
+                        placeholder="City, Country"
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone_number" className="flex items-center gap-2">
-                      <Phone className="w-4 h-4" />
-                      Phone Number
-                    </Label>
-                    <Input
-                      id="phone_number"
-                      value={settings.phone_number || ''}
-                      onChange={(e) => updateSetting('phone_number', e.target.value)}
-                      placeholder="+1 (555) 123-4567"
-                    />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="address" className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4" />
-                      Address / Location
-                    </Label>
-                    <Input
-                      id="address"
-                      value={settings.address || ''}
-                      onChange={(e) => updateSetting('address', e.target.value)}
-                      placeholder="San Francisco, CA"
-                    />
-                  </div>
+                </GlassCard>
+
+                <div className="space-y-6 sm:space-y-8">
+                  <GlassCard className="p-6 sm:p-8 border-accent/10 flex flex-col items-center text-center justify-center">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-primary/20 flex items-center justify-center mb-4 sm:mb-6 shadow-2xl shadow-primary/20">
+                      <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+                    </div>
+                    <h3 className="text-lg font-bold mb-2">Real-time Sync</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      All changes here reflect instantly on your live storefront and landing pages.
+                    </p>
+                  </GlassCard>
                 </div>
               </div>
             </TabsContent>
 
             {/* Social & Footer Tab */}
-            <TabsContent value="social" className="space-y-6">
-              <div className="bg-card border border-border rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center">
-                    <Share2 className="w-5 h-5 text-accent-foreground" />
+            <TabsContent value="social" className="space-y-6 sm:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+                <GlassCard className="lg:col-span-2 p-6 sm:p-8 lg:p-10 border-accent/10">
+                  <div className="flex items-center gap-4 mb-8 sm:mb-10">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-accent/20 flex items-center justify-center shadow-inner text-accent-foreground">
+                      <Share2 className="w-5 h-5 sm:w-6 sm:h-6" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-foreground">Social Connectivity</h2>
+                      <p className="text-sm text-muted-foreground font-medium">Engage with your audience on social platforms</p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-foreground">Social Media Links</h2>
-                    <p className="text-sm text-muted-foreground">Connect your social profiles</p>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="social_instagram" className="flex items-center gap-2">
-                      <Instagram className="w-4 h-4" />
-                      Instagram
-                    </Label>
-                    <Input
-                      id="social_instagram"
-                      value={settings.social_instagram || ''}
-                      onChange={(e) => updateSetting('social_instagram', e.target.value)}
-                      placeholder="https://instagram.com/yourhandle"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                    {[
+                      { id: 'instagram', icon: Instagram, placeholder: 'https://instagram.com/...' },
+                      { id: 'twitter', icon: Twitter, placeholder: 'https://twitter.com/...' },
+                      { id: 'facebook', icon: Facebook, placeholder: 'https://facebook.com/...' },
+                      { id: 'linkedin', icon: Linkedin, placeholder: 'https://linkedin.com/...' }
+                    ].map(social => (
+                      <div key={social.id} className="space-y-3">
+                        <Label htmlFor={`social_${social.id}`} className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                          <social.icon className="w-4 h-4" />
+                          {social.id}
+                        </Label>
+                        <Input
+                          id={`social_${social.id}`}
+                          value={settings[`social_${social.id}`] || ''}
+                          className="bg-background/50 rounded-xl h-12"
+                          onChange={(e) => updateSetting(`social_${social.id}`, e.target.value)}
+                          placeholder={social.placeholder}
+                        />
+                      </div>
+                    ))}
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="social_twitter" className="flex items-center gap-2">
-                      <Twitter className="w-4 h-4" />
-                      Twitter / X
-                    </Label>
-                    <Input
-                      id="social_twitter"
-                      value={settings.social_twitter || ''}
-                      onChange={(e) => updateSetting('social_twitter', e.target.value)}
-                      placeholder="https://twitter.com/yourhandle"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="social_facebook" className="flex items-center gap-2">
-                      <Facebook className="w-4 h-4" />
-                      Facebook
-                    </Label>
-                    <Input
-                      id="social_facebook"
-                      value={settings.social_facebook || ''}
-                      onChange={(e) => updateSetting('social_facebook', e.target.value)}
-                      placeholder="https://facebook.com/yourpage"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="social_linkedin" className="flex items-center gap-2">
-                      <Linkedin className="w-4 h-4" />
-                      LinkedIn
-                    </Label>
-                    <Input
-                      id="social_linkedin"
-                      value={settings.social_linkedin || ''}
-                      onChange={(e) => updateSetting('social_linkedin', e.target.value)}
-                      placeholder="https://linkedin.com/company/yourcompany"
-                    />
-                  </div>
-                </div>
-              </div>
+                </GlassCard>
 
-              {/* Footer */}
-              <div className="bg-card border border-border rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-primary" />
+                <GlassCard className="p-6 sm:p-8 lg:p-10 border-primary/10">
+                  <div className="flex items-center gap-4 mb-6 sm:mb-8">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-primary/10 flex items-center justify-center shadow-inner text-primary">
+                      <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
+                    </div>
+                    <h2 className="text-lg sm:text-xl font-bold text-foreground">Footer</h2>
                   </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-foreground">Footer</h2>
-                    <p className="text-sm text-muted-foreground">Footer text, copyright and background color</p>
-                  </div>
-                </div>
 
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="footer_text">Footer Copyright Text</Label>
-                    <Input
-                      id="footer_text"
-                      value={settings.footer_text || ''}
-                      onChange={(e) => updateSetting('footer_text', e.target.value)}
-                      placeholder="© 2024 Your Company. All rights reserved."
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="footer_color">Footer Background Color</Label>
-                    <div className="flex flex-col gap-2 sm:flex-row">
+                  <div className="space-y-8">
+                    <div className="space-y-3">
+                      <Label htmlFor="footer_text" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Copyright Text</Label>
                       <Input
-                        id="footer_color"
-                        type="color"
-                        value={settings.footer_color || '#1a1a1a'}
-                        onChange={(e) => updateSetting('footer_color', e.target.value)}
-                        className="w-16 h-10 p-1"
-                      />
-                      <Input
-                        value={settings.footer_color || ''}
-                        onChange={(e) => updateSetting('footer_color', e.target.value)}
-                        className="flex-1"
-                        placeholder="Leave empty for default theme color"
+                        id="footer_text"
+                        value={settings.footer_text || ''}
+                        className="bg-background/50 rounded-xl"
+                        onChange={(e) => updateSetting('footer_text', e.target.value)}
+                        placeholder="© 2024 ..."
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground">Leave empty to use the default theme background</p>
+                    <div className="space-y-3">
+                      <Label htmlFor="footer_color" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Footer Background</Label>
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center gap-3 p-3 bg-background/50 rounded-xl border border-border/50">
+                          <Input
+                            id="footer_color"
+                            type="color"
+                            value={settings.footer_color || '#1a1a1a'}
+                            onChange={(e) => updateSetting('footer_color', e.target.value)}
+                            className="w-10 h-10 p-1 rounded-lg border-none cursor-pointer"
+                          />
+                          <Input
+                            value={settings.footer_color || ''}
+                            onChange={(e) => updateSetting('footer_color', e.target.value)}
+                            className="bg-transparent border-none text-sm font-mono focus-visible:ring-0"
+                            placeholder="Hex Code"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                </GlassCard>
               </div>
             </TabsContent>
           </Tabs>

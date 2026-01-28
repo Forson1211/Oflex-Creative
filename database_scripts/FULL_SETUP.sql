@@ -572,6 +572,9 @@ USING (public.has_role(auth.uid(), 'admin'));
 
 -- Add template_link column to products table for digital product download links
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS template_link TEXT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS resolution TEXT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS dimensions TEXT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS file_size TEXT;
 
 -- Create purchases table to track completed purchases and provide download access
 CREATE TABLE IF NOT EXISTS public.purchases (

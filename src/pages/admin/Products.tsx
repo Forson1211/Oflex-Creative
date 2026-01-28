@@ -194,7 +194,7 @@ const Products = () => {
                     rows={3}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="price">Price ($)</Label>
                     <Input
@@ -243,7 +243,7 @@ const Products = () => {
                     placeholder="https://..."
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="resolution">Resolution (e.g. 300 DPI)</Label>
                     <Input
@@ -263,7 +263,7 @@ const Products = () => {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="file_size">File Size</Label>
                     <Input
@@ -322,7 +322,7 @@ const Products = () => {
               placeholder="Search products..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 max-w-sm"
+              className="pl-10 w-full sm:max-w-sm"
             />
           </div>
 
@@ -347,72 +347,135 @@ const Products = () => {
               <p className="text-muted-foreground">No products found</p>
             </div>
           ) : (
-            <AdminTable minWidthClassName="min-w-[760px]">
-              <thead className={ADMIN_TABLE_HEADER_CLASS}>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Product</th>
-                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Category</th>
-                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Price</th>
-                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Status</th>
-                  <th className="text-right p-4 font-medium text-foreground whitespace-nowrap">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              {/* Mobile View - Cards */}
+              <div className="grid grid-cols-1 gap-4 md:hidden">
                 {filteredProducts.map((product) => (
-                  <tr key={product.id} className="border-b border-border last:border-0">
-                    <td className="p-4">
-                      <div className="flex items-center gap-3 min-w-[18rem]">
+                  <div key={product.id} className="bg-card p-4 rounded-xl border border-border shadow-sm">
+                    <div className="flex gap-4 mb-3">
+                      <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted border border-border">
                         {product.image_url ? (
                           <img
                             src={product.image_url}
                             alt={product.title}
-                            className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                            className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
-                            <Package className="w-6 h-6 text-muted-foreground" />
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package className="w-8 h-8 text-muted-foreground/50" />
                           </div>
                         )}
-                        <div className="min-w-0">
-                          <p className="font-medium text-foreground truncate">{product.title}</p>
-                          <p className="text-sm text-muted-foreground line-clamp-1">
-                            {product.description}
-                          </p>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-xs px-2 py-1 rounded-full bg-accent text-accent-foreground mb-1 inline-block">
+                              {product.category}
+                            </span>
+                            <h3 className="font-semibold text-foreground truncate">{product.title}</h3>
+                          </div>
+                          <span
+                            className={`px-2 py-1 text-xs rounded-full ml-2 ${product.is_active
+                              ? 'bg-chart-3/20 text-chart-3'
+                              : 'bg-muted text-muted-foreground'
+                              }`}
+                          >
+                            {product.is_active ? 'Active' : 'Inactive'}
+                          </span>
                         </div>
+                        <p className="text-lg font-bold text-foreground mt-1">
+                          ${Number(product.price).toFixed(2)}
+                        </p>
                       </div>
-                    </td>
-                    <td className="p-4 whitespace-nowrap">
-                      <span className="px-2 py-1 text-xs rounded-full bg-accent text-accent-foreground">
-                        {product.category}
-                      </span>
-                    </td>
-                    <td className="p-4 font-medium text-foreground whitespace-nowrap">
-                      ${Number(product.price).toFixed(2)}
-                    </td>
-                    <td className="p-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs rounded-full ${product.is_active
-                          ? 'bg-chart-3/20 text-chart-3'
-                          : 'bg-muted text-muted-foreground'
-                          }`}
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2 border-t border-border pt-3">
+                      <Button variant="outline" size="sm" className="flex-1" onClick={() => handleEdit(product)}>
+                        <Pencil className="w-3 h-3 mr-2" /> Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:bg-destructive/10 hover:text-destructive px-3"
+                        onClick={() => handleDelete(product.id)}
                       >
-                        {product.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center justify-end gap-2 whitespace-nowrap">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(product)}>
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(product.id)}>
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </AdminTable>
+              </div>
+
+              {/* Desktop View - Table */}
+              <div className="hidden md:block">
+                <AdminTable minWidthClassName="min-w-[760px]">
+                  <thead className={ADMIN_TABLE_HEADER_CLASS}>
+                    <tr className="border-b border-border bg-muted/50">
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Product</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Category</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Price</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Status</th>
+                      <th className="text-right p-4 font-medium text-foreground whitespace-nowrap">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredProducts.map((product) => (
+                      <tr key={product.id} className="border-b border-border last:border-0">
+                        <td className="p-4">
+                          <div className="flex items-center gap-3 min-w-[18rem]">
+                            {product.image_url ? (
+                              <img
+                                src={product.image_url}
+                                alt={product.title}
+                                className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                                <Package className="w-6 h-6 text-muted-foreground" />
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <p className="font-medium text-foreground truncate">{product.title}</p>
+                              <p className="text-sm text-muted-foreground line-clamp-1">
+                                {product.description}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4 whitespace-nowrap">
+                          <span className="px-2 py-1 text-xs rounded-full bg-accent text-accent-foreground">
+                            {product.category}
+                          </span>
+                        </td>
+                        <td className="p-4 font-medium text-foreground whitespace-nowrap">
+                          ${Number(product.price).toFixed(2)}
+                        </td>
+                        <td className="p-4 whitespace-nowrap">
+                          <span
+                            className={`px-2 py-1 text-xs rounded-full ${product.is_active
+                              ? 'bg-chart-3/20 text-chart-3'
+                              : 'bg-muted text-muted-foreground'
+                              }`}
+                          >
+                            {product.is_active ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center justify-end gap-2 whitespace-nowrap">
+                            <Button variant="ghost" size="icon" onClick={() => handleEdit(product)}>
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleDelete(product.id)}>
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </AdminTable>
+              </div>
+            </>
           )}
         </div>
       </AdminLayout>

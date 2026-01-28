@@ -11,6 +11,8 @@ import { Layout } from '@/components/layout/Layout';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { GlassCard } from '@/components/ui/GlassCard';
 
+import { useServices } from '@/hooks/useServices';
+
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Sparkles,
   Palette,
@@ -22,19 +24,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 const Services = () => {
   const { getSetting } = useSiteSettings();
-
-  const { data: services = [], isLoading } = useQuery({
-    queryKey: ['services'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('services')
-        .select('*')
-        .eq('is_active', true)
-        .order('display_order', { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: allServices = [], isLoading } = useServices();
+  const services = allServices.filter(s => s.is_active);
 
   return (
     <Layout>

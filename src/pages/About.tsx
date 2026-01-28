@@ -40,7 +40,17 @@ const About = () => {
         .eq('is_active', true)
         .order('display_order', { ascending: true });
       if (error) throw error;
-      return data as TeamMember[];
+
+      // Strict sort: CEO/Founder always first, then by display_order
+      return (data as TeamMember[]).sort((a, b) => {
+        const aHigher = (role: string) => role.toLowerCase().includes('ceo') || role.toLowerCase().includes('founder') || role.toLowerCase().includes('director');
+        const aIsHigher = aHigher(a.role);
+        const bIsHigher = aHigher(b.role);
+
+        if (aIsHigher && !bIsHigher) return -1;
+        if (!aIsHigher && bIsHigher) return 1;
+        return a.display_order - b.display_order;
+      });
     },
   });
 
@@ -191,39 +201,61 @@ const About = () => {
 
       {/* Team Section */}
       {teamMembers.length > 0 && (
-        <section className="py-20 bg-card">
-          <div className="container mx-auto px-4">
+        <section className="py-24 bg-card/30 relative overflow-hidden">
+          <div className="container mx-auto px-4 relative">
             <SectionHeading
-              badge={getSetting('about_team_badge', 'Our Team')}
+              badge={getSetting('about_team_badge', 'Masterminds')}
               title={getSetting('about_team_title', 'Meet the Team')}
-              description={getSetting('about_team_description', 'The creative minds behind our work')}
+              description={getSetting('about_team_description', 'The creative minds behind our exceptional digital experiences.')}
             />
 
-            <div className={`grid gap-8 ${teamMembers.length === 1 ? 'max-w-md mx-auto' : teamMembers.length === 2 ? 'grid-cols-1 md:grid-cols-2 max-w-3xl mx-auto' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
+            <div className={`grid gap-6 ${teamMembers.length === 1 ? 'max-w-md mx-auto' :
+                teamMembers.length === 2 ? 'grid-cols-1 md:grid-cols-2 max-w-2xl mx-auto' :
+                  'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:max-w-6xl mx-auto'
+              }`}>
               {teamMembers.map((member, index) => (
                 <motion.div
                   key={member.id}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  className="text-center"
+                  transition={{
+                    duration: 0.6,
+                    delay: index * 0.1,
+                    ease: "easeOut"
+                  }}
                 >
-                  <div className="w-32 h-32 rounded-full overflow-hidden mx-auto mb-6 ring-4 ring-primary/20">
-                    <img
-                      src={getOptimizedImageUrl(member.image_url || '', 200)}
-                      alt={member.name}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  </div>
-                  <h3 className="font-serif text-2xl font-bold text-foreground mb-2">{member.name}</h3>
-                  <p className="text-primary font-medium mb-4">{member.role}</p>
-                  {member.bio && (
-                    <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
-                      "{member.bio}"
-                    </p>
-                  )}
+                  <GlassCard className="h-full p-6 flex flex-col items-center text-center border-primary/5 hover:border-primary/20 transition-all duration-300 hover:bg-card/50">
+                    {/* Compact Avatar with Subtle Glow */}
+                    <div className="relative mb-6">
+                      <div className="absolute inset-0 bg-primary/10 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden relative z-10 p-0.5 bg-gradient-to-tr from-primary/40 to-accent/40 shadow-xl">
+                        <div className="w-full h-full rounded-full overflow-hidden bg-background">
+                          <img
+                            src={getOptimizedImageUrl(member.image_url || '', 300)}
+                            alt={member.name}
+                            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                            loading="lazy"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col flex-1 items-center">
+                      <span className="inline-block px-2.5 py-0.5 rounded-full bg-primary/5 text-primary text-[9px] font-bold tracking-[0.15em] uppercase mb-2 border border-primary/10">
+                        {member.role}
+                      </span>
+                      <h3 className="text-xl md:text-2xl font-bold text-foreground mb-3 tracking-tight">
+                        {member.name}
+                      </h3>
+
+                      {member.bio && (
+                        <p className="text-muted-foreground leading-relaxed text-sm line-clamp-4 italic border-t border-primary/5 pt-4">
+                          "{member.bio}"
+                        </p>
+                      )}
+                    </div>
+                  </GlassCard>
                 </motion.div>
               ))}
             </div>

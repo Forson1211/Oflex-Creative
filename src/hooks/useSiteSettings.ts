@@ -1,9 +1,7 @@
-
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-
-
+import { useToast } from './use-toast';
 
 interface SiteSetting {
   setting_key: string;
@@ -89,4 +87,34 @@ export function useSiteSettings() {
     maintenanceMode,
     currencySymbol,
   };
+}
+
+export function useSiteSettingsMutations() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const updateSetting = useMutation({
+    mutationFn: async ({ key, value }: { key: string; value: string }) => {
+      const { error } = await supabase
+        .from('site_settings')
+        .upsert({ setting_key: key, setting_value: value }, { onConflict: 'setting_key' });
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['site-settings'] });
+      toast({
+        title: 'Settings updated',
+        description: `${variables.key.replace(/_/g, ' ')} successfully updated.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Update failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  return { updateSetting };
 }

@@ -185,55 +185,103 @@ const FAQs = () => {
               <p className="text-muted-foreground mb-4">Add your first FAQ to help your visitors.</p>
             </div>
           ) : (
-            <AdminTableContainer>
-              <Table className="min-w-[900px]">
-                <TableHeader className={ADMIN_TABLE_HEADER_CLASS}>
-                  <TableRow>
-                    <TableHead className="whitespace-nowrap">Order</TableHead>
-                    <TableHead className="w-[40%]">Question</TableHead>
-                    <TableHead className="w-[35%]">Answer</TableHead>
-                    <TableHead className="whitespace-nowrap">Status</TableHead>
-                    <TableHead className="text-right whitespace-nowrap">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {faqs.map((faq) => (
-                    <TableRow key={faq.id}>
-                      <TableCell className="whitespace-nowrap">{faq.display_order}</TableCell>
-                      <TableCell className="font-medium min-w-[18rem]">{faq.question}</TableCell>
-                      <TableCell className="text-muted-foreground min-w-[18rem]">
-                        <div className="line-clamp-2">{faq.answer}</div>
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${faq.is_active
-                            ? 'bg-primary/10 text-primary'
-                            : 'bg-muted text-muted-foreground'
-                            }`}
-                        >
-                          {faq.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right whitespace-nowrap">
-                        <div className="flex justify-end gap-2">
-                          <Button size="icon" variant="ghost" onClick={() => handleEdit(faq)}>
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => deleteFAQ.mutate(faq.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+            <>
+              {/* Mobile View - Cards */}
+              <div className="grid grid-cols-1 gap-6 md:hidden">
+                {faqs.map((faq) => (
+                  <div key={faq.id} className="group bg-card border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                            {faq.display_order}
+                          </span>
+                          <h3 className="font-semibold text-lg text-foreground line-clamp-2">{faq.question}</h3>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </AdminTableContainer>
+                        <p className="text-muted-foreground text-sm line-clamp-3 mb-4 bg-muted/30 p-3 rounded-lg">{faq.answer}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-border mt-2">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${faq.is_active
+                          ? 'bg-primary/10 text-primary'
+                          : 'bg-muted text-muted-foreground'
+                          }`}
+                      >
+                        {faq.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => handleEdit(faq)}>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => deleteFAQ.mutate(faq.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop View - Table */}
+              <div className="hidden md:block">
+                <AdminTableContainer>
+                  <Table className="min-w-[900px]">
+                    <TableHeader className={ADMIN_TABLE_HEADER_CLASS}>
+                      <TableRow>
+                        <TableHead className="whitespace-nowrap">Order</TableHead>
+                        <TableHead className="w-[40%]">Question</TableHead>
+                        <TableHead className="w-[35%]">Answer</TableHead>
+                        <TableHead className="whitespace-nowrap">Status</TableHead>
+                        <TableHead className="text-right whitespace-nowrap">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {faqs.map((faq) => (
+                        <TableRow key={faq.id}>
+                          <TableCell className="whitespace-nowrap">{faq.display_order}</TableCell>
+                          <TableCell className="font-medium min-w-[18rem]">{faq.question}</TableCell>
+                          <TableCell className="text-muted-foreground min-w-[18rem]">
+                            <div className="line-clamp-2">{faq.answer}</div>
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${faq.is_active
+                                ? 'bg-primary/10 text-primary'
+                                : 'bg-muted text-muted-foreground'
+                                }`}
+                            >
+                              {faq.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right whitespace-nowrap">
+                            <div className="flex justify-end gap-2">
+                              <Button size="icon" variant="ghost" onClick={() => handleEdit(faq)}>
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => deleteFAQ.mutate(faq.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </AdminTableContainer>
+              </div>
+            </>
           )}
         </div>
       </AdminLayout>

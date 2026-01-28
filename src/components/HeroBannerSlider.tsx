@@ -62,7 +62,7 @@ export const HeroBannerSlider = () => {
     <div className="w-full">
       {/* Centered hero container (desktop) with subtle spacing */}
       <div className="container mx-auto px-4">
-        <div className="mx-auto w-full max-w-6xl">
+        <div className="mx-auto w-full">
           {/* Banner Slider - responsive height */}
           <div className="group relative h-[250px] sm:h-[350px] md:h-[450px] lg:h-[520px] overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
             <AnimatePresence mode="wait">

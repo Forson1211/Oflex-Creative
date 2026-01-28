@@ -4,9 +4,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/query-client";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { SecurityCheck } from "@/components/auth/SecurityCheck";
 import { MaintenanceGuard } from "@/components/layout/MaintenanceGuard";
@@ -23,13 +24,15 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const OrderDetail = lazy(() => import("./pages/OrderDetails"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogPostDetail = lazy(() => import("./pages/BlogPostDetail"));
 const Dashboard = lazy(() => import("./pages/admin/Dashboard"));
 const Products = lazy(() => import("./pages/admin/Products"));
 const FeaturedProjects = lazy(() => import("./pages/admin/FeaturedProjects"));
 const AdminServices = lazy(() => import("./pages/admin/Services"));
 const AdminPortfolio = lazy(() => import("./pages/admin/Portfolio"));
 const HeroSlides = lazy(() => import("./pages/admin/HeroSlides"));
-const StoreSlides = lazy(() => import("./pages/admin/StoreSlides"));
+
 const SiteCustomization = lazy(() => import("./pages/admin/SiteCustomization"));
 const Testimonials = lazy(() => import("./pages/admin/Testimonials"));
 const FAQs = lazy(() => import("./pages/admin/FAQs"));
@@ -38,20 +41,90 @@ const TrustedPartners = lazy(() => import("./pages/admin/TrustedPartners"));
 const Orders = lazy(() => import("./pages/admin/Orders"));
 const Users = lazy(() => import("./pages/admin/Users"));
 const Settings = lazy(() => import("./pages/admin/Settings"));
+const AdminProfile = lazy(() => import("./pages/admin/Profile"));
 const ContactMessages = lazy(() => import("./pages/admin/ContactMessages"));
+const BlogPosts = lazy(() => import("./pages/admin/BlogPosts"));
+const NewsletterSubscribers = lazy(() => import("./pages/admin/NewsletterSubscribers"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const AccessDenied = lazy(() => import("./pages/AccessDenied"));
+const Maintenance = lazy(() => import("./pages/Maintenance"));
+
+const AuthStatusHandler = () => {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
+
+    // Check for standard Supabase auth parameters
+    const hasAuthParams = params.has('code') ||
+      hashParams.has('access_token') ||
+      hashParams.has('refresh_token');
+
+    const error = params.get('error') || hashParams.get('error');
+    const description = params.get('error_description') || hashParams.get('error_description');
+    const code = params.get('error_code') || hashParams.get('error_code');
+    const signupSuccess = params.get('signup_success');
+
+    if (error) {
+      const isExpired = code === 'otp_expired' || description?.includes('expired') || error.includes('expired');
+
+      toast({
+        title: isExpired ? "Verification Link Expired" : "Authentication Error",
+        description: isExpired
+          ? "This link has already been used or has expired. Please sign in to receive a new one."
+          : description?.replace(/\+/g, ' ') || `An error occurred: ${error}`,
+        variant: "destructive",
+      });
+
+      // If it's an expired link, help them out by taking them to the auth page
+      if (isExpired) {
+        setTimeout(() => navigate('/auth'), 2000);
+      }
+    } else if (signupSuccess) {
+      toast({
+        title: "Account Confirmed!",
+        description: "Your email has been verified. Welcome to Oflex Creative Studio!",
+      });
+    }
+
+    // Only clear the URL if we AREN'T currently trying to log in (no code/tokens present)
+    if (!hasAuthParams && (error || signupSuccess)) {
+      // Clear the URL parameters to prevent repeated toasts on refresh
+      const url = new URL(window.location.href);
+      url.search = '';
+      url.hash = '';
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [toast, navigate, user]);
+
+  return null;
+};
 
 // Component to handle initial load vs navigation
 const AppContent = () => {
   useEffect(() => {
     // Prefetch common routes in idle time to make navigation feel instant
     const prefetch = () => {
-      void import("./pages/Store");
-      void import("./pages/Portfolio");
-      void import("./pages/Contact");
-      void import("./pages/About");
-      void import("./pages/Services");
-      void import("./pages/Profile");
+      const routes = [
+        () => import("./pages/Store"),
+        () => import("./pages/Portfolio"),
+        () => import("./pages/Contact"),
+        () => import("./pages/About"),
+        () => import("./pages/Services"),
+        () => import("./pages/Profile"),
+        () => import("./pages/Blog"),
+        () => import("./pages/ProductDetail"),
+      ];
+
+      // Sequential prefetch to avoid bandwidth clog
+      routes.forEach((route, i) => {
+        setTimeout(() => {
+          void route();
+        }, i * 300);
+      });
     };
 
     const w = globalThis as unknown as {
@@ -61,9 +134,9 @@ const AppContent = () => {
 
     let idleId: number;
     if (typeof w.requestIdleCallback === "function") {
-      idleId = w.requestIdleCallback(prefetch, { timeout: 1500 });
+      idleId = w.requestIdleCallback(prefetch, { timeout: 1000 });
     } else {
-      idleId = setTimeout(prefetch, 2500) as unknown as number;
+      idleId = setTimeout(prefetch, 1500) as unknown as number;
     }
 
     return () => {
@@ -77,37 +150,46 @@ const AppContent = () => {
 
   return (
     <Suspense fallback={<LoadingScreen />}>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/services" element={<Services />} />
-        <Route path="/portfolio" element={<Portfolio />} />
-        <Route path="/store" element={<Store />} />
-        <Route path="/product/:id" element={<ProductDetail />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/order/:id" element={<OrderDetail />} />
-        <Route path="/admin" element={<Dashboard />} />
-        <Route path="/admin/hero-slides" element={<HeroSlides />} />
-        <Route path="/admin/store-slides" element={<StoreSlides />} />
-        <Route path="/admin/featured-projects" element={<FeaturedProjects />} />
-        <Route path="/admin/portfolio" element={<AdminPortfolio />} />
-        <Route path="/admin/services" element={<AdminServices />} />
-        <Route path="/admin/products" element={<Products />} />
-        <Route path="/admin/testimonials" element={<Testimonials />} />
-        <Route path="/admin/faqs" element={<FAQs />} />
-        <Route path="/admin/about" element={<AboutPage />} />
-        <Route path="/admin/trusted-partners" element={<TrustedPartners />} />
-        <Route path="/admin/customization" element={<SiteCustomization />} />
-        <Route path="/admin/orders" element={<Orders />} />
-        <Route path="/admin/users" element={<Users />} />
-        <Route path="/admin/settings" element={<Settings />} />
-        <Route path="/admin/contact-messages" element={<ContactMessages />} />
-        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <AuthStatusHandler />
+      <MaintenanceGuard>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/portfolio" element={<Portfolio />} />
+          <Route path="/store" element={<Store />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/order/:id" element={<OrderDetail />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:id" element={<BlogPostDetail />} />
+          <Route path="/admin" element={<Dashboard />} />
+          <Route path="/admin/hero-slides" element={<HeroSlides />} />
+
+          <Route path="/admin/featured-projects" element={<FeaturedProjects />} />
+          <Route path="/admin/portfolio" element={<AdminPortfolio />} />
+          <Route path="/admin/services" element={<AdminServices />} />
+          <Route path="/admin/products" element={<Products />} />
+          <Route path="/admin/testimonials" element={<Testimonials />} />
+          <Route path="/admin/faqs" element={<FAQs />} />
+          <Route path="/admin/about" element={<AboutPage />} />
+          <Route path="/admin/trusted-partners" element={<TrustedPartners />} />
+          <Route path="/admin/customization" element={<SiteCustomization />} />
+          <Route path="/admin/orders" element={<Orders />} />
+          <Route path="/admin/users" element={<Users />} />
+          <Route path="/admin/settings" element={<Settings />} />
+          <Route path="/admin/profile" element={<AdminProfile />} />
+          <Route path="/admin/messages" element={<ContactMessages />} />
+          <Route path="/admin/blog-posts" element={<BlogPosts />} />
+          <Route path="/admin/newsletter" element={<NewsletterSubscribers />} />
+          <Route path="/access-denied" element={<AccessDenied />} />
+          <Route path="/maintenance" element={<Maintenance />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </MaintenanceGuard>
     </Suspense>
   );
 };
@@ -116,22 +198,20 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <SecurityCheck>
-        <MaintenanceGuard>
-          <ThemeProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter
-                future={{
-                  v7_startTransition: true,
-                  v7_relativeSplatPath: true,
-                }}
-              >
-                <AppContent />
-              </BrowserRouter>
-            </TooltipProvider>
-          </ThemeProvider>
-        </MaintenanceGuard>
+        <ThemeProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter
+              future={{
+                v7_startTransition: true,
+                v7_relativeSplatPath: true,
+              }}
+            >
+              <AppContent />
+            </BrowserRouter>
+          </TooltipProvider>
+        </ThemeProvider>
       </SecurityCheck>
     </AuthProvider>
   </QueryClientProvider>

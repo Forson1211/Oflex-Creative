@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingCart, ArrowLeft, Download, Check, Star, ExternalLink } from 'lucide-react';
+import { ShoppingCart, ArrowLeft, Download, Check, Star, ExternalLink, Share2, Copy } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -41,6 +41,32 @@ const ProductDetail = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { currencySymbol } = useSiteSettings();
+
+  const handleShare = async () => {
+    const shareData = {
+      title: product?.title || 'Check out this product!',
+      text: product?.description || 'I found this amazing product on Oflex Creative Studio.',
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        toast({
+          title: 'Link copied!',
+          description: 'Product link copied to clipboard.',
+        });
+      } catch (err) {
+        console.error('Error copying link:', err);
+      }
+    }
+  };
 
   // Fetch product details
   const { data: product, isLoading } = useQuery({
@@ -172,24 +198,26 @@ const ProductDetail = () => {
             animate={{ opacity: 1, y: 0 }}
             className="grid lg:grid-cols-2 gap-12"
           >
-            {/* Product Image */}
-            <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
-              <OptimizedImage
-                src={product.image_url || 'https://images.unsplash.com/photo-1586717791821-3f44a563eb4c?auto=format&fit=crop&q=80'}
-                alt={product.title}
-                width={800}
-                className="w-full h-full"
-                imageClassName="object-cover"
-                priority
-              />
-              {hasPurchased && (
-                <div className="absolute top-4 right-4">
-                  <Badge className="bg-primary text-primary-foreground flex items-center gap-1">
-                    <Check className="w-3 h-3" />
-                    Purchased
-                  </Badge>
-                </div>
-              )}
+            {/* Product Image - Responsive Aspect Ratio */}
+            <div className="flex justify-center items-start lg:sticky lg:top-32">
+              <div className="relative rounded-2xl overflow-hidden bg-card/50 shadow-2xl border border-white/5 w-full flex items-center justify-center">
+                <OptimizedImage
+                  src={product.image_url || 'https://images.unsplash.com/photo-1586717791821-3f44a563eb4c?auto=format&fit=crop&q=80'}
+                  alt={product.title}
+                  width={1200}
+                  className="w-full"
+                  imageClassName="w-full h-auto max-h-[80vh] object-contain"
+                  priority
+                />
+                {hasPurchased && (
+                  <div className="absolute top-4 right-4 z-20">
+                    <Badge className="bg-primary text-primary-foreground flex items-center gap-1 shadow-lg">
+                      <Check className="w-3 h-3" />
+                      Purchased
+                    </Badge>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Product Info */}
@@ -198,9 +226,19 @@ const ProductDetail = () => {
                 {product.category}
               </Badge>
 
-              <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                {product.title}
-              </h1>
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+                  {product.title}
+                </h1>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full hover:bg-primary/10 transition-colors"
+                  onClick={handleShare}
+                >
+                  <Share2 className="w-5 h-5" />
+                </Button>
+              </div>
 
               <div className="flex items-center gap-2 mb-6">
                 {[1, 2, 3, 4, 5].map((star) => (

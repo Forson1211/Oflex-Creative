@@ -137,7 +137,7 @@ const ContactMessages = () => {
                 placeholder="Search messages..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 w-full sm:max-w-sm"
               />
             </div>
           </div>
@@ -168,99 +168,164 @@ const ContactMessages = () => {
               </p>
             </div>
           ) : (
-            <AdminTable minWidthClassName="min-w-[900px]">
-              <thead className={ADMIN_TABLE_HEADER_CLASS}>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Status</th>
-                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Name</th>
-                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Email</th>
-                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Subject</th>
-                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Preview</th>
-                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Received</th>
-                  <th className="text-right p-4 font-medium text-foreground whitespace-nowrap">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
+            <>
+              {/* Mobile View - Cards */}
+              <div className="grid grid-cols-1 gap-4 md:hidden">
                 {filteredMessages.map((message) => (
-                  <tr
-                    key={message.id}
-                    className={`border-b border-border last:border-0 ${
-                      message.is_read ? '' : 'bg-primary/5'
-                    }`}
-                  >
-                    <td className="p-4 whitespace-nowrap">
-                      <span className="inline-flex items-center gap-2">
-                        {message.is_read ? (
-                          <CheckCircle className="w-4 h-4 text-muted-foreground" />
-                        ) : (
-                          <Clock className="w-4 h-4 text-primary" />
-                        )}
-                        <Badge
-                          variant={message.is_read ? 'secondary' : 'default'}
-                          className="text-xs"
-                        >
-                          {message.is_read ? 'Read' : 'New'}
-                        </Badge>
-                      </span>
-                    </td>
-                    <td className="p-4 font-medium text-foreground whitespace-nowrap">
-                      {message.name}
-                    </td>
-                    <td className="p-4 text-muted-foreground whitespace-nowrap">
-                      {message.email}
-                    </td>
-                    <td className="p-4 text-foreground whitespace-nowrap">
-                      {message.subject}
-                    </td>
-                    <td className="p-4 text-muted-foreground">
-                      <span className="line-clamp-2 max-w-[36rem]">
-                        {message.message}
-                      </span>
-                    </td>
-                    <td className="p-4 text-muted-foreground whitespace-nowrap">
-                      {new Date(message.created_at).toLocaleString()}
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center justify-end gap-2 whitespace-nowrap">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewMessage(message)}
-                        >
-                          <Eye className="w-4 h-4 mr-1" />
-                          View
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="sm">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Message</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete this message from{' '}
-                                {message.name}? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => deleteMutation.mutate(message.id)}
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                  <div key={message.id} className={`bg-card p-4 rounded-xl border border-border shadow-sm ${message.is_read ? '' : 'bg-primary/5'}`}>
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h3 className="font-semibold text-foreground">{message.name}</h3>
+                        <p className="text-sm text-muted-foreground">{message.email}</p>
                       </div>
-                    </td>
-                  </tr>
+                      <Badge variant={message.is_read ? 'secondary' : 'default'} className="flex-shrink-0">
+                        {message.is_read ? 'Read' : 'New'}
+                      </Badge>
+                    </div>
+
+                    <div className="mb-3">
+                      <p className="font-medium text-sm mb-1">{message.subject}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-3 bg-muted/30 p-2 rounded">
+                        {message.message}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
+                      <span>{new Date(message.created_at).toLocaleDateString()}</span>
+                    </div>
+
+                    <div className="flex justify-end gap-2 border-t border-border pt-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleViewMessage(message)}
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        View
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive px-3">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Message</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete this message from {message.name}?
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteMutation.mutate(message.id)}>
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </AdminTable>
+              </div>
+
+              {/* Desktop View - Table */}
+              <div className="hidden md:block">
+                <AdminTable minWidthClassName="min-w-[900px]">
+                  <thead className={ADMIN_TABLE_HEADER_CLASS}>
+                    <tr className="border-b border-border bg-muted/50">
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Status</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Name</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Email</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Subject</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Preview</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Received</th>
+                      <th className="text-right p-4 font-medium text-foreground whitespace-nowrap">Actions</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {filteredMessages.map((message) => (
+                      <tr
+                        key={message.id}
+                        className={`border-b border-border last:border-0 ${message.is_read ? '' : 'bg-primary/5'
+                          }`}
+                      >
+                        <td className="p-4 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-2">
+                            {message.is_read ? (
+                              <CheckCircle className="w-4 h-4 text-muted-foreground" />
+                            ) : (
+                              <Clock className="w-4 h-4 text-primary" />
+                            )}
+                            <Badge
+                              variant={message.is_read ? 'secondary' : 'default'}
+                              className="text-xs"
+                            >
+                              {message.is_read ? 'Read' : 'New'}
+                            </Badge>
+                          </span>
+                        </td>
+                        <td className="p-4 font-medium text-foreground whitespace-nowrap">
+                          {message.name}
+                        </td>
+                        <td className="p-4 text-muted-foreground whitespace-nowrap">
+                          {message.email}
+                        </td>
+                        <td className="p-4 text-foreground whitespace-nowrap">
+                          {message.subject}
+                        </td>
+                        <td className="p-4 text-muted-foreground">
+                          <span className="line-clamp-2 max-w-[36rem]">
+                            {message.message}
+                          </span>
+                        </td>
+                        <td className="p-4 text-muted-foreground whitespace-nowrap">
+                          {new Date(message.created_at).toLocaleString()}
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center justify-end gap-2 whitespace-nowrap">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewMessage(message)}
+                            >
+                              <Eye className="w-4 h-4 mr-1" />
+                              View
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm">
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Message</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this message from{' '}
+                                    {message.name}? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => deleteMutation.mutate(message.id)}
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </AdminTable>
+              </div>
+            </>
           )}
         </div>
 

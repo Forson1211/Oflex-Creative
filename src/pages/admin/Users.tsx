@@ -218,7 +218,7 @@ const Users = () => {
               placeholder="Search users..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 max-w-sm"
+              className="pl-10 w-full sm:max-w-sm"
             />
           </div>
 
@@ -249,91 +249,159 @@ const Users = () => {
               </div>
             </div>
           ) : (
-            <AdminTable minWidthClassName="min-w-[760px]">
-              <thead className={ADMIN_TABLE_HEADER_CLASS}>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">User</th>
-                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Email</th>
-                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Role</th>
-                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Joined</th>
-                  <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Security</th>
-                  <th className="text-right p-4 font-medium text-foreground whitespace-nowrap">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              {/* Mobile View - Cards */}
+              <div className="grid grid-cols-1 gap-4 md:hidden">
                 {filteredUsers.map((user) => (
-                  <tr key={user.id} className="border-b border-border last:border-0">
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-medium">
+                  <div key={user.id} className="bg-card p-4 rounded-xl border border-border shadow-sm">
+                    <div className="flex items-start justify-between gap-4 mb-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-full bg-primary flex-shrink-0 flex items-center justify-center text-primary-foreground font-medium text-lg">
                           {user.full_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
                         </div>
-                        <p className="font-medium text-foreground">
-                          {user.full_name || 'No name'}
-                        </p>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-foreground truncate">
+                            {user.full_name || 'No name'}
+                          </p>
+                          <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+                        </div>
                       </div>
-                    </td>
-                    <td className="p-4 text-muted-foreground whitespace-nowrap">{user.email}</td>
-                    <td className="p-4">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full capitalize ${getRoleColor(user.role || 'user')}`}
-                      >
-                        {getRoleIcon(user.role || 'user')}
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="p-4 text-muted-foreground whitespace-nowrap">
-                      {new Date(user.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-shrink-0">
                         {user.account_locked && (
-                          <span title="Account Locked" className="text-destructive">
-                            <Lock className="w-4 h-4" />
-                          </span>
+                          <Lock className="w-4 h-4 text-destructive" />
                         )}
-                        {user.force_password_reset && (
-                          <span title="Password Reset Required" className="text-amber-500">
-                            <Key className="w-4 h-4" />
-                          </span>
-                        )}
-                        {!user.account_locked && !user.force_password_reset && (
-                          <span title="Secure" className="text-green-500">
-                            <Shield className="w-4 h-4" />
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="p-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setIsSecurityDialogOpen(true);
-                          }}
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full capitalize ${getRoleColor(user.role || 'user')}`}
                         >
-                          <ShieldAlert className="w-4 h-4 mr-2" />
-                          Security
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setIsRoleDialogOpen(true);
-                          }}
-                        >
-                          <UserCog className="w-4 h-4 mr-2" />
-                          Role
-                        </Button>
+                          {getRoleIcon(user.role || 'user')}
+                          {user.role}
+                        </span>
                       </div>
-                    </td>
-                  </tr>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-muted-foreground bg-muted/30 p-2 rounded mb-3">
+                      <span>Joined: {new Date(user.created_at).toLocaleDateString()}</span>
+                    </div>
+
+                    <div className="flex justify-end gap-2 border-t border-border pt-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setIsSecurityDialogOpen(true);
+                        }}
+                      >
+                        <ShieldAlert className="w-4 h-4 mr-2" />
+                        Security
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setIsRoleDialogOpen(true);
+                        }}
+                      >
+                        <UserCog className="w-4 h-4 mr-2" />
+                        Role
+                      </Button>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </AdminTable>
+              </div>
+
+              {/* Desktop View - Table */}
+              <div className="hidden md:block">
+                <AdminTable minWidthClassName="min-w-[760px]">
+                  <thead className={ADMIN_TABLE_HEADER_CLASS}>
+                    <tr className="border-b border-border bg-muted/50">
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">User</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Email</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Role</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Joined</th>
+                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Security</th>
+                      <th className="text-right p-4 font-medium text-foreground whitespace-nowrap">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map((user) => (
+                      <tr key={user.id} className="border-b border-border last:border-0">
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-medium">
+                              {user.full_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
+                            </div>
+                            <p className="font-medium text-foreground">
+                              {user.full_name || 'No name'}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="p-4 text-muted-foreground whitespace-nowrap">{user.email}</td>
+                        <td className="p-4">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full capitalize ${getRoleColor(user.role || 'user')}`}
+                          >
+                            {getRoleIcon(user.role || 'user')}
+                            {user.role}
+                          </span>
+                        </td>
+                        <td className="p-4 text-muted-foreground whitespace-nowrap">
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center gap-2">
+                            {user.account_locked && (
+                              <span title="Account Locked" className="text-destructive">
+                                <Lock className="w-4 h-4" />
+                              </span>
+                            )}
+                            {user.force_password_reset && (
+                              <span title="Password Reset Required" className="text-amber-500">
+                                <Key className="w-4 h-4" />
+                              </span>
+                            )}
+                            {!user.account_locked && !user.force_password_reset && (
+                              <span title="Secure" className="text-green-500">
+                                <Shield className="w-4 h-4" />
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setIsSecurityDialogOpen(true);
+                              }}
+                            >
+                              <ShieldAlert className="w-4 h-4 mr-2" />
+                              Security
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setIsRoleDialogOpen(true);
+                              }}
+                            >
+                              <UserCog className="w-4 h-4 mr-2" />
+                              Role
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </AdminTable>
+              </div>
+            </>
           )}
 
           {/* Role Change Dialog */}

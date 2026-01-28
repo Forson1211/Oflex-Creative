@@ -28,6 +28,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Pencil, Trash2, Image as ImageIcon, GripVertical } from 'lucide-react';
 import { AdminTableContainer, ADMIN_TABLE_HEADER_CLASS } from '@/components/admin/AdminTable';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 interface FeaturedProject {
   id: string;
@@ -161,94 +162,155 @@ const FeaturedProjects = () => {
     <ProtectedRoute requireModerator>
       <AdminLayout>
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Featured Projects</h1>
-              <p className="text-muted-foreground">Manage portfolio projects shown on homepage</p>
-            </div>
-            <Button
-              onClick={() => {
-                resetForm();
-                setIsDialogOpen(true);
-              }}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Project
-            </Button>
-          </div>
+          <AdminPageHeader
+            title="Featured Projects"
+            description="Manage portfolio projects shown on homepage"
+            icon={<ImageIcon className="w-5 h-5" />}
+            actions={
+              <Button
+                onClick={() => {
+                  resetForm();
+                  setIsDialogOpen(true);
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Project
+              </Button>
+            }
+          />
 
-          <AdminTableContainer>
-            {isLoading ? (
-              <div className="p-6 space-y-4">
-                {[...Array(4)].map((_, i) => (
-                  <Skeleton key={i} className="h-16 w-full" />
-                ))}
-              </div>
-            ) : projects.length === 0 ? (
-              <div className="p-12 text-center">
-                <ImageIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">No projects yet. Add your first project!</p>
-              </div>
-            ) : (
-              <Table className="min-w-[820px]">
-                <TableHeader className={ADMIN_TABLE_HEADER_CLASS}>
-                  <TableRow>
-                    <TableHead className="w-12"></TableHead>
-                    <TableHead>Image</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Featured</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {projects.map((project) => (
-                    <TableRow key={project.id}>
-                      <TableCell>
-                        <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab" />
-                      </TableCell>
-                      <TableCell>
-                        <img
-                          src={project.image_url || 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80'}
-                          alt={project.title}
-                          className="w-16 h-12 object-cover rounded-lg"
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium">{project.title}</TableCell>
-                      <TableCell>
-                        <span className="px-2 py-1 rounded-full bg-primary/10 text-primary text-xs">
-                          {project.category}
+          {isLoading ? (
+            <div className="space-y-4">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-32 w-full md:h-16" />
+              ))}
+            </div>
+          ) : projects.length === 0 ? (
+            <div className="p-12 text-center border border-dashed border-border rounded-xl">
+              <ImageIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">No projects yet. Add your first project!</p>
+            </div>
+          ) : (
+            <>
+              {/* Mobile View - Cards */}
+              <div className="grid grid-cols-1 gap-6 md:hidden">
+                {projects.map((project) => (
+                  <div key={project.id} className="group bg-card border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+                    <div className="relative aspect-video w-full overflow-hidden">
+                      <img
+                        src={project.image_url || 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80'}
+                        alt={project.title}
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                      />
+                      <div className="absolute top-2 right-2 flex gap-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium shadow-sm backdrop-blur-md ${project.is_featured ? 'bg-green-500/90 text-white' : 'bg-black/50 text-white'}`}>
+                          {project.is_featured ? 'Featured' : 'Standard'}
                         </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${project.is_featured ? 'bg-green-500/10 text-green-600' : 'bg-muted text-muted-foreground'}`}>
-                          {project.is_featured ? 'Yes' : 'No'}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(project)}>
-                            <Pencil className="w-4 h-4" />
+                      </div>
+                    </div>
+
+                    <div className="p-4">
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                            {project.category}
+                          </span>
+                        </div>
+                        <h3 className="font-semibold text-lg text-foreground line-clamp-1">{project.title}</h3>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-4 border-t border-border">
+                        <div className="flex items-center text-xs text-muted-foreground">
+                          <GripVertical className="w-3 h-3 mr-1" />
+                          Order: {project.display_order}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" onClick={() => handleEdit(project)}>
+                            <Pencil className="w-4 h-4 mr-2" />
+                            Edit
                           </Button>
                           <Button
-                            variant="ghost"
-                            size="icon"
+                            variant="destructive"
+                            size="sm"
                             onClick={() => {
                               if (confirm('Delete this project?')) {
                                 deleteMutation.mutate(project.id);
                               }
                             }}
                           >
-                            <Trash2 className="w-4 h-4 text-destructive" />
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </AdminTableContainer>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop View - Table */}
+              <div className="hidden md:block">
+                <AdminTableContainer>
+                  <Table className="min-w-[820px]">
+                    <TableHeader className={ADMIN_TABLE_HEADER_CLASS}>
+                      <TableRow>
+                        <TableHead className="w-12"></TableHead>
+                        <TableHead>Image</TableHead>
+                        <TableHead>Title</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Featured</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {projects.map((project) => (
+                        <TableRow key={project.id}>
+                          <TableCell>
+                            <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab" />
+                          </TableCell>
+                          <TableCell>
+                            <img
+                              src={project.image_url || 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80'}
+                              alt={project.title}
+                              className="w-16 h-12 object-cover rounded-lg"
+                            />
+                          </TableCell>
+                          <TableCell className="font-medium">{project.title}</TableCell>
+                          <TableCell>
+                            <span className="px-2 py-1 rounded-full bg-primary/10 text-primary text-xs">
+                              {project.category}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs ${project.is_featured ? 'bg-green-500/10 text-green-600' : 'bg-muted text-muted-foreground'}`}>
+                              {project.is_featured ? 'Yes' : 'No'}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button variant="ghost" size="icon" onClick={() => handleEdit(project)}>
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  if (confirm('Delete this project?')) {
+                                    deleteMutation.mutate(project.id);
+                                  }
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </AdminTableContainer>
+              </div>
+            </>
+          )}
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

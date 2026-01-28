@@ -27,6 +27,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Pencil, Trash2, Image as ImageIcon, GripVertical } from 'lucide-react';
 import { AdminTableContainer, ADMIN_TABLE_HEADER_CLASS } from '@/components/admin/AdminTable';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 interface HeroSlide {
   id: string;
@@ -170,93 +171,152 @@ const HeroSlides = () => {
     <ProtectedRoute requireModerator>
       <AdminLayout>
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Hero Banner Slides</h1>
-              <p className="text-muted-foreground">Manage the homepage hero slider images</p>
-            </div>
-            <Button
-              onClick={() => {
-                resetForm();
-                setIsDialogOpen(true);
-              }}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Slide
-            </Button>
-          </div>
+          <AdminPageHeader
+            title="Hero Banner Slides"
+            description="Manage the homepage hero slider images"
+            icon={<ImageIcon className="w-5 h-5" />}
+            actions={
+              <Button
+                onClick={() => {
+                  resetForm();
+                  setIsDialogOpen(true);
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Slide
+              </Button>
+            }
+          />
 
-          <AdminTableContainer>
-            {isLoading ? (
-              <div className="p-6 space-y-4">
-                {[...Array(3)].map((_, i) => (
-                  <Skeleton key={i} className="h-16 w-full" />
-                ))}
-              </div>
-            ) : slides.length === 0 ? (
-              <div className="p-12 text-center">
-                <ImageIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">No slides yet. Add your first slide!</p>
-              </div>
-            ) : (
-              <Table className="min-w-[760px]">
-                <TableHeader className={ADMIN_TABLE_HEADER_CLASS}>
-                  <TableRow>
-                    <TableHead className="w-12"></TableHead>
-                    <TableHead>Image</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Active</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {slides.map((slide) => (
-                    <TableRow key={slide.id}>
-                      <TableCell>
-                        <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab" />
-                      </TableCell>
-                      <TableCell>
-                        <img
-                          src={slide.image_url}
-                          alt={slide.title || 'Slide'}
-                          className="w-24 h-14 object-cover rounded-lg"
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {slide.title || 'No title'}
-                        {slide.subtitle && (
-                          <span className="block text-sm text-muted-foreground">{slide.subtitle}</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${slide.is_active ? 'bg-green-500/10 text-green-600' : 'bg-muted text-muted-foreground'}`}>
+          {isLoading ? (
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} className="h-48 w-full md:h-16" />
+              ))}
+            </div>
+          ) : slides.length === 0 ? (
+            <div className="p-12 text-center border border-dashed border-border rounded-xl">
+              <ImageIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">No slides yet. Add your first slide!</p>
+            </div>
+          ) : (
+            <>
+              {/* Mobile View - Cards */}
+              <div className="grid grid-cols-1 gap-6 md:hidden">
+                {slides.map((slide) => (
+                  <div key={slide.id} className="group bg-card border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+                    <div className="relative aspect-video w-full overflow-hidden">
+                      <img
+                        src={slide.image_url}
+                        alt={slide.title || 'Slide'}
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                      />
+                      <div className="absolute top-2 right-2 flex gap-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium shadow-sm backdrop-blur-md ${slide.is_active ? 'bg-green-500/90 text-white' : 'bg-black/50 text-white'}`}>
                           {slide.is_active ? 'Active' : 'Hidden'}
                         </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(slide)}>
-                            <Pencil className="w-4 h-4" />
+                      </div>
+                    </div>
+
+                    <div className="p-4">
+                      <div className="mb-4">
+                        <h3 className="font-semibold text-lg text-foreground line-clamp-1">{slide.title || 'Untitled Slide'}</h3>
+                        {slide.subtitle && (
+                          <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{slide.subtitle}</p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between pt-4 border-t border-border">
+                        <div className="flex items-center text-xs text-muted-foreground">
+                          <GripVertical className="w-3 h-3 mr-1" />
+                          Order: {slide.display_order}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" onClick={() => handleEdit(slide)}>
+                            <Pencil className="w-4 h-4 mr-2" />
+                            Edit
                           </Button>
                           <Button
-                            variant="ghost"
-                            size="icon"
+                            variant="destructive"
+                            size="sm"
                             onClick={() => {
                               if (confirm('Delete this slide?')) {
                                 deleteMutation.mutate(slide.id);
                               }
                             }}
                           >
-                            <Trash2 className="w-4 h-4 text-destructive" />
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </AdminTableContainer>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop View - Table */}
+              <div className="hidden md:block">
+                <AdminTableContainer>
+                  <Table className="min-w-[760px]">
+                    <TableHeader className={ADMIN_TABLE_HEADER_CLASS}>
+                      <TableRow>
+                        <TableHead className="w-12"></TableHead>
+                        <TableHead>Image</TableHead>
+                        <TableHead>Title</TableHead>
+                        <TableHead>Active</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {slides.map((slide) => (
+                        <TableRow key={slide.id}>
+                          <TableCell>
+                            <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab" />
+                          </TableCell>
+                          <TableCell>
+                            <img
+                              src={slide.image_url}
+                              alt={slide.title || 'Slide'}
+                              className="w-24 h-14 object-cover rounded-lg"
+                            />
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {slide.title || 'No title'}
+                            {slide.subtitle && (
+                              <span className="block text-sm text-muted-foreground">{slide.subtitle}</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs ${slide.is_active ? 'bg-green-500/10 text-green-600' : 'bg-muted text-muted-foreground'}`}>
+                              {slide.is_active ? 'Active' : 'Hidden'}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button variant="ghost" size="icon" onClick={() => handleEdit(slide)}>
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  if (confirm('Delete this slide?')) {
+                                    deleteMutation.mutate(slide.id);
+                                  }
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </AdminTableContainer>
+              </div>
+            </>
+          )}
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
