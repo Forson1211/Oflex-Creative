@@ -13,6 +13,7 @@ import { useProfile, useUserMutations } from '@/hooks/useUsers';
 import { useOrders, useOrderMutations } from '@/hooks/useOrders';
 import { usePurchases } from '@/hooks/usePurchases';
 import { useImageUpload } from '@/hooks/useImageUpload';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { Layout } from '@/components/layout/Layout';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { ImageCropper } from '@/components/ui/ImageCropper';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -61,6 +63,7 @@ const Profile = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile?.full_name) {
@@ -138,9 +141,20 @@ const Profile = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && user?.id) {
-      uploadAvatar(file, user.id);
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImageToCrop(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
+  };
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    if (!user?.id) return;
+    setImageToCrop(null);
+    const file = new File([croppedBlob], 'avatar.jpg', { type: 'image/jpeg' });
+    uploadAvatar(file, user.id);
   };
 
   const navItems = [
@@ -178,7 +192,7 @@ const Profile = () => {
                   <div className="relative">
                     <div className="absolute inset-[-4px] bg-gradient-to-tr from-primary via-accent to-primary rounded-full blur-md opacity-20 group-hover:opacity-40 transition-opacity duration-500" />
                     <Avatar className="w-28 h-28 sm:w-32 sm:h-32 md:w-44 md:h-44 border-[3px] md:border-[4px] border-background shadow-2xl relative z-10">
-                      <AvatarImage src={profile?.avatar_url || ''} className="object-cover" />
+                      <AvatarImage src={getOptimizedImageUrl(profile?.avatar_url || '', 400)} className="object-cover" />
                       <AvatarFallback className="text-3xl sm:text-4xl md:text-6xl bg-muted text-primary font-bold">
                         {profile?.full_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
                       </AvatarFallback>
@@ -613,6 +627,15 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      {imageToCrop && (
+        <ImageCropper
+          image={imageToCrop}
+          onCropComplete={handleCropComplete}
+          onCancel={() => setImageToCrop(null)}
+          aspect={1}
+        />
+      )}
 
       {/* Edit Profile Dialog (Fallback) */}
       <Dialog open={isEditingProfile} onOpenChange={setIsEditingProfile}>

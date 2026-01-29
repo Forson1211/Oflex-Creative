@@ -40,6 +40,10 @@ import { Badge } from '@/components/ui/badge';
 import { useRealtimeOrders } from '@/hooks/useRealtimeOrders';
 import { useAdminStats } from '@/hooks/useAdminStats';
 
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useProfile } from '@/hooks/useUsers';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
+
 interface AdminLayoutProps {
   children: ReactNode;
 }
@@ -75,6 +79,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const { data: profile } = useProfile(user?.id);
   const logoUrl = getSetting('logo_url', '');
 
   const shouldEnableRealtime = isAdmin || isModerator;
@@ -243,8 +248,13 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
               <span className="text-sm text-muted-foreground hidden lg:block truncate max-w-[150px]">
                 {user?.email}
               </span>
-              <div className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-black text-xs sm:text-sm shadow-lg shadow-primary/20">
-                {user?.email?.charAt(0).toUpperCase()}
+              <div className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0">
+                <Avatar className="w-full h-full border-2 border-primary bg-background shadow-lg shadow-primary/20">
+                  <AvatarImage src={getOptimizedImageUrl(profile?.avatar_url || '', 100)} className="object-cover" />
+                  <AvatarFallback className="bg-primary flex items-center justify-center text-primary-foreground font-black text-xs sm:text-sm">
+                    {user?.email?.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
               </div>
             </Link>
           </div>

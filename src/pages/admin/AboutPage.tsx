@@ -353,7 +353,7 @@ const AboutPage = () => {
                       Add Team Member
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
+                  <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>
                         {editingMember ? 'Edit Team Member' : 'Add Team Member'}
@@ -464,9 +464,8 @@ const AboutPage = () => {
                           <TableCell className="font-medium">{member.name}</TableCell>
                           <TableCell className="text-muted-foreground">{member.role}</TableCell>
                           <TableCell>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              member.is_active ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
-                            }`}>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${member.is_active ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                              }`}>
                               {member.is_active ? 'Active' : 'Inactive'}
                             </span>
                           </TableCell>

@@ -394,7 +394,6 @@ const Orders = () => {
                     if (orderToDelete) {
                       deleteOrder.mutate(orderToDelete);
                       setOrderToDelete(null);
-                      toast({ title: "Order deleted" });
                     }
                   }}
                 >

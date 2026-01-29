@@ -73,6 +73,7 @@ const TrustedPartners = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trusted-partners'] });
+      queryClient.invalidateQueries({ queryKey: ['trusted-partners-public'] });
       toast({ title: editingPartner ? 'Partner updated!' : 'Partner added!' });
       resetForm();
       setIsDialogOpen(false);
@@ -89,6 +90,7 @@ const TrustedPartners = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trusted-partners'] });
+      queryClient.invalidateQueries({ queryKey: ['trusted-partners-public'] });
       toast({ title: 'Partner deleted' });
     },
     onError: () => {
@@ -256,11 +258,10 @@ const TrustedPartners = () => {
                     </a>
                   )}
                   <div className="flex items-center gap-2 mt-auto">
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      partner.is_active
-                        ? 'bg-chart-3/20 text-chart-3'
-                        : 'bg-muted text-muted-foreground'
-                    }`}>
+                    <span className={`px-2 py-1 text-xs rounded-full ${partner.is_active
+                      ? 'bg-chart-3/20 text-chart-3'
+                      : 'bg-muted text-muted-foreground'
+                      }`}>
                       {partner.is_active ? 'Active' : 'Inactive'}
                     </span>
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(partner)}>

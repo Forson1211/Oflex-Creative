@@ -22,6 +22,7 @@ import { Plus, Minus, Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
+import { useProfile } from '@/hooks/useUsers';
 
 
 const navLinks = [
@@ -58,6 +59,8 @@ export const Navbar = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  const { data: profile } = useProfile(user?.id);
 
   const { isLoading: settingsLoading } = useSiteSettings();
   const logoUrl = getSetting('logo_url', '');
@@ -260,7 +263,8 @@ export const Navbar = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full">
-                    <Avatar className="h-8 w-8">
+                    <Avatar className="h-8 w-8 border-2 border-primary rounded-full">
+                      <AvatarImage src={getOptimizedImageUrl(profile?.avatar_url || '', 100)} className="object-cover" />
                       <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                         {userInitials}
                       </AvatarFallback>
@@ -355,9 +359,14 @@ export const Navbar = () => {
               >
                 {user ? (
                   <div className="space-y-2">
-                    <Button asChild variant="outline" className="w-full">
-                      <Link to="/profile" onClick={() => setIsOpen(false)}>
-                        <User className="w-4 h-4 mr-2" />
+                    <Button asChild variant="outline" className="w-full justify-start h-12">
+                      <Link to="/profile" onClick={() => setIsOpen(false)} className="flex items-center gap-3">
+                        <Avatar className="h-6 w-6 border-2 border-primary rounded-full">
+                          <AvatarImage src={getOptimizedImageUrl(profile?.avatar_url || '', 50)} className="object-cover" />
+                          <AvatarFallback className="text-[10px]">
+                            {userInitials}
+                          </AvatarFallback>
+                        </Avatar>
                         Profile
                       </Link>
                     </Button>

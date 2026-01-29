@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useProducts, useProductMutations } from '@/hooks/useProducts';
 import { Package } from 'lucide-react';
 import { Plus, Pencil, Trash2, Search } from 'lucide-react';
@@ -14,14 +14,20 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Settings, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useImageUpload } from '@/hooks/useImageUpload';
@@ -32,7 +38,19 @@ import { AdminTable, ADMIN_TABLE_HEADER_CLASS } from '@/components/admin/AdminTa
 
 type Product = Tables<'products'>;
 
-const categories = ['Prompts', 'Templates', 'Branding', 'UI Kits', 'Mockups'];
+// Define categories for the dropdown
+const defaultCategories: string[] = [
+  'Church Flyers',
+  'Birthday Flyers',
+  'Business Flyers',
+  'Club & Party Flyers',
+  'Social Media Templates',
+  'Funeral & Memorial Flyers',
+  'Concert & Festival Flyers',
+  'Real Estate Flyers',
+  'Education & School Flyers',
+  'Food & Restaurant Flyers'
+];
 
 const Products = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -51,10 +69,54 @@ const Products = () => {
     file_size: '',
     is_active: true,
   });
+  const { toast } = useToast();
+  const [newCategory, setNewCategory] = useState('');
+  const [allCategories, setAllCategories] = useState<string[]>([]);
+  const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+
+  // ... (existing code) ...
+
+  const handleDeleteCategory = async (category: string) => {
+    // 1. Check if it's a default category (optional: allow deleting but warn)
+    // 2. Update products using this category to 'Uncategorized'
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({ category: 'Uncategorized' })
+        .eq('category', category);
+
+      if (error) throw error;
+
+      // 3. Update local state
+      setAllCategories(prev => prev.filter(c => c !== category));
+      setCategoryToDelete(null);
+
+      toast({
+        title: 'Category Removed',
+        description: `Category "${category}" has been removed. Products in this category are now "Uncategorized".`
+      });
+
+      // Refresh to ensure everything is in sync
+      fetchCategories();
+      // Also invalidate products query if needed, but fetchCategories usually handles the list.
+      window.location.reload(); // Hard refresh to force ensuring listing is consistent? Or just invalidate query. 
+      // Actually a simple reload or refetch is better.
+      // Let's rely on useProducts hook refetch if we knew how to access queryClient here.
+      // For now, fetchCategories updates the dropdown. The products list needs refetch.
+      // I'll leave the products list update to the user navigating or manual refresh, or force reload.
+
+    } catch (err: any) {
+      toast({
+        title: 'Error',
+        description: `Failed to remove category: ${err.message}`,
+        variant: 'destructive'
+      });
+    }
+  };
 
   const { data: products = [], isLoading: loading } = useProducts();
   const { createProduct, updateProduct, deleteProduct } = useProductMutations();
-  const { toast } = useToast();
 
   const { uploadImage, isUploading } = useImageUpload({
     bucket: 'product-images',
@@ -138,6 +200,47 @@ const Products = () => {
     }
   };
 
+  // Ensure dropdown always displays the full set of categories
+  const fetchCategories = async () => {
+    const { data, error } = await supabase
+      .from('products')
+      .select('category');
+
+    if (error) {
+      toast({ title: 'Error', description: 'Failed to fetch categories.', variant: 'destructive' });
+      setAllCategories([...defaultCategories]);
+      return;
+    }
+
+    if (data) {
+      // Get unique categories from products
+      const dbCategoryNames = [...new Set(data.map((item) => item.category).filter(Boolean))];
+      // Combine default categories with database categories, avoiding duplicates
+      const allCats = [...new Set([...defaultCategories, ...dbCategoryNames])];
+      setAllCategories(allCats);
+    } else {
+      setAllCategories([...defaultCategories]);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories(); // Fetch categories on component mount
+  }, []);
+
+  // Update addCategory to fetch categories after adding a new one
+  const addCategory = async (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent default button behavior
+
+    if (newCategory.trim() && !allCategories.includes(newCategory)) {
+      // Add to local state - category will be saved when product is created
+      setAllCategories((prev) => [...prev, newCategory]);
+      setFormData((prev) => ({ ...prev, category: newCategory }));
+      setNewCategory('');
+      toast({ title: 'Category added', description: `${newCategory} has been added to the dropdown.` });
+    } else {
+      toast({ title: 'Error', description: 'Category already exists or is invalid.', variant: 'destructive' });
+    }
+  };
 
   const filteredProducts = products.filter(
     (product) =>
@@ -209,21 +312,46 @@ const Products = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="category">Category</Label>
-                    <Select
-                      value={formData.category}
-                      onValueChange={(value) => setFormData({ ...formData, category: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat} value={cat}>
-                            {cat}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Input
+                          id="category"
+                          value={formData.category}
+                          onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                          placeholder="Select or type category"
+                          list="category-options"
+                          required
+                        />
+                        <datalist id="category-options">
+                          {allCategories.map((cat) => (
+                            <option key={cat} value={cat} />
+                          ))}
+                        </datalist>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Input
+                          value={newCategory}
+                          onChange={(e) => setNewCategory(e.target.value)}
+                          placeholder="Add new category name"
+                        />
+                        <Button
+                          onClick={addCategory}
+                          variant="secondary"
+                          disabled={!newCategory.trim() || allCategories.includes(newCategory)}
+                        >
+                          Add
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setIsCategoryManagerOpen(true)}
+                          title="Manage Categories"
+                        >
+                          <Settings className="w-4 h-4 text-muted-foreground" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -243,6 +371,23 @@ const Products = () => {
                     placeholder="https://..."
                   />
                 </div>
+
+                {/* Add image preview when URL is entered */}
+                {formData.image_url && (
+                  <div className="mt-4">
+                    <Label>Image Preview</Label>
+                    <img
+                      src={formData.image_url}
+                      alt="Product Preview"
+                      className="w-full h-auto rounded-md border border-gray-300"
+                      onError={(e) => {
+                        e.currentTarget.src = 'https://via.placeholder.com/150'; // Fallback image
+                        toast({ title: 'Invalid URL', description: 'The provided image URL is not valid.', variant: 'destructive' });
+                      }}
+                    />
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="resolution">Resolution (e.g. 300 DPI)</Label>
@@ -478,6 +623,67 @@ const Products = () => {
             </>
           )}
         </div>
+
+        {/* Category Manager Dialog */}
+        <Dialog open={isCategoryManagerOpen} onOpenChange={setIsCategoryManagerOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Manage Categories</DialogTitle>
+              <DialogDescription>
+                Remove unused categories. Products with removed categories will be marked as "Uncategorized".
+              </DialogDescription>
+            </DialogHeader>
+            <div className="max-h-[60vh] overflow-y-auto space-y-2 mt-4 pr-2">
+              {allCategories.map((category) => (
+                <div key={category} className="flex items-center justify-between p-2 rounded-lg border bg-card/50">
+                  <span className="font-medium truncate max-w-[200px]">{category}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => setCategoryToDelete(category)}
+                    disabled={category === 'Uncategorized'}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+              {allCategories.length === 0 && (
+                <p className="text-center text-muted-foreground py-4">No categories found.</p>
+              )}
+            </div>
+            <div className="flex justify-end pt-4">
+              <Button variant="outline" onClick={() => setIsCategoryManagerOpen(false)}>Close</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Alert */}
+        <AlertDialog open={!!categoryToDelete} onOpenChange={(open) => !open && setCategoryToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remove Category?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to remove "{categoryToDelete}"?
+                <br /><br />
+                This will NOT delete products. Products using this category will be moved to "Uncategorized".
+                <div className="mt-2 text-amber-500 text-xs flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  This action cannot be undone.
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => categoryToDelete && handleDeleteCategory(categoryToDelete)}
+              >
+                Remove
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </AdminLayout>
     </ProtectedRoute>
   );

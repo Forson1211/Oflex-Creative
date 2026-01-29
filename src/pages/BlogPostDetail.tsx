@@ -1,37 +1,72 @@
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Calendar, User, Clock, Share2, Facebook, Twitter, Linkedin, Link as LinkIcon, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Clock, Facebook, Twitter, Linkedin, Link as LinkIcon, ChevronRight, Loader2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
-import { BLOG_POSTS } from '@/data/blog-posts';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect } from 'react';
 import { SEO } from '@/components/layout/SEO';
 
+interface BlogPost {
+    id: string;
+    title: string;
+    slug: string;
+    excerpt: string;
+    content: string;
+    category: string;
+    author: string;
+    image_url: string | null;
+    read_time: string;
+    tags: string[];
+    published_at: string | null;
+}
+
 const BlogPostDetail = () => {
-    const { id } = useParams();
+    const { id: slug } = useParams();
     const { toast } = useToast();
-    const post = BLOG_POSTS.find(p => p.id === id);
 
     useEffect(() => {
         window.scrollTo(0, 0);
-    }, [id]);
+    }, [slug]);
 
-    if (!post) {
-        return (
-            <Layout>
-                <div className="min-h-[60vh] flex flex-col items-center justify-center">
-                    <h2 className="text-2xl font-bold mb-4">Post not found</h2>
-                    <Button asChild>
-                        <Link to="/blog">Back to Blog</Link>
-                    </Button>
-                </div>
-            </Layout>
-        );
-    }
+    const { data: post, isLoading } = useQuery({
+        queryKey: ['blog-post', slug],
+        queryFn: async () => {
+            if (!slug) throw new Error('No slug provided');
+            const { data, error } = await supabase
+                .from('blog_posts' as any)
+                .select('*')
+                .eq('slug', slug)
+                .single();
+
+            if (error) throw error;
+            return data as unknown as BlogPost;
+        },
+        enabled: !!slug,
+    });
+
+    const { data: relatedPosts = [] } = useQuery({
+        queryKey: ['related-posts', post?.category, post?.id],
+        queryFn: async () => {
+            if (!post?.category) return [];
+            const { data, error } = await supabase
+                .from('blog_posts' as any)
+                .select('id, title, slug, image_url, published_at')
+                .eq('category', post.category)
+                .neq('id', post.id)
+                .eq('is_published', true)
+                .limit(2);
+
+            if (error) return [];
+            return data;
+        },
+        enabled: !!post?.category,
+    });
 
     const handleCopyLink = () => {
         navigator.clipboard.writeText(window.location.href);
@@ -41,15 +76,38 @@ const BlogPostDetail = () => {
         });
     };
 
-    const relatedPosts = BLOG_POSTS.filter(p => p.id !== post.id && p.category === post.category).slice(0, 2);
+    if (isLoading) {
+        return (
+            <Layout>
+                <div className="min-h-[60vh] flex flex-col items-center justify-center">
+                    <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+                    <p className="text-muted-foreground">Loading article...</p>
+                </div>
+            </Layout>
+        );
+    }
+
+    if (!post) {
+        return (
+            <Layout>
+                <div className="min-h-[60vh] flex flex-col items-center justify-center">
+                    <h2 className="text-2xl font-bold mb-4">Post not found</h2>
+                    <p className="text-muted-foreground mb-6">The article you are looking for does not exist or has been moved.</p>
+                    <Button asChild>
+                        <Link to="/blog">Back to Blog</Link>
+                    </Button>
+                </div>
+            </Layout>
+        );
+    }
 
     return (
         <Layout>
             <SEO
                 title={post.title}
                 description={post.excerpt || post.title}
-                image={post.image}
-                pathname={`/blog/${id}`}
+                image={post.image_url || undefined}
+                pathname={`/blog/${post.slug}`}
             />
             {/* Post Header / Hero */}
             <article className="pt-24 pb-32">
@@ -97,11 +155,11 @@ const BlogPostDetail = () => {
                                 <div className="flex items-center gap-4 text-sm font-medium">
                                     <div className="flex items-center gap-1.5">
                                         <Calendar className="w-4 h-4" />
-                                        {post.date}
+                                        {post.published_at ? new Date(post.published_at).toLocaleDateString() : 'Draft'}
                                     </div>
                                     <div className="flex items-center gap-1.5">
                                         <Clock className="w-4 h-4" />
-                                        {post.readTime} Read
+                                        {post.read_time} Read
                                     </div>
                                 </div>
 
@@ -118,22 +176,24 @@ const BlogPostDetail = () => {
                     </header>
 
                     {/* Main Image */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="mb-16"
-                    >
-                        <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl border border-white/5">
-                            <OptimizedImage
-                                src={post.image}
-                                alt={post.title}
-                                className="w-full h-full"
-                                imageClassName="object-cover"
-                                priority
-                            />
-                        </div>
-                    </motion.div>
+                    {post.image_url && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.2 }}
+                            className="mb-16"
+                        >
+                            <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl border border-white/5">
+                                <OptimizedImage
+                                    src={post.image_url}
+                                    alt={post.title}
+                                    className="w-full h-full"
+                                    imageClassName="object-cover"
+                                    priority
+                                />
+                            </div>
+                        </motion.div>
+                    )}
 
                     {/* Post Content */}
                     <div className="grid lg:grid-cols-12 gap-12">
@@ -149,7 +209,7 @@ const BlogPostDetail = () => {
                             />
 
                             {/* Tags */}
-                            {post.tags && (
+                            {post.tags && post.tags.length > 0 && (
                                 <div className="mt-16 flex flex-wrap gap-2 pt-8 border-t border-white/5">
                                     {post.tags.map(tag => (
                                         <Badge key={tag} variant="secondary" className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors uppercase text-[10px] tracking-widest px-3 py-1">
@@ -202,12 +262,12 @@ const BlogPostDetail = () => {
                                     <div>
                                         <h4 className="text-sm font-bold uppercase tracking-widest mb-6 border-l-2 border-primary pl-4">Related Stories</h4>
                                         <div className="space-y-6">
-                                            {relatedPosts.map(rp => (
-                                                <Link key={rp.id} to={`/blog/${rp.id}`} className="group block">
+                                            {relatedPosts.map((rp: any) => (
+                                                <Link key={rp.id} to={`/blog/${rp.slug}`} className="group block">
                                                     <div className="flex gap-4 items-start">
                                                         <div className="w-20 h-20 rounded-xl overflow-hidden shadow-lg flex-shrink-0">
                                                             <OptimizedImage
-                                                                src={rp.image}
+                                                                src={rp.image_url || '/placeholder.svg'}
                                                                 alt={rp.title}
                                                                 className="w-full h-full"
                                                                 imageClassName="object-cover transition-transform group-hover:scale-110"
@@ -217,7 +277,9 @@ const BlogPostDetail = () => {
                                                             <h5 className="font-bold text-sm group-hover:text-primary transition-colors line-clamp-2 leading-tight mb-1">
                                                                 {rp.title}
                                                             </h5>
-                                                            <p className="text-[10px] text-muted-foreground uppercase">{rp.date}</p>
+                                                            <p className="text-[10px] text-muted-foreground uppercase">
+                                                                {rp.published_at ? new Date(rp.published_at).toLocaleDateString() : ''}
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </Link>
@@ -251,5 +313,4 @@ const BlogPostDetail = () => {
         </Layout>
     );
 };
-
 export default BlogPostDetail;

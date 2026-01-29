@@ -264,6 +264,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       },
     });
 
+    // With autoconfirm enabled, session will be returned immediately
+    // If session exists, user is automatically logged in
+    if (data?.session && data?.user) {
+      setUser(data.user);
+
+      // Check and set user role (this function sets state directly)
+      await checkUserRole(data.user.id);
+
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+    }
+
     return { data, error };
   };
 
@@ -303,9 +314,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const resetPasswordForEmail = async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: getAbsoluteUrl('/auth?update_password=true'),
-    });
+    // Rely on default Site URL to avoid redirect whitelist errors
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
     return { error };
   };
 

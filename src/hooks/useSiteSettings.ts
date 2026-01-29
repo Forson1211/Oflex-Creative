@@ -60,8 +60,10 @@ export function useSiteSettings() {
     if (primaryColor && primaryColor.startsWith('#')) {
       const hslValue = hexToHSL(primaryColor);
       document.documentElement.style.setProperty('--primary', hslValue);
+      document.documentElement.style.setProperty('--primary-foreground', '0 0% 100%');
       document.documentElement.style.setProperty('--ring', hslValue);
       document.documentElement.style.setProperty('--sidebar-primary', hslValue);
+      document.documentElement.style.setProperty('--sidebar-primary-foreground', '0 0% 100%');
     }
 
     // Update favicon

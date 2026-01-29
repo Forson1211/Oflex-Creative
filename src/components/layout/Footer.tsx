@@ -6,7 +6,6 @@ import {
   Twitter,
   Linkedin,
   Facebook,
-  Youtube,
   ExternalLink,
   MapPin,
 } from "lucide-react";
@@ -64,15 +63,15 @@ export const Footer = () => {
     return url.trim();
   };
 
-  // Fetch featured projects
-  const { data: featuredProjects = [] } = useQuery({
-    queryKey: ["featured-projects-footer"],
+  // Fetch latest products for footer
+  const { data: footerProducts = [] } = useQuery({
+    queryKey: ["latest-products-footer"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("featured_projects")
+        .from("products")
         .select("*")
-        .eq("is_featured", true)
-        .order("display_order", { ascending: true })
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
         .limit(2);
       if (error) throw error;
       return data || [];
@@ -84,7 +83,6 @@ export const Footer = () => {
     { icon: Twitter, href: getSetting('social_twitter', '#'), label: 'Twitter' },
     { icon: Linkedin, href: getSetting('social_linkedin', '#'), label: 'LinkedIn' },
     { icon: Facebook, href: getSetting('social_facebook', '#'), label: 'Facebook' },
-    { icon: Youtube, href: getSetting('social_youtube', '#'), label: 'Youtube' },
   ];
 
   const logoUrl = getSetting('logo_url', '');
@@ -114,7 +112,7 @@ export const Footer = () => {
 
           {/* Social Icons */}
           {socialLinks.length > 0 && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               {socialLinks.map((social) => (
                 <motion.a
                   key={social.label}
@@ -337,38 +335,42 @@ export const Footer = () => {
               </form>
             </div>
 
-            {/* Featured Projects */}
+            {/* Visit Store Section */}
             <div>
-              <h4 className="font-semibold text-white mb-4">Featured Projects</h4>
+              <h4 className="font-semibold text-white mb-4">Visit Store</h4>
               <div className="space-y-4">
-                {featuredProjects.length > 0 ? (
-                  featuredProjects.map((project) => (
-                    <motion.div
-                      key={project.id}
-                      whileHover={{ x: 4 }}
+                {footerProducts.length > 0 ? (
+                  footerProducts.map((product) => (
+                    <Link
+                      key={product.id}
+                      to={`/product/${product.id}`}
                       className="group flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
                     >
                       <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-white/10">
                         <img
-                          src={getOptimizedImageUrl(project.image_url || "/placeholder.svg", 100)}
-                          alt={project.title}
+                          src={getOptimizedImageUrl(product.image_url || "/placeholder.svg", 100)}
+                          alt={product.title}
                           loading="lazy"
                           decoding="async"
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h5 className="text-sm font-medium text-white truncate">
-                          {project.title}
+                          {product.title}
                         </h5>
-                        <p className="text-xs text-white/60">{project.category}</p>
+                        <p className="text-xs text-white/60">{product.category}</p>
+                        <p className="text-xs font-bold text-primary mt-1">${product.price}</p>
                       </div>
                       <ExternalLink className="w-4 h-4 text-white/40 group-hover:text-primary transition-colors flex-shrink-0" />
-                    </motion.div>
+                    </Link>
                   ))
                 ) : (
-                  <div className="text-sm text-white/60">No featured projects</div>
+                  <div className="text-sm text-white/60">No products found</div>
                 )}
+                <Button variant="link" className="text-xs p-0 h-auto text-primary hover:text-primary/80" asChild>
+                  <Link to="/store">View all products <ArrowRight className="ml-1 w-3 h-3" /></Link>
+                </Button>
               </div>
             </div>
           </div>
@@ -391,7 +393,9 @@ export const Footer = () => {
                 `© ${new Date().getFullYear()} ${siteName}. All rights reserved.`
               )}
             </p>
-            <p className="text-sm text-white/40">www.oflexcreative.com</p>
+            <p className="text-sm text-white/40">
+              Developed by <span className="text-primary font-medium">Oflex Creative</span>
+            </p>
           </div>
         </div>
       </div>

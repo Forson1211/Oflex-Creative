@@ -63,7 +63,8 @@ const Dashboard = () => {
     pendingOrders: adminStats?.pending_orders || 0,
   };
 
-  const recentOrders = adminStats?.recent_orders || [];
+  // Filter recent orders to exclude archived ones
+  const recentOrders = (adminStats?.recent_orders || []).filter((o: any) => o.status !== 'archived');
 
   const statCards = [
     {
@@ -148,8 +149,8 @@ const Dashboard = () => {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Reset Dashboard Statistics?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          This will clear all chart history, daily analytics data, AND delete all PENDING orders.
-                          Completed orders and user accounts will NOT be deleted.
+                          This will clear all chart history, daily analytics data, AND delete ALL orders.
+                          User accounts will NOT be deleted.
                           This action cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>

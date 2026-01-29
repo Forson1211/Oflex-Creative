@@ -435,37 +435,65 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Services Preview */}
-      <section className="py-20 bg-card">
-        <div className="container mx-auto px-4">
+      {/* Services Preview - Modern Enhanced Layout */}
+      <section className="py-24 relative overflow-hidden">
+        {/* Abstract Background Elements */}
+        <div className="absolute top-0 left-0 w-full h-full -z-10 bg-background/50" />
+        <div className="absolute top-1/4 -left-20 w-80 h-80 bg-primary/10 rounded-full blur-[100px] -z-10 animate-pulse" />
+        <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-accent/10 rounded-full blur-[100px] -z-10 animate-pulse" style={{ animationDelay: '2s' }} />
+
+        <div className="container mx-auto px-4 relative z-10">
           <SectionHeading
             badge={getSetting('home_services_badge', 'What We Do')}
             title={getSetting('home_services_title', 'Our Services')}
             description={getSetting('home_services_description', 'Comprehensive creative solutions tailored to your needs')}
           />
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
             {(dynamicServices.length > 0 ? dynamicServices : [
-              { icon: 'Sparkles', title: 'Prompt Engineering', description: 'AI-powered creative prompts' },
-              { icon: 'Palette', title: 'Brand Design', description: 'Visual identity systems' },
-              { icon: 'Code', title: 'UI/UX Design', description: 'User-centered interfaces' },
-              { icon: 'Zap', title: 'AI Automation', description: 'Workflow optimization' },
+              { icon: 'Sparkles', title: 'Prompt Engineering', description: 'AI-powered creative prompts crafted for stunning visual results.' },
+              { icon: 'Palette', title: 'Brand Design', description: 'Complete visual identity systems that make your business stand out.' },
+              { icon: 'Code', title: 'UI/UX Design', description: 'User-centered digital interfaces that are beautiful and functional.' },
+              { icon: 'Zap', title: 'AI Automation', description: 'Smart workflow optimization to supercharge your productivity.' },
             ]).map((service, index) => {
               const IconComponent = typeof service.icon === 'string' ? (iconMap[service.icon] || Sparkles) : service.icon;
               return (
                 <motion.div
                   key={service.title}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
+                  transition={{
+                    duration: 0.6,
+                    delay: index * 0.1,
+                    ease: [0.21, 0.47, 0.32, 0.98]
+                  }}
+                  whileHover={{ y: -10 }}
+                  className="h-full"
                 >
-                  <GlassCard className="text-center h-full">
-                    <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                      <IconComponent className="w-7 h-7 text-primary" />
+                  <GlassCard className="text-center h-full p-8 border-white/5 hover:border-primary/20 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.3)] transition-all duration-500 group relative overflow-hidden">
+                    {/* Hover Glow Effect */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                    <div className="relative z-10">
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-500 shadow-inner">
+                        <IconComponent className="w-8 h-8 text-primary group-hover:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)] transition-all duration-300" />
+                      </div>
+
+                      <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors duration-300">
+                        {service.title}
+                      </h3>
+
+                      <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                        {service.description}
+                      </p>
+
+                      <div className="pt-2">
+                        <div className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-primary opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                          Explore Service <ArrowRight className="ml-2 w-3 h-3" />
+                        </div>
+                      </div>
                     </div>
-                    <h3 className="font-semibold text-foreground mb-2">{service.title}</h3>
-                    <p className="text-sm text-muted-foreground">{service.description}</p>
                   </GlassCard>
                 </motion.div>
               );

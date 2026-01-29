@@ -13,6 +13,7 @@ import { SecurityCheck } from "@/components/auth/SecurityCheck";
 import { MaintenanceGuard } from "@/components/layout/MaintenanceGuard";
 import { HelmetProvider } from 'react-helmet-async';
 import { SEO } from "@/components/layout/SEO";
+import { ScrollToTop } from "@/components/layout/ScrollToTop";
 
 // Lazy load pages for faster initial load
 const Index = lazy(() => import("./pages/Index"));
@@ -105,6 +106,8 @@ const AuthStatusHandler = () => {
   return null;
 };
 
+
+
 // Component to handle initial load vs navigation
 const AppContent = () => {
   useEffect(() => {
@@ -152,6 +155,7 @@ const AppContent = () => {
 
   return (
     <Suspense fallback={<LoadingScreen />}>
+      <ScrollToTop />
       <SEO />
       <AuthStatusHandler />
       <MaintenanceGuard>

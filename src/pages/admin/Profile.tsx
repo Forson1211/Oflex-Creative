@@ -11,9 +11,11 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Shield, Lock, Save, Loader2, Mail, Camera } from 'lucide-react';
 import { useImageUpload } from '@/hooks/useImageUpload';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { ImageCropper } from '@/components/ui/ImageCropper';
 
 const AdminProfile = () => {
     const { user, isAdmin, isModerator } = useAuth();
@@ -28,6 +30,7 @@ const AdminProfile = () => {
         new: '',
         confirm: '',
     });
+    const [imageToCrop, setImageToCrop] = useState<string | null>(null);
 
     useEffect(() => {
         if (profile) {
@@ -90,9 +93,20 @@ const AdminProfile = () => {
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file && user?.id) {
-            uploadAvatar(file, user.id);
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                setImageToCrop(reader.result as string);
+            };
+            reader.readAsDataURL(file);
         }
+    };
+
+    const handleCropComplete = async (croppedBlob: Blob) => {
+        if (!user?.id) return;
+        setImageToCrop(null);
+        const file = new File([croppedBlob], 'avatar.jpg', { type: 'image/jpeg' });
+        uploadAvatar(file, user.id);
     };
 
     return (
@@ -111,7 +125,7 @@ const AdminProfile = () => {
                             <div className="bg-card border border-border rounded-xl p-6 flex flex-col items-center text-center">
                                 <div className="relative mb-4">
                                     <Avatar className="w-24 h-24 border-2 border-border shadow-md">
-                                        <AvatarImage src={avatarUrl} className="object-cover" />
+                                        <AvatarImage src={getOptimizedImageUrl(avatarUrl, 200)} className="object-cover" />
                                         <AvatarFallback className="text-2xl font-bold bg-muted text-foreground">
                                             {fullName?.charAt(0) || user?.email?.charAt(0)?.toUpperCase()}
                                         </AvatarFallback>
@@ -269,6 +283,15 @@ const AdminProfile = () => {
                     </div>
                 </div>
             </AdminLayout>
+
+            {imageToCrop && (
+                <ImageCropper
+                    image={imageToCrop}
+                    onCropComplete={handleCropComplete}
+                    onCancel={() => setImageToCrop(null)}
+                    aspect={1}
+                />
+            )}
         </ProtectedRoute>
     );
 };

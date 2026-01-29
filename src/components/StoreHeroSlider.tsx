@@ -49,11 +49,11 @@ export const StoreHeroSlider = () => {
             opts={{
               align: "start",
               loop: true,
-              duration: 60,
+              duration: 25,
             }}
             plugins={[
               Autoplay({
-                delay: 6000,
+                delay: 3500,
                 stopOnInteraction: false,
               }),
             ]}
@@ -68,19 +68,33 @@ export const StoreHeroSlider = () => {
                       <GlassCard className="p-0 border-white/10 overflow-hidden bg-[#1a1a1a]/90 backdrop-blur-xl">
                         <div className="grid lg:grid-cols-2 lg:h-[480px] gap-0">
                           {/* Image Side */}
-                          <div className="relative aspect-video lg:aspect-auto overflow-hidden">
+                          <div className="relative aspect-square sm:aspect-[4/3] lg:aspect-auto lg:h-full overflow-hidden bg-black/20">
                             <motion.div
                               animate={{ scale: isActive ? 1.05 : 1 }}
-                              transition={{ duration: 6, ease: "linear" }}
-                              className="w-full h-full"
+                              transition={{ duration: 4, ease: "linear" }}
+                              className="w-full h-full relative"
                             >
-                              <OptimizedImage
-                                src={product.image_url || ''}
-                                alt={product.title}
-                                width={1200}
-                                className="w-full h-full"
-                                imageClassName="object-cover transition-transform duration-700 group-hover:scale-110"
-                              />
+                              {/* Background blurred layer for atmosphere */}
+                              <div className="absolute inset-0 z-0">
+                                <OptimizedImage
+                                  src={product.image_url || ''}
+                                  alt=""
+                                  width={400}
+                                  className="w-full h-full"
+                                  imageClassName="object-cover blur-3xl opacity-50 scale-125"
+                                />
+                              </div>
+
+                              {/* Main Image - Fully visible */}
+                              <div className="relative z-10 w-full h-full flex items-center justify-center">
+                                <OptimizedImage
+                                  src={product.image_url || ''}
+                                  alt={product.title}
+                                  width={1200}
+                                  className="w-full h-full"
+                                  imageClassName="object-contain drop-shadow-2xl transition-transform duration-700 group-hover:scale-105"
+                                />
+                              </div>
                             </motion.div>
                             <div className="absolute top-6 left-6">
                               <Badge className="bg-primary text-primary-foreground px-4 py-1.5 rounded-full border-none shadow-xl font-bold text-xs uppercase tracking-[0.2em]">
@@ -94,19 +108,19 @@ export const StoreHeroSlider = () => {
                             <motion.div
                               initial={{ opacity: 0, x: 20 }}
                               animate={isActive ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
-                              transition={{ duration: 0.8, delay: 0.2 }}
+                              transition={{ duration: 0.5, delay: 0.1 }}
                               className="flex items-center gap-2 mb-6"
                             >
                               <span className="text-xs font-bold text-primary tracking-[0.2em] uppercase">{product.category}</span>
                               <span className="w-1 h-1 bg-primary/30 rounded-full" />
-                              <span className="text-xs font-bold text-muted-foreground/60 tracking-[0.2em] uppercase">Premium Release</span>
+                              <span className="text-xs font-bold text-white/50 tracking-[0.2em] uppercase">Premium Release</span>
                             </motion.div>
 
                             <motion.h2
                               initial={{ opacity: 0, y: 30 }}
                               animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-                              transition={{ duration: 0.8, delay: 0.3 }}
-                              className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 tracking-tight group-hover:text-primary transition-colors duration-300 leading-tight"
+                              transition={{ duration: 0.5, delay: 0.2 }}
+                              className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 tracking-tight text-white group-hover:text-primary transition-colors duration-300 leading-tight"
                             >
                               {product.title}
                             </motion.h2>
@@ -114,10 +128,10 @@ export const StoreHeroSlider = () => {
                             <motion.div
                               initial={{ opacity: 0, y: 20 }}
                               animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                              transition={{ duration: 0.8, delay: 0.4 }}
+                              transition={{ duration: 0.5, delay: 0.3 }}
                               className="flex items-center gap-4 mb-8"
                             >
-                              <span className="text-2xl font-bold text-foreground">{currencySymbol}{product.price.toFixed(2)}</span>
+                              <span className="text-2xl font-bold text-white">{currencySymbol}{product.price.toFixed(2)}</span>
                               <div className="h-1 w-12 bg-primary/20 rounded-full" />
                               <div className="flex items-center gap-1 text-yellow-500">
                                 <Star className="w-4 h-4 fill-current" />
@@ -131,8 +145,8 @@ export const StoreHeroSlider = () => {
                             <motion.p
                               initial={{ opacity: 0, y: 20 }}
                               animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                              transition={{ duration: 0.8, delay: 0.5 }}
-                              className="text-lg text-muted-foreground/80 leading-relaxed mb-10 line-clamp-3"
+                              transition={{ duration: 0.5, delay: 0.4 }}
+                              className="text-lg text-white/70 leading-relaxed mb-10 line-clamp-3"
                             >
                               {product.description || "An exclusive digital resource from Oflex Creative Studio, designed to push the boundaries of digital craft and creative excellence."}
                             </motion.p>
@@ -140,7 +154,7 @@ export const StoreHeroSlider = () => {
                             <motion.div
                               initial={{ opacity: 0, y: 20 }}
                               animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                              transition={{ duration: 0.8, delay: 0.6 }}
+                              transition={{ duration: 0.5, delay: 0.5 }}
                               className="flex items-center justify-between mt-auto"
                             >
                               <div className="flex items-center gap-3">
@@ -148,8 +162,8 @@ export const StoreHeroSlider = () => {
                                   <ShoppingCart className="w-6 h-6" />
                                 </div>
                                 <div className="flex flex-col">
-                                  <span className="text-sm font-bold text-foreground">Oflex Studio</span>
-                                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Verified Asset</span>
+                                  <span className="text-sm font-bold text-white">Oflex Studio</span>
+                                  <span className="text-[10px] uppercase tracking-widest text-white/50">Verified Asset</span>
                                 </div>
                               </div>
 
@@ -158,7 +172,7 @@ export const StoreHeroSlider = () => {
                                   Buy Now
                                   <ArrowRight className="ml-2 w-4 h-4" />
                                 </Button>
-                                <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest group/btn sm:hidden">
+                                <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest group/btn sm:hidden text-white">
                                   <span>View Details</span>
                                   <ChevronRightIcon className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
                                 </div>

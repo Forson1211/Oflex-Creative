@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -132,8 +132,32 @@ const Store = () => {
     enabled: isAuthReady && !!user,
   });
 
-  // Get unique categories
-  const categories: string[] = ['All', ...Array.from(new Set(products.map((p) => p.category).filter(Boolean)))];
+  // Fetch categories dynamically from actual products
+  const [categories, setCategories] = useState<string[]>(['All']);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('category')
+          .eq('is_active', true);
+
+        if (error) throw error;
+
+        if (data) {
+          // Get unique categories from active products
+          const uniqueCategories = [...new Set(data.map((item: { category: string }) => item.category).filter(Boolean))];
+          setCategories(['All', ...uniqueCategories.sort()]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+        // Fallback to just 'All' if fetch fails
+        setCategories(['All']);
+      }
+    };
+    fetchCategories();
+  }, [products]); // Re-fetch when products change
 
   // Filter and sort products
   const filteredProducts = products
@@ -239,7 +263,7 @@ const Store = () => {
   // Remove from cart mutation
   const removeFromCartMutation = useMutation({
     mutationFn: async (itemId: string) => {
-      if (!user) return;
+      if (!user) throw new Error('User not authenticated');
       const { error } = await supabase
         .from('cart_items')
         .delete()
@@ -248,7 +272,10 @@ const Store = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
-      toast({ title: 'Removed from cart' });
+      toast({ title: 'Item permanently deleted from cart' });
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
     },
   });
 
@@ -267,11 +294,8 @@ const Store = () => {
 
   return (
     <Layout>
-      {/* Store Hero Slider */}
-      <StoreHeroSlider />
-
       {/* Hero Section - Immersive Design */}
-      <section className="relative py-20 md:py-32 overflow-hidden">
+      <section className="relative pt-20 pb-10 md:pt-32 md:pb-16 overflow-hidden">
         {/* Dynamic Background */}
         <div className="absolute inset-0 -z-10">
           <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background z-0" />
@@ -474,6 +498,9 @@ const Store = () => {
         </div>
       </section>
 
+      {/* Store Hero Slider */}
+      <StoreHeroSlider />
+
       {/* Products Section */}
       <section className="pb-32">
         <div className="container mx-auto px-4">
@@ -618,9 +645,6 @@ const Store = () => {
                             imageClassName="object-cover transition-transform duration-500 group-hover:scale-105"
                           />
                           <div className="absolute top-3 left-3 flex flex-col gap-2">
-                            <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm border-none text-[10px] py-0 px-2 h-5">
-                              {product.category}
-                            </Badge>
                             {product.dimensions && (
                               <Badge variant="outline" className="bg-black/50 backdrop-blur-sm border-none text-white text-[9px] py-0 px-1.5 h-4 w-fit">
                                 {product.dimensions}
@@ -659,9 +683,6 @@ const Store = () => {
                           </span>
                         </div>
                         <div className="p-5 flex-1 flex flex-col">
-                          <Badge variant="secondary" className="w-fit mb-2 text-xs">
-                            {product.category}
-                          </Badge>
                           <h3 className="font-semibold text-foreground mb-2 line-clamp-1">{product.title}</h3>
                           <p className="text-sm text-muted-foreground line-clamp-2 flex-1">{product.description}</p>
                           <div className="flex gap-2 mt-4">

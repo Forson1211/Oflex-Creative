@@ -116,7 +116,8 @@ const Auth = () => {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    const emailResult = emailSchema.safeParse(email);
+    const trimmedEmail = email.trim();
+    const emailResult = emailSchema.safeParse(trimmedEmail);
     if (!emailResult.success) {
       setErrors({ email: emailResult.error.errors[0].message });
       return;
@@ -124,7 +125,9 @@ const Auth = () => {
 
     setIsSubmitting(true);
     try {
-      const { error } = await resetPasswordForEmail(email);
+      // Use simplified call without explicit redirectTo to avoid whitelist issues
+      // Supabase will use the default Site URL from the dashboard
+      const { error } = await resetPasswordForEmail(trimmedEmail);
       if (error) throw error;
 
       toast({
@@ -134,9 +137,14 @@ const Auth = () => {
       setIsForgotPassword(false);
       setIsLogin(true);
     } catch (error: any) {
+      // Common Supabase SMTP/Rate limit error message
+      const isSmtpError = error.message.includes('recovery email');
+
       toast({
-        title: 'Error',
-        description: error.message,
+        title: isSmtpError ? 'Could not send email' : 'Reset Failed',
+        description: isSmtpError
+          ? 'We encountered an error sending the recovery email. This usually happens if the email limit (3/hr) is reached or SMTP is not configured. Please try again later.'
+          : error.message,
         variant: 'destructive',
       });
     } finally {
@@ -233,6 +241,13 @@ const Auth = () => {
               description: 'You have requested too many verification codes. Please wait a few minutes and try again.',
               variant: 'destructive',
             });
+          } else if (error && error.message.toLowerCase().includes('password')) {
+            // Handle weak password errors
+            toast({
+              title: 'Weak Password',
+              description: error.message || 'Please choose a stronger password (at least 6 characters).',
+              variant: 'destructive',
+            });
           } else if (error) {
             toast({
               title: 'Sign Up Failed',
@@ -241,7 +256,19 @@ const Auth = () => {
             });
             console.error("Signup error:", error);
           }
+        } else if (data?.session && data?.user) {
+          // AUTOCONFIRM MODE: User is immediately logged in with a session
+          toast({
+            title: 'Account Created Successfully!',
+            description: 'Welcome to Oflex Creative Studio. Redirecting you to your dashboard...',
+          });
+
+          // Redirect to dashboard/home page
+          setTimeout(() => {
+            navigate('/');
+          }, 1000);
         } else {
+          // EMAIL CONFIRMATION MODE: No session, user needs to verify email
           toast({
             title: 'Verification Code Sent',
             description: 'Please enter the 6-digit code sent to your email.',

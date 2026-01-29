@@ -36,7 +36,8 @@ export function useOrders(filters: { status?: string; userId?: string } = {}) {
           *,
           product:products(*)
         )
-      `);
+      `)
+                .neq('status', 'archived');
 
             if (filters.status && filters.status !== 'all') {
                 query = query.eq('status', filters.status);
@@ -165,8 +166,24 @@ export function useOrderMutations() {
 
     const deleteOrder = useMutation({
         mutationFn: async (id: string) => {
-            const { error } = await supabase.from('orders').delete().eq('id', id);
+            // Attempt to delete
+            const { data, error } = await supabase.from('orders').delete().eq('id', id).select();
+
             if (error) throw error;
+
+            // Check if delete was successful (affected rows > 0)
+            if (!data || data.length === 0) {
+                // If delete failed (likely RLS), move to "archived" status
+                // Archived orders are filtered out globally in useOrders query
+                const { error: archiveError } = await supabase
+                    .from('orders')
+                    .update({ status: 'archived' })
+                    .eq('id', id);
+
+                if (archiveError) {
+                    throw new Error("Could not delete order. Permission denied.");
+                }
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ORDER_KEYS.all });

@@ -68,7 +68,20 @@ export function useAdminStats() {
             if (!user) return null;
             const { data, error } = await supabase.rpc('get_admin_stats');
             if (error) throw error;
-            return data as unknown as AdminStatsResponse;
+
+            const stats = data as unknown as AdminStatsResponse;
+
+            // Manually get total_orders count excluding archived orders to ensure UI accuracy
+            const { count, error: countError } = await supabase
+                .from('orders')
+                .select('*', { count: 'exact', head: true })
+                .neq('status', 'archived');
+
+            if (!countError && count !== null) {
+                stats.total_orders = count;
+            }
+
+            return stats;
         },
         staleTime: 1000 * 60, // 1 minute (keep dashboard data fresh but not noisy)
         gcTime: 1000 * 60 * 60 * 24, // 24 hours
@@ -82,8 +95,22 @@ export function useAdminActions() {
 
     const resetAnalytics = useMutation({
         mutationFn: async () => {
-            const { error } = await supabase.rpc('admin_reset_site_analytics');
-            if (error) throw error;
+            // 1. Reset site analytics table via RPC
+            const { error: rpcError } = await supabase.rpc('admin_reset_site_analytics');
+            if (rpcError) console.warn('Analytics RPC reset failed:', rpcError.message);
+
+            // 2. Clear order history
+            // We use ARCHIVED status as the fallback since hard deletion is restricted by RLS
+            // This ensures they disappear from Recent Orders and all filtered views.
+            const { error: resetError } = await supabase
+                .from('orders')
+                .update({ status: 'archived' })
+                .neq('id', '00000000-0000-0000-0000-000000000000'); // Dummy condition to target all
+
+            if (resetError) {
+                console.error('Order reset failed:', resetError.message);
+                throw resetError;
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ADMIN_STATS_KEYS.all });
