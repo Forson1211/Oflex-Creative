@@ -339,6 +339,102 @@ const Index = () => {
         <HeroBannerSlider />
       </section>
 
+      {/* Featured Products */}
+      <section className="py-20 bg-card/50">
+        <div className="container mx-auto px-4">
+          <SectionHeading
+            badge={getSetting('home_store_badge', 'Digital Store')}
+            title={getSetting('home_store_title', 'Featured Products')}
+            description={getSetting('home_store_description', 'Premium digital assets for your creative projects')}
+          />
+
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 -mx-4 px-4 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6 md:pb-0 md:mx-0 md:px-0 scrollbar-none">
+            {featuredProducts.map((product, index) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="group min-w-[260px] md:min-w-0 snap-center"
+              >
+                <div className="bg-card rounded-2xl border border-border overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300 h-full flex flex-col">
+                  <div className="relative aspect-square overflow-hidden">
+                    <OptimizedImage
+                      src={product.image_url || ''}
+                      alt={product.title}
+                      width={400}
+                      className="w-full h-full"
+                      imageClassName="object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+
+                    {/* Overlay on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end justify-center pb-6 gap-2">
+                      <motion.button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          addToCartMutation.mutate(product.id);
+                        }}
+                        className="px-6 py-3 rounded-full bg-primary text-primary-foreground font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors shadow-lg"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <ShoppingCart className="w-4 h-4" />
+                        Add to Cart
+                      </motion.button>
+                      <motion.button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleShare(product);
+                        }}
+                        className="p-3 rounded-full bg-background/80 backdrop-blur-md text-foreground border border-white/10 hover:bg-background transition-colors shadow-lg"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Share2 className="w-4 h-4" />
+                      </motion.button>
+                    </div>
+                  </div>
+
+                  <div className="p-5">
+                    <p className="text-xs uppercase tracking-wider text-primary font-medium mb-2">
+                      {product.category}
+                    </p>
+                    <h3 className="font-semibold text-foreground text-lg leading-snug line-clamp-2 mb-3 min-h-[3.5rem]">
+                      {product.title}
+                    </h3>
+                    <div className="flex items-center justify-between">
+                      <p className="text-primary font-bold text-xl">${product.price}</p>
+                      <Badge variant="secondary" className="text-xs">Digital</Badge>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {featuredProducts.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No products available yet.</p>
+            </div>
+          )}
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center mt-12"
+          >
+            <Button size="lg" variant="outline" asChild>
+              <Link to="/store">
+                <ShoppingBag className="mr-2 w-4 h-4" />
+                View All Products
+              </Link>
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Services Preview */}
       <section className="py-20 bg-card">
         <div className="container mx-auto px-4">
@@ -522,101 +618,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section className="py-20 bg-card/50">
-        <div className="container mx-auto px-4">
-          <SectionHeading
-            badge={getSetting('home_store_badge', 'Digital Store')}
-            title={getSetting('home_store_title', 'Featured Products')}
-            description={getSetting('home_store_description', 'Premium digital assets for your creative projects')}
-          />
-
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 -mx-4 px-4 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6 md:pb-0 md:mx-0 md:px-0 scrollbar-none">
-            {featuredProducts.map((product, index) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="group min-w-[260px] md:min-w-0 snap-center"
-              >
-                <div className="bg-card rounded-2xl border border-border overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300 h-full flex flex-col">
-                  <div className="relative aspect-square overflow-hidden">
-                    <OptimizedImage
-                      src={product.image_url || ''}
-                      alt={product.title}
-                      width={400}
-                      className="w-full h-full"
-                      imageClassName="object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-
-                    {/* Overlay on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end justify-center pb-6 gap-2">
-                      <motion.button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          addToCartMutation.mutate(product.id);
-                        }}
-                        className="px-6 py-3 rounded-full bg-primary text-primary-foreground font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors shadow-lg"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <ShoppingCart className="w-4 h-4" />
-                        Add to Cart
-                      </motion.button>
-                      <motion.button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleShare(product);
-                        }}
-                        className="p-3 rounded-full bg-background/80 backdrop-blur-md text-foreground border border-white/10 hover:bg-background transition-colors shadow-lg"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Share2 className="w-4 h-4" />
-                      </motion.button>
-                    </div>
-                  </div>
-
-                  <div className="p-5">
-                    <p className="text-xs uppercase tracking-wider text-primary font-medium mb-2">
-                      {product.category}
-                    </p>
-                    <h3 className="font-semibold text-foreground text-lg leading-snug line-clamp-2 mb-3 min-h-[3.5rem]">
-                      {product.title}
-                    </h3>
-                    <div className="flex items-center justify-between">
-                      <p className="text-primary font-bold text-xl">${product.price}</p>
-                      <Badge variant="secondary" className="text-xs">Digital</Badge>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          {featuredProducts.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No products available yet.</p>
-            </div>
-          )}
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-center mt-12"
-          >
-            <Button size="lg" variant="outline" asChild>
-              <Link to="/store">
-                <ShoppingBag className="mr-2 w-4 h-4" />
-                View All Products
-              </Link>
-            </Button>
-          </motion.div>
-        </div>
-      </section>
       {/* Testimonials */}
       <section className="py-20">
         <div className="container mx-auto px-4">

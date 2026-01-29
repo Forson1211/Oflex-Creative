@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useProfile, useUserMutations } from '@/hooks/useUsers';
 import { useOrders, useOrderMutations } from '@/hooks/useOrders';
 import { usePurchases } from '@/hooks/usePurchases';
+import { useImageUpload } from '@/hooks/useImageUpload';
 import { Layout } from '@/components/layout/Layout';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/button';
@@ -120,6 +121,28 @@ const Profile = () => {
     }
   };
 
+  const { uploadImage: uploadAvatar, isUploading: isUploadingAvatar } = useImageUpload({
+    bucket: 'avatars',
+    onSuccess: (url) => {
+      if (!user?.id) return;
+      updateProfile.mutate(
+        { userId: user.id, data: { avatar_url: url } },
+        {
+          onSuccess: () => {
+            toast({ title: 'Profile picture updated' });
+          },
+        }
+      );
+    },
+  });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && user?.id) {
+      uploadAvatar(file, user.id);
+    }
+  };
+
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'purchases', label: 'My Library', icon: Package },
@@ -155,14 +178,30 @@ const Profile = () => {
                   <div className="relative">
                     <div className="absolute inset-[-4px] bg-gradient-to-tr from-primary via-accent to-primary rounded-full blur-md opacity-20 group-hover:opacity-40 transition-opacity duration-500" />
                     <Avatar className="w-28 h-28 sm:w-32 sm:h-32 md:w-44 md:h-44 border-[3px] md:border-[4px] border-background shadow-2xl relative z-10">
-                      <AvatarImage src={profile?.avatar_url || ''} />
+                      <AvatarImage src={profile?.avatar_url || ''} className="object-cover" />
                       <AvatarFallback className="text-3xl sm:text-4xl md:text-6xl bg-muted text-primary font-bold">
                         {profile?.full_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
                       </AvatarFallback>
+                      {isUploadingAvatar && (
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20">
+                          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                        </div>
+                      )}
                     </Avatar>
-                    <button className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 p-2 sm:p-3 bg-primary text-white rounded-xl sm:rounded-2xl shadow-2xl z-20 hover:scale-110 active:scale-95 transition-all">
+                    <input
+                      type="file"
+                      id="avatar-upload"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      disabled={isUploadingAvatar}
+                    />
+                    <label
+                      htmlFor="avatar-upload"
+                      className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 p-2 sm:p-3 bg-primary text-white rounded-xl sm:rounded-2xl shadow-2xl z-20 hover:scale-110 active:scale-95 transition-all cursor-pointer"
+                    >
                       <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
+                    </label>
                   </div>
 
                   <div className="flex-1 text-center md:text-left space-y-3 sm:space-y-4">

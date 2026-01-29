@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface UseImageUploadOptions {
-  bucket: 'product-images' | 'site-assets';
+  bucket: 'product-images' | 'site-assets' | 'avatars';
   onSuccess?: (url: string) => void;
 }
 
@@ -12,7 +12,7 @@ export const useImageUpload = ({ bucket, onSuccess }: UseImageUploadOptions) => 
   const [progress, setProgress] = useState(0);
   const { toast } = useToast();
 
-  const uploadImage = async (file: File): Promise<string | null> => {
+  const uploadImage = async (file: File, pathPrefix?: string): Promise<string | null> => {
     if (!file) return null;
 
     // Validate file type
@@ -33,7 +33,7 @@ export const useImageUpload = ({ bucket, onSuccess }: UseImageUploadOptions) => 
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const filePath = pathPrefix ? `${pathPrefix}/${fileName}` : fileName;
 
       setProgress(30);
 

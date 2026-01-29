@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Shield, Lock, Save, Loader2, Mail, Camera } from 'lucide-react';
+import { useImageUpload } from '@/hooks/useImageUpload';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -71,6 +72,29 @@ const AdminProfile = () => {
         }
     };
 
+    const { uploadImage: uploadAvatar, isUploading: isUploadingAvatar } = useImageUpload({
+        bucket: 'avatars',
+        onSuccess: (url) => {
+            if (!user?.id) return;
+            updateProfile.mutate(
+                { userId: user.id, data: { avatar_url: url } },
+                {
+                    onSuccess: () => {
+                        toast({ title: 'Profile picture updated' });
+                        setAvatarUrl(url);
+                    },
+                }
+            );
+        },
+    });
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file && user?.id) {
+            uploadAvatar(file, user.id);
+        }
+    };
+
     return (
         <ProtectedRoute requireModerator>
             <AdminLayout>
@@ -87,14 +111,30 @@ const AdminProfile = () => {
                             <div className="bg-card border border-border rounded-xl p-6 flex flex-col items-center text-center">
                                 <div className="relative mb-4">
                                     <Avatar className="w-24 h-24 border-2 border-border shadow-md">
-                                        <AvatarImage src={avatarUrl} />
+                                        <AvatarImage src={avatarUrl} className="object-cover" />
                                         <AvatarFallback className="text-2xl font-bold bg-muted text-foreground">
                                             {fullName?.charAt(0) || user?.email?.charAt(0)?.toUpperCase()}
                                         </AvatarFallback>
+                                        {isUploadingAvatar && (
+                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
+                                                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                            </div>
+                                        )}
                                     </Avatar>
-                                    <div className="absolute bottom-0 right-0 p-1.5 bg-primary text-primary-foreground rounded-full shadow-lg border-2 border-background cursor-pointer hover:scale-110 transition-transform">
+                                    <input
+                                        type="file"
+                                        id="admin-avatar-upload"
+                                        className="hidden"
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                        disabled={isUploadingAvatar}
+                                    />
+                                    <label
+                                        htmlFor="admin-avatar-upload"
+                                        className="absolute bottom-0 right-0 p-1.5 bg-primary text-primary-foreground rounded-full shadow-lg border-2 border-background cursor-pointer hover:scale-110 transition-transform"
+                                    >
                                         <Camera className="w-3 h-3" />
-                                    </div>
+                                    </label>
                                 </div>
 
                                 <h2 className="text-xl font-bold text-foreground mb-1">
@@ -146,14 +186,14 @@ const AdminProfile = () => {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="avatarUrl">Avatar URL</Label>
+                                        <Label htmlFor="avatarUrl">Avatar URL (External)</Label>
                                         <Input
                                             id="avatarUrl"
                                             value={avatarUrl}
                                             onChange={(e) => setAvatarUrl(e.target.value)}
                                             placeholder="https://..."
                                         />
-                                        <p className="text-xs text-muted-foreground">Link to your profile picture (optional)</p>
+                                        <p className="text-xs text-muted-foreground">Or upload a new one by clicking the camera icon above.</p>
                                     </div>
 
                                     <div className="pt-2 flex justify-end">
