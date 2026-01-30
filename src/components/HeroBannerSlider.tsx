@@ -81,6 +81,7 @@ export const HeroBannerSlider = () => {
                   alt="Banner slide"
                   loading={currentIndex === 0 ? "eager" : "lazy"}
                   decoding={currentIndex === 0 ? "sync" : "async"}
+                  {...(currentIndex === 0 ? { fetchpriority: "high" } : {})}
                   className={`w-full h-full ${imgFitClass} object-center`}
                   initial={{ scale: 1 }}
                   animate={{ scale: 1.05 }}

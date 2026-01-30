@@ -193,6 +193,7 @@ const Index = () => {
             alt="Hero background"
             loading="eager"
             decoding="sync"
+            {...({ fetchpriority: "high" } as any)}
             className="absolute inset-0 w-full h-full object-cover object-center"
             style={{ display: getSetting('hero_background_url') ? 'block' : 'none' }}
           />

@@ -119,43 +119,46 @@ const AppContent = () => {
   useEffect(() => {
     // Prefetch common routes in idle time to make navigation feel instant
     const prefetch = () => {
-      const routes = [
+      // Check if user has "Save Data" enabled or slow connection
+      const nav = navigator as any;
+      if (nav.connection && (nav.connection.saveData || /(2g|3g)/.test(nav.connection.effectiveType))) {
+        return;
+      }
+
+      const highPriority = [
         () => import("./pages/Store"),
         () => import("./pages/Portfolio"),
-        () => import("./pages/Contact"),
-        () => import("./pages/About"),
         () => import("./pages/Services"),
-        () => import("./pages/Profile"),
-        () => import("./pages/Blog"),
-        () => import("./pages/ProductDetail"),
       ];
 
-      // Sequential prefetch to avoid bandwidth clog
-      routes.forEach((route, i) => {
-        setTimeout(() => {
-          void route();
-        }, i * 300);
+      const mediumPriority = [
+        () => import("./pages/Blog"),
+        () => import("./pages/About"),
+        () => import("./pages/Contact"),
+      ];
+
+      // Sequential prefetch with priority delay
+      highPriority.forEach((route, i) => {
+        setTimeout(() => void route(), i * 200);
+      });
+
+      mediumPriority.forEach((route, i) => {
+        setTimeout(() => void route(), (highPriority.length * 200) + (i * 400));
       });
     };
 
-    const w = globalThis as unknown as {
-      requestIdleCallback?: (cb: () => void, opts?: { timeout?: number }) => number;
-      cancelIdleCallback?: (id: number) => void;
-    };
+    const w = globalThis as any;
+    let idleId: any;
 
-    let idleId: number;
-    if (typeof w.requestIdleCallback === "function") {
-      idleId = w.requestIdleCallback(prefetch, { timeout: 1000 });
+    if (w.requestIdleCallback) {
+      idleId = w.requestIdleCallback(() => prefetch(), { timeout: 2000 });
     } else {
-      idleId = setTimeout(prefetch, 1500) as unknown as number;
+      idleId = setTimeout(prefetch, 2000);
     }
 
     return () => {
-      if (typeof w.cancelIdleCallback === "function") {
-        w.cancelIdleCallback(idleId);
-      } else {
-        clearTimeout(idleId);
-      }
+      if (w.cancelIdleCallback) w.cancelIdleCallback(idleId);
+      else clearTimeout(idleId);
     };
   }, []);
 

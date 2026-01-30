@@ -11,6 +11,7 @@ interface OptimizedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> 
     height?: number;
     priority?: boolean;
     imageClassName?: string;
+    fetchPriority?: 'high' | 'low' | 'auto';
 }
 
 export const OptimizedImage = ({
@@ -21,6 +22,7 @@ export const OptimizedImage = ({
     height,
     priority = false,
     imageClassName,
+    fetchPriority = 'auto',
     ...props
 }: OptimizedImageProps) => {
     const [isLoaded, setIsLoaded] = useState(false);
@@ -45,6 +47,7 @@ export const OptimizedImage = ({
                 alt={alt}
                 loading={priority ? "eager" : "lazy"}
                 decoding={priority ? "sync" : "async"}
+                fetchPriority={fetchPriority}
                 className={cn(
                     "transition-opacity duration-500",
                     !isLoaded ? "opacity-0" : "opacity-100",

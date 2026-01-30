@@ -56,6 +56,8 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
             if (error) throw error;
             return data as SiteSetting[];
         },
+        staleTime: 1000 * 60 * 60, // 1 hour (Realtime will handle updates)
+        gcTime: 1000 * 60 * 60 * 24, // 24 hours
     });
 
     if (error) {
