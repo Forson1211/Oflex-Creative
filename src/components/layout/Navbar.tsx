@@ -359,8 +359,8 @@ export const Navbar = () => {
               >
                 {user ? (
                   <div className="space-y-2">
-                    <Button asChild variant="outline" className="w-full justify-start h-12">
-                      <Link to="/profile" onClick={() => setIsOpen(false)} className="flex items-center gap-3">
+                    <Button asChild variant="outline" className="w-full h-12">
+                      <Link to="/profile" onClick={() => setIsOpen(false)} className="flex items-center justify-center gap-3">
                         <Avatar className="h-6 w-6 border-2 border-primary rounded-full">
                           <AvatarImage src={getOptimizedImageUrl(profile?.avatar_url || '', 50)} className="object-cover" />
                           <AvatarFallback className="text-[10px]">

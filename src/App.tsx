@@ -14,6 +14,7 @@ import { MaintenanceGuard } from "@/components/layout/MaintenanceGuard";
 import { HelmetProvider } from 'react-helmet-async';
 import { SEO } from "@/components/layout/SEO";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
+import { ChatBot } from "@/components/layout/ChatBot";
 
 // Lazy load pages for faster initial load
 const Index = lazy(() => import("./pages/Index"));
@@ -157,6 +158,7 @@ const AppContent = () => {
     <Suspense fallback={<LoadingScreen />}>
       <ScrollToTop />
       <SEO />
+      <ChatBot />
       <AuthStatusHandler />
       <MaintenanceGuard>
         <Routes>
