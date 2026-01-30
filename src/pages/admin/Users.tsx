@@ -25,13 +25,12 @@ import { AdminTable, ADMIN_TABLE_HEADER_CLASS } from '@/components/admin/AdminTa
 
 const Users = () => {
   const { data: users = [], isLoading: loading, refetch: fetchUsers } = useUsers();
-  const { lockUser, forcePasswordReset, updateProfile } = useUserMutations();
+  const { lockUser, forcePasswordReset, updateProfile, setUserRole } = useUserMutations();
   const [syncing, setSyncing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isSecurityDialogOpen, setIsSecurityDialogOpen] = useState(false);
-  const [updatingRole, setUpdatingRole] = useState(false);
   const [processingSecurity, setProcessingSecurity] = useState(false);
 
   // Fetch security info via hook when dialog is open and user is selected
@@ -67,50 +66,15 @@ const Users = () => {
 
   const handleRoleChange = async (newRole: string) => {
     if (!selectedUser) return;
-    setUpdatingRole(true);
 
-    try {
-      // We use the direct supabase call here for role management as it's not strictly a profile update
-      // but it could be added to mutations if needed.
-      const { data: existingRole } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('user_id', selectedUser.user_id)
-        .maybeSingle();
-
-      if (existingRole) {
-        const { error } = await supabase
-          .from('user_roles')
-          .update({ role: newRole as 'admin' | 'moderator' | 'user' })
-          .eq('user_id', selectedUser.user_id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('user_roles')
-          .insert({
-            user_id: selectedUser.user_id,
-            role: newRole as 'admin' | 'moderator' | 'user'
-          });
-        if (error) throw error;
+    setUserRole.mutate({
+      id: selectedUser.user_id!,
+      role: newRole
+    }, {
+      onSuccess: () => {
+        setIsRoleDialogOpen(false);
       }
-
-      toast({
-        title: 'Role Updated',
-        description: `${selectedUser.full_name || selectedUser.email || 'User'}'s role has been changed to ${newRole}`,
-      });
-
-      setIsRoleDialogOpen(false);
-      fetchUsers();
-    } catch (error) {
-      console.error('Error updating role:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update user role',
-        variant: 'destructive',
-      });
-    } finally {
-      setUpdatingRole(false);
-    }
+    });
   };
 
   const handleLockAccount = async (lock: boolean, reason: string = '') => {
@@ -419,7 +383,7 @@ const Users = () => {
                   <Select
                     defaultValue={selectedUser?.role || 'user'}
                     onValueChange={handleRoleChange}
-                    disabled={updatingRole}
+                    disabled={setUserRole.isPending}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a role" />
@@ -455,7 +419,7 @@ const Users = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                {updatingRole && (
+                {setUserRole.isPending && (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span>Updating role...</span>

@@ -20,7 +20,7 @@ export function useTestimonials() {
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            return data as Testimonial[];
+            return (data || []) as Testimonial[];
         },
     });
 }

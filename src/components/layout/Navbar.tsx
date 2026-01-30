@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Sun, Moon, Sparkles, ShoppingCart, User, LogOut } from 'lucide-react';
+import { Menu, X, Sun, Moon, Shield, UserCog, ShoppingCart, User, LogOut } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -53,7 +53,7 @@ export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
-  const { user, signOut, isAdmin, isAuthReady } = useAuth();
+  const { user, signOut, isAdmin, isModerator, isAuthReady } = useAuth();
   const { getSetting } = useSiteSettings();
   const location = useLocation();
   const navigate = useNavigate();
@@ -137,7 +137,7 @@ export const Navbar = () => {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      navigate('/auth');
+      navigate('/');
     }
   };
 
@@ -276,10 +276,10 @@ export const Navbar = () => {
                     <User className="w-4 h-4 mr-2" />
                     Profile
                   </DropdownMenuItem>
-                  {isAdmin && (
+                  {(isAdmin || isModerator) && (
                     <DropdownMenuItem onClick={() => navigate('/admin')}>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Admin Dashboard
+                      {isAdmin ? <Shield className="w-4 h-4 mr-2" /> : <UserCog className="w-4 h-4 mr-2" />}
+                      {isAdmin ? 'Admin Dashboard' : 'Moderator Dashboard'}
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
@@ -370,11 +370,11 @@ export const Navbar = () => {
                         Profile
                       </Link>
                     </Button>
-                    {isAdmin && (
+                    {(isAdmin || isModerator) && (
                       <Button asChild variant="outline" className="w-full">
                         <Link to="/admin" onClick={() => setIsOpen(false)}>
-                          <Sparkles className="w-4 h-4 mr-2" />
-                          Admin Dashboard
+                          {isAdmin ? <Shield className="w-4 h-4 mr-2" /> : <UserCog className="w-4 h-4 mr-2" />}
+                          {isAdmin ? 'Admin Dashboard' : 'Moderator Dashboard'}
                         </Link>
                       </Button>
                     )}

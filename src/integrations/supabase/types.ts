@@ -838,6 +838,19 @@ export type Database = {
           synced_roles: number
         }
       }
+      admin_update_user_role: {
+        Args: {
+          p_user_id: string
+          p_role: string
+        }
+        Returns: Json
+      }
+      get_user_role: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

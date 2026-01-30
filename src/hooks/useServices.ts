@@ -20,7 +20,7 @@ export function useServices() {
                 .order('display_order', { ascending: true });
 
             if (error) throw error;
-            return data as Service[];
+            return (data || []) as Service[];
         },
     });
 }

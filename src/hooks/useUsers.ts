@@ -101,9 +101,12 @@ export function useUsers() {
 
             if (rolesError) console.error('Error fetching roles:', rolesError);
 
-            return profiles.map((profile) => ({
+            const safeProfiles = profiles || [];
+            const safeRoles = roles || [];
+
+            return safeProfiles.map((profile) => ({
                 ...profile,
-                role: roles?.find((r) => r.user_id === profile.user_id)?.role || 'user',
+                role: safeRoles.find((r) => r.user_id === profile.user_id)?.role || 'user',
             })) as UserWithRole[];
         },
         staleTime: 1000 * 60 * 15, // 15 minutes
@@ -169,5 +172,30 @@ export function useUserMutations() {
         }
     });
 
-    return { updateProfile, lockUser, forcePasswordReset };
+    const setUserRole = useMutation({
+        mutationFn: async ({ id, role }: { id: string; role: string }) => {
+            const { data, error } = await supabase.rpc('admin_update_user_role', {
+                p_user_id: id,
+                p_role: role
+            });
+            if (error) throw error;
+            return data;
+        },
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: USER_KEYS.all });
+            toast({
+                title: 'Role Updated',
+                description: `User role has been changed to ${variables.role}`,
+            });
+        },
+        onError: (error: Error) => {
+            toast({
+                title: 'Error updating role',
+                description: error.message,
+                variant: 'destructive'
+            });
+        }
+    });
+
+    return { updateProfile, lockUser, forcePasswordReset, setUserRole };
 }

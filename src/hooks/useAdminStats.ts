@@ -71,14 +71,16 @@ export function useAdminStats() {
 
             const stats = data as unknown as AdminStatsResponse;
 
-            // Manually get total_orders count excluding archived orders to ensure UI accuracy
-            const { count, error: countError } = await supabase
-                .from('orders')
-                .select('*', { count: 'exact', head: true })
-                .neq('status', 'archived');
+            if (stats) {
+                // Manually get total_orders count excluding archived orders to ensure UI accuracy
+                const { count, error: countError } = await supabase
+                    .from('orders')
+                    .select('*', { count: 'exact', head: true })
+                    .neq('status', 'archived');
 
-            if (!countError && count !== null) {
-                stats.total_orders = count;
+                if (!countError && count !== null) {
+                    stats.total_orders = count;
+                }
             }
 
             return stats;

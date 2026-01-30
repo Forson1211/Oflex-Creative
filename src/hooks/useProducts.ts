@@ -36,7 +36,7 @@ export function useProducts(filters: { isActive?: boolean; category?: string; se
             if (error) throw error;
 
             // Local search filtering if needed (or we could do it in Supabase)
-            let result = data as Product[];
+            let result = (data || []) as Product[];
             if (filters.searchTerm) {
                 const lowerSearch = filters.searchTerm.toLowerCase();
                 result = result.filter(p =>

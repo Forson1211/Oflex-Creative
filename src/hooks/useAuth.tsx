@@ -19,17 +19,26 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   resetPasswordForEmail: (email: string) => Promise<{ error: Error | null }>;
   verifyOtp: (email: string, token: string) => Promise<{ error: Error | null }>;
+  refreshRole: () => Promise<void>;
 }
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  // Initialize state from cache synchronously to prevent flickering and infinite loops
+  // 1. Initialize state from cache synchronously to prevent flickering and ensure immediate role access
   const [user, setUser] = useState<User | null>(() => {
     try {
-      const cached = localStorage.getItem('sb-rilcytjdydirhhtbrwet-auth-token');
-      return cached ? JSON.parse(cached)?.currentSession?.user || null : null;
-    } catch { return null; }
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.includes('auth-token')) {
+          const cached = localStorage.getItem(key);
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            return parsed.user || parsed.currentSession?.user || null;
+          }
+        }
+      }
+    } catch (e) { console.warn("Cache read error", e); }
+    return null;
   });
 
   const [userRole, setUserRole] = useState<AppRole | null>(() =>
@@ -42,26 +51,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return r === 'admin' || r === 'moderator';
   });
 
-  // Auth is ready immediately if we have cached data OR if we definitely have no session
   const [isAuthReady, setIsAuthReady] = useState(() => {
-    const hasSession = !!localStorage.getItem('sb-rilcytjdydirhhtbrwet-auth-token');
-    // If no session, we are ready (anonymous)
-    if (!hasSession) return true;
-
-    // If we have session, we need role to be ready
-    const hasRole = !!localStorage.getItem('userRole');
-    return hasRole;
+    // If we have a role or token in cache, we're ready enough to show the UI
+    if (localStorage.getItem('userRole')) return true;
+    for (let i = 0; i < localStorage.length; i++) {
+      if (localStorage.key(i)?.includes('auth-token')) return false; // Still need to verify
+    }
+    return true; // No session found, so we're "ready" as guest
   });
 
-  // Non-blocking loading if cache exists or if we are anonymous
   const [loading, setLoading] = useState(() => {
-    const hasSession = !!localStorage.getItem('sb-rilcytjdydirhhtbrwet-auth-token');
-    // If no session, not loading
-    if (!hasSession) return false;
-
-    // If session exists but no role, we are loading
-    const hasRole = !!localStorage.getItem('userRole');
-    return !hasRole;
+    for (let i = 0; i < localStorage.length; i++) {
+      if (localStorage.key(i)?.includes('auth-token')) return !localStorage.getItem('userRole');
+    }
+    return false;
   });
 
   const queryClient = useQueryClient();
@@ -69,45 +72,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Helper to check role with timeout
   const checkUserRole = async (userId: string) => {
     try {
-      // Create a promise that rejects after 3 seconds
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Role check timeout')), 3000)
+        setTimeout(() => reject(new Error('Role check timeout')), 4000)
       );
 
-      // Race the query against the timeout
-      const queryPromise = supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .maybeSingle();
+      const queryPromise = supabase.rpc('get_user_role', { p_user_id: userId });
+      const result = await Promise.race([queryPromise, timeoutPromise]) as any;
+      const role = result?.data as AppRole;
 
-      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
-
-      if (error) {
-        console.error("Error checking user role:", error);
-        setUserRole('user');
-        setIsAdmin(false);
-        setIsModerator(false);
-        return;
-      }
-
-      if (data) {
-        const role = data.role as AppRole;
+      if (role) {
         setUserRole(role);
         setIsAdmin(role === 'admin');
         setIsModerator(role === 'admin' || role === 'moderator');
         localStorage.setItem('userRole', role);
-      } else {
-        setUserRole('user');
-        setIsAdmin(false);
-        setIsModerator(false);
       }
     } catch (error) {
-      console.error("Critical error in checkUserRole (timeout/error):", error);
-      // Default to user role on error/timeout so app loads
-      setUserRole('user');
-      setIsAdmin(false);
-      setIsModerator(false);
+      console.warn("Recoverable error in checkUserRole:", error);
+      // Fallback to cache if available
+      const cachedRole = localStorage.getItem('userRole') as AppRole;
+      if (cachedRole) {
+        setUserRole(cachedRole);
+        setIsAdmin(cachedRole === 'admin');
+        setIsModerator(cachedRole === 'admin' || cachedRole === 'moderator');
+      }
     }
   };
 
@@ -122,24 +109,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (isMounted) {
           if (session?.user) {
-            // Update user if session is fresh
-            if (user?.id !== session.user.id) {
-              setUser(session.user);
-            }
-
-            const cachedRole = localStorage.getItem('userRole');
-            if (!cachedRole) {
-              await checkUserRole(session.user.id);
-            }
+            setUser(session.user);
+            await checkUserRole(session.user.id);
           } else {
-            // Only clear if we currently have a user (to prevent unnecessary updates)
-            if (user) {
-              setUser(null);
-              setIsAdmin(false);
-              setIsModerator(false);
-              setUserRole(null);
-              localStorage.removeItem('userRole');
-            }
+            setUser(null);
+            setIsAdmin(false);
+            setIsModerator(false);
+            setUserRole(null);
           }
         }
       } catch (error) {
@@ -154,16 +130,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return;
 
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
         setUser(session?.user ?? null);
         if (session?.user) {
-          const cachedRole = localStorage.getItem('userRole');
-          if (!cachedRole) {
-            await checkUserRole(session.user.id);
-          }
+          await checkUserRole(session.user.id);
         }
         setLoading(false);
         setIsAuthReady(true);
@@ -176,16 +149,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         queryClient.clear();
         setLoading(false);
         setIsAuthReady(true);
-      } else if (event === 'USER_UPDATED') {
-        setUser(session?.user ?? null);
       }
     });
 
     return () => {
       isMounted = false;
-      subscription.unsubscribe();
+      authSubscription.unsubscribe();
     };
-  }, [queryClient]);
+  }, [queryClient]); // Runs once
+
+  // Separate Effect for Realtime Role Updates
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const roleSubscription = supabase
+      .channel(`role-updates-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_roles',
+          filter: `user_id=eq.${user.id}`
+        },
+        async () => {
+          await checkUserRole(user.id);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(roleSubscription);
+    };
+  }, [user?.id]);
+
+  const refreshRole = async () => {
+    if (user) {
+      await checkUserRole(user.id);
+    }
+  };
 
   const signIn = async (email: string, password: string) => {
     console.log("Attempting sign in for:", email);
@@ -299,17 +301,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
+    console.log("Sign out requested...");
     try {
-      await supabase.auth.signOut();
+      // 1. Clear state immediately so UI updates instantly
       setUser(null);
       setIsAdmin(false);
       setIsModerator(false);
       setUserRole(null);
       localStorage.removeItem('userRole');
-      queryClient.clear();
       localStorage.removeItem('site_settings');
+      queryClient.clear();
+
+      // 2. Clear all auth tokens from localStorage just in case
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.includes('auth-token')) {
+          localStorage.removeItem(key!);
+        }
+      }
+
+      // 3. Attempt supabase signout with timeout
+      const signOutPromise = supabase.auth.signOut();
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Sign out timeout')), 3000)
+      );
+
+      await Promise.race([signOutPromise, timeoutPromise]);
+      console.log("Sign out completed successfully");
     } catch (error) {
-      console.error("Error during sign out:", error);
+      console.error("Sign out error (non-fatal):", error);
     }
   };
 
@@ -320,7 +340,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAuthReady, isAdmin, isModerator, userRole, signIn, signUp, resendSignupConfirmation, signOut, resetPasswordForEmail, verifyOtp }}>
+    <AuthContext.Provider value={{ user, loading, isAuthReady, isAdmin, isModerator, userRole, signIn, signUp, resendSignupConfirmation, signOut, resetPasswordForEmail, verifyOtp, refreshRole }}>
       {children}
     </AuthContext.Provider>
   );

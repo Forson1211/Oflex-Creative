@@ -31,7 +31,7 @@ export function useProjects(filters: { category?: string; isFeatured?: boolean }
             const { data, error } = await query.order('created_at', { ascending: false });
 
             if (error) throw error;
-            return data as Project[];
+            return (data || []) as Project[];
         },
     });
 }

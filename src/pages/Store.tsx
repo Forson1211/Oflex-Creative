@@ -683,6 +683,11 @@ const Store = () => {
                           </span>
                         </div>
                         <div className="p-5 flex-1 flex flex-col">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge variant="secondary" className="text-[10px] font-bold tracking-wider py-0 px-2 h-5 bg-primary/10 text-primary border-primary/20">
+                              {product.category}
+                            </Badge>
+                          </div>
                           <h3 className="font-semibold text-foreground mb-2 line-clamp-1">{product.title}</h3>
                           <p className="text-sm text-muted-foreground line-clamp-2 flex-1">{product.description}</p>
                           <div className="flex gap-2 mt-4">
