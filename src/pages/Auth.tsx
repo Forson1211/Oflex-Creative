@@ -44,11 +44,16 @@ const Auth = () => {
   const siteName = getSetting('site_name', '');
 
   useEffect(() => {
-    if (searchParams.get('update_password') === 'true') {
+    // Check for both query params and hash (Supabase can use either depending on flow)
+    const hasUpdateFlag = searchParams.get('update_password') === 'true' ||
+      window.location.hash.includes('type=recovery') ||
+      window.location.search.includes('type=recovery');
+
+    if (hasUpdateFlag) {
       setIsUpdatePassword(true);
+      setIsLogin(false);
+      setIsForgotPassword(false);
     } else {
-      // If we navigate to /auth normally (clicking Login in Navbar), 
-      // reset to the main login view
       setIsLogin(true);
       setIsForgotPassword(false);
       setIsUpdatePassword(false);

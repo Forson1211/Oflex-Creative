@@ -15,6 +15,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { SEO } from "@/components/layout/SEO";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { ChatBot } from "@/components/layout/ChatBot";
+import { SiteSettingsProvider } from "@/hooks/useSiteSettings";
 
 // Lazy load pages for faster initial load
 const Index = lazy(() => import("./pages/Index"));
@@ -94,8 +95,12 @@ const AuthStatusHandler = () => {
       });
     }
 
-    // Only clear the URL if we AREN'T currently trying to log in (no code/tokens present)
-    if (!hasAuthParams && (error || signupSuccess)) {
+    // Only clear the URL if we AREN'T currently trying to log in or reset password
+    const isResettingPassword = params.has('update_password') ||
+      params.get('type') === 'recovery' ||
+      hashParams.get('type') === 'recovery';
+
+    if (!hasAuthParams && !isResettingPassword && (error || signupSuccess)) {
       // Clear the URL parameters to prevent repeated toasts on refresh
       const url = new URL(window.location.href);
       url.search = '';
@@ -209,18 +214,20 @@ const App = () => (
       <AuthProvider>
         <SecurityCheck>
           <ThemeProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter
-                future={{
-                  v7_startTransition: true,
-                  v7_relativeSplatPath: true,
-                }}
-              >
-                <AppContent />
-              </BrowserRouter>
-            </TooltipProvider>
+            <SiteSettingsProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter
+                  future={{
+                    v7_startTransition: true,
+                    v7_relativeSplatPath: true,
+                  }}
+                >
+                  <AppContent />
+                </BrowserRouter>
+              </TooltipProvider>
+            </SiteSettingsProvider>
           </ThemeProvider>
         </SecurityCheck>
       </AuthProvider>

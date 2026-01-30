@@ -334,9 +334,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const resetPasswordForEmail = async (email: string) => {
-    // Rely on default Site URL to avoid redirect whitelist errors
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
-    return { error };
+    try {
+      // We explicitly state where to go back to so the Auth page knows to show the "New Password" form
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?update_password=true`,
+      });
+      return { error };
+    } catch (err: any) {
+      return { error: err };
+    }
   };
 
   return (
