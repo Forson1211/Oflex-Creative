@@ -140,7 +140,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
           {/* Logo */}
           <div className="p-6 border-b border-border flex items-center justify-between">
             <Link to="/admin" className="flex items-center">
-              <img src={logoUrl || "/placeholder.svg"} alt="Admin" className="h-8 w-auto" />
+              <img src={logoUrl || ""} alt="Admin" className="h-8 w-auto" />
             </Link>
             <Button
               variant="ghost"

@@ -102,7 +102,7 @@ export const Footer = () => {
           {/* Logo */}
           <Link to="/" className="inline-block">
             <img
-              src={getOptimizedImageUrl(logoUrl || "/placeholder.svg", 200)}
+              src={logoUrl ? getOptimizedImageUrl(logoUrl, 200) : ""}
               alt={siteName}
               loading="lazy"
               decoding="async"
@@ -348,7 +348,7 @@ export const Footer = () => {
                     >
                       <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-white/10">
                         <img
-                          src={getOptimizedImageUrl(product.image_url || "/placeholder.svg", 100)}
+                          src={product.image_url ? getOptimizedImageUrl(product.image_url, 100) : ""}
                           alt={product.title}
                           loading="lazy"
                           decoding="async"

@@ -109,7 +109,7 @@ const Blog = () => {
                                 <div className="grid lg:grid-cols-2 gap-0">
                                     <div className="relative aspect-video lg:aspect-auto overflow-hidden">
                                         <OptimizedImage
-                                            src={featuredPost.image_url || '/placeholder.svg'}
+                                            src={featuredPost.image_url || ''}
                                             alt={featuredPost.title}
                                             className="w-full h-full"
                                             imageClassName="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -210,7 +210,7 @@ const Blog = () => {
                                             <GlassCard className="p-0 border-white/5 overflow-hidden flex flex-col h-full group">
                                                 <div className="relative aspect-[16/10] overflow-hidden">
                                                     <OptimizedImage
-                                                        src={post.image_url || '/placeholder.svg'}
+                                                        src={post.image_url || ''}
                                                         alt={post.title}
                                                         className="w-full h-full"
                                                         imageClassName="object-cover transition-transform duration-500 group-hover:scale-110"

@@ -267,7 +267,7 @@ const BlogPostDetail = () => {
                                                     <div className="flex gap-4 items-start">
                                                         <div className="w-20 h-20 rounded-xl overflow-hidden shadow-lg flex-shrink-0">
                                                             <OptimizedImage
-                                                                src={rp.image_url || '/placeholder.svg'}
+                                                                src={rp.image_url || ''}
                                                                 alt={rp.title}
                                                                 className="w-full h-full"
                                                                 imageClassName="object-cover transition-transform group-hover:scale-110"

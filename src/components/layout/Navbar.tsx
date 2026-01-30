@@ -154,7 +154,7 @@ export const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <motion.img
-              src={getOptimizedImageUrl(logoUrl || "/placeholder.svg", 200)}
+              src={logoUrl ? getOptimizedImageUrl(logoUrl, 200) : ""}
               alt={getSetting('site_name', 'Oflex Creative')}
               className="h-10 w-auto"
               loading="eager"
