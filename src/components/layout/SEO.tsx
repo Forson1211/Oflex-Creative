@@ -23,7 +23,7 @@ export const SEO = ({ title, description, image, article, pathname }: SEOProps) 
     // Determine the final image URL - must be absolute for social scrapers
     let finalImage = image || sitePreviewImage;
     if (!finalImage) {
-        finalImage = `${siteUrl}/logo.png`;
+        finalImage = `${siteUrl}/og-image.png`;
     } else if (!finalImage.startsWith('http')) {
         finalImage = `${siteUrl}${finalImage.startsWith('/') ? '' : '/'}${finalImage}`;
     }
