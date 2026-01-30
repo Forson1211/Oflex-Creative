@@ -15,20 +15,25 @@ export const SEO = ({ title, description, image, article, pathname }: SEOProps) 
     const siteName = getSetting('site_name', 'Oflex Creative Studio');
     const siteTagline = getSetting('site_tagline', 'Premium Digital Products & Design Services');
     const defaultDescription = getSetting('site_description', siteTagline);
-    const siteUrl = window.location.origin;
-    const sitePreviewImage = getSetting('site_preview_image_url', '/logo.png');
+
+    // Use the actual domain instead of just localhost if available
+    const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://oflexcreative.vercel.app';
+    const sitePreviewImage = getSetting('site_preview_image_url', '');
+
+    // Determine the final image URL - must be absolute for social scrapers
+    let finalImage = image || sitePreviewImage;
+    if (!finalImage) {
+        finalImage = `${siteUrl}/logo.png`;
+    } else if (!finalImage.startsWith('http')) {
+        finalImage = `${siteUrl}${finalImage.startsWith('/') ? '' : '/'}${finalImage}`;
+    }
 
     const seo = {
         title: title ? `${title} | ${siteName}` : `${siteName} | ${siteTagline}`,
         description: description || defaultDescription,
-        image: image || sitePreviewImage,
+        image: finalImage,
         url: `${siteUrl}${pathname || ''}`,
     };
-
-    // Ensure image URL is absolute
-    if (seo.image && !seo.image.startsWith('http')) {
-        seo.image = `${siteUrl}${seo.image}`;
-    }
 
     return (
         <Helmet>
