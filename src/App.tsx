@@ -14,6 +14,7 @@ import { MaintenanceGuard } from "@/components/layout/MaintenanceGuard";
 import { HelmetProvider } from 'react-helmet-async';
 import { SEO } from "@/components/layout/SEO";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
+import { SmoothScroll } from "@/components/layout/SmoothScroll";
 import { ChatBot } from "@/components/layout/ChatBot";
 import { SiteSettingsProvider } from "@/hooks/useSiteSettings";
 
@@ -164,6 +165,7 @@ const AppContent = () => {
 
   return (
     <Suspense fallback={<LoadingScreen />}>
+      <SmoothScroll />
       <ScrollToTop />
       <SEO />
       <ChatBot />

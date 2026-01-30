@@ -48,6 +48,7 @@ export default defineConfig(({ mode }) => ({
         assetFileNames: 'assets/[name]-[hash].[ext]',
       },
     },
+    assetsInlineLimit: 4096, // Inline assets smaller than 4kb as base64
     chunkSizeWarningLimit: 1000,
   },
 }));
