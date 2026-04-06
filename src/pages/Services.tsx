@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Sparkles, Palette, Code, Zap, Layers, Wand2 } from 'lucide-react';
+import { ArrowRight, Sparkles, Palette, Code, Zap, Layers, Wand2, Camera, Smartphone } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { Button } from '@/components/ui/button';
@@ -20,12 +20,21 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Zap,
   Layers,
   Wand2,
+  Camera,
+  Smartphone
 };
 
 const Services = () => {
   const { getSetting } = useSiteSettings();
   const { data: allServices = [], isLoading } = useServices();
-  const services = allServices.filter(s => s.is_active);
+  const servicesData = allServices.filter(s => s.is_active).slice(0, 3);
+  
+  // Hardcoded content as fallback or base
+  const services = servicesData.length >= 3 ? servicesData : [
+    { id: '1', icon: 'Code', title: 'Development', description: 'Full-Stack Engineering for Web & Mobile. We build robust websites, scalable web apps, custom software, and native mobile applications tailored to your business logic.', features: ['Full-Stack Web Dev', 'Mobile App Dev', 'Custom Software', 'Scalable Systems'] },
+    { id: '2', icon: 'Palette', title: 'Graphic Design', description: 'Strategic UI/UX & Visual Identity. We design intuitive user interfaces and striking brand visuals that bridge the gap between aesthetic beauty and functional performance.', features: ['UI/UX Design', 'Visual Identity', 'Brand Graphics', 'Creative Direction'] },
+    { id: '3', icon: 'Camera', title: 'Photography', description: 'Professional Visual Storytelling. High-quality commercial and product photography designed to elevate your brand’s aesthetic and showcase your work with professional clarity.', features: ['Commercial Photo', 'Product Shoots', 'Brand Imagery', 'Visual clarity'] },
+  ];
 
   return (
     <Layout>
@@ -56,7 +65,7 @@ const Services = () => {
           {isLoading ? (
             <div className="text-center py-12 text-muted-foreground">Loading services...</div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {services.map((service, index) => {
                 const IconComponent = iconMap[service.icon] || Sparkles;
                 return (
@@ -67,21 +76,39 @@ const Services = () => {
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <GlassCard className="h-full">
-                      <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6">
-                        <IconComponent className="w-7 h-7 text-primary" />
+                    <div className="bg-white dark:bg-card rounded-2xl p-10 flex flex-col items-center text-center shadow-[0_4px_25px_-5px_rgba(0,0,0,0.05)] border border-border/40 h-full group hover:shadow-[0_15px_35px_-10px_rgba(0,0,0,0.1)] transition-all duration-300">
+                      <div className="mb-8">
+                        <IconComponent className="w-16 h-16 text-[#FF6B35] transition-transform duration-500 group-hover:scale-110" />
                       </div>
-                      <h3 className="font-semibold text-xl text-foreground mb-3">{service.title}</h3>
-                      <p className="text-muted-foreground mb-6 leading-relaxed">{service.description}</p>
-                      <ul className="space-y-2">
+                      
+                      <h3 className="text-2xl font-bold text-[#1A1028] dark:text-white mb-4 font-roboto">
+                        {service.title}
+                      </h3>
+                      
+                      <p className="text-[15px] leading-relaxed text-muted-foreground mb-8">
+                        {service.description}
+                      </p>
+                      
+                      <ul className="space-y-3 mb-10 text-left w-full max-w-[240px] mx-auto">
                         {(service.features || []).map((feature: string, i: number) => (
-                          <li key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                            {feature}
+                          <li key={i} className="flex items-start gap-3 text-sm text-black dark:text-white/80">
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#FF6B35] mt-1.5 flex-shrink-0" />
+                            <span>{feature}</span>
                           </li>
                         ))}
                       </ul>
-                    </GlassCard>
+
+                      <div className="mt-auto">
+                        <Button 
+                          className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white px-10 py-6 rounded-none font-bold text-base transition-all duration-300 shadow-sm"
+                          asChild
+                        >
+                          <Link to="/contact">
+                            Get A Quote
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
                   </motion.div>
                 );
               })}
@@ -141,13 +168,13 @@ const Services = () => {
               {getSetting('services_cta_description', "We're always excited to discuss new ideas and help bring them to life. Let's start building your next success story.")}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" asChild>
+              <Button size="lg" className="h-12 px-8 rounded-none" asChild>
                 <Link to="/contact">
                   Start a Project
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild>
+              <Button size="lg" variant="outline" className="h-12 px-8 rounded-none" asChild>
                 <Link to="/store">Browse Products</Link>
               </Button>
             </div>

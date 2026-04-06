@@ -59,6 +59,21 @@ const SiteCustomization = () => {
     bucket: 'site-assets',
     onSuccess: (url) => updateSetting('logo_url', url),
   });
+  
+  const { uploadImage: uploadLogoWhite, isUploading: isUploadingLogoWhite } = useImageUpload({
+    bucket: 'site-assets',
+    onSuccess: (url) => updateSetting('logo_white_url', url),
+  });
+
+  const { uploadImage: uploadFavicon, isUploading: isUploadingFavicon } = useImageUpload({
+    bucket: 'site-assets',
+    onSuccess: (url) => updateSetting('site_favicon_url', url),
+  });
+
+  const { uploadImage: uploadSocial, isUploading: isUploadingSocial } = useImageUpload({
+    bucket: 'site-assets',
+    onSuccess: (url) => updateSetting('og_image_url', url),
+  });
 
   const { uploadImage: uploadHeroBg, isUploading: isUploadingHeroBg } = useImageUpload({
     bucket: 'site-assets',
@@ -282,7 +297,7 @@ const SiteCustomization = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                       <div className="space-y-4">
-                        <Label className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Logo Upload</Label>
+                        <Label className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Primary Logo (Light Mode)</Label>
                         <ImageUpload
                           value={settings.logo_url || ''}
                           onChange={(url) => updateSetting('logo_url', url)}
@@ -292,27 +307,38 @@ const SiteCustomization = () => {
                           className="rounded-2xl border-dashed border-2 p-2 hover:border-primary/50 transition-colors"
                         />
                       </div>
-                      <div className="space-y-6 flex flex-col justify-center">
-                        <div className="space-y-3">
-                          <Label htmlFor="logo_url" className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Direct URL</Label>
-                          <Input
-                            id="logo_url"
-                            value={settings.logo_url || ''}
-                            className="bg-background/50 border-border/50 rounded-xl"
-                            onChange={(e) => updateSetting('logo_url', e.target.value)}
-                            placeholder="https://yourdomain.com/logo.png"
-                          />
-                        </div>
-                        {settings.logo_url && (
-                          <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10 flex items-center justify-center min-h-[100px]">
-                            <img
-                              src={settings.logo_url}
-                              alt="Logo preview"
-                              className="max-h-16 w-auto object-contain drop-shadow-sm"
-                              onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
-                            />
-                          </div>
-                        )}
+                      <div className="space-y-4">
+                        <Label className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">White Logo (Dark Mode & Footer)</Label>
+                        <ImageUpload
+                          value={settings.logo_white_url || ''}
+                          onChange={(url) => updateSetting('logo_white_url', url)}
+                          onUpload={uploadLogoWhite}
+                          isUploading={isUploadingLogoWhite}
+                          aspectRatio="auto"
+                          className="rounded-2xl border-dashed border-2 p-2 hover:border-primary/50 transition-colors"
+                        />
+                      </div>
+                      <div className="space-y-4">
+                        <Label className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Browser Favicon</Label>
+                        <ImageUpload
+                          value={settings.site_favicon_url || ''}
+                          onChange={(url) => updateSetting('site_favicon_url', url)}
+                          onUpload={uploadFavicon}
+                          isUploading={isUploadingFavicon}
+                          aspectRatio="square"
+                          className="rounded-2xl border-dashed border-2 p-2 hover:border-primary/50 transition-colors"
+                        />
+                      </div>
+                      <div className="space-y-4">
+                        <Label className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Social Sharing Image (OG Image)</Label>
+                        <ImageUpload
+                          value={settings.og_image_url || ''}
+                          onChange={(url) => updateSetting('og_image_url', url)}
+                          onUpload={uploadSocial}
+                          isUploading={isUploadingSocial}
+                          aspectRatio="video"
+                          className="rounded-2xl border-dashed border-2 p-2 hover:border-primary/50 transition-colors"
+                        />
                       </div>
                     </div>
                   </GlassCard>

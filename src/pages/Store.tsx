@@ -12,13 +12,12 @@ import {
   SlidersHorizontal,
   Grid3X3,
   LayoutList,
-  Star,
-  Heart,
   Tag,
   Package,
-  Crown,
   Palette,
-  Share2
+  Share2,
+  Sparkles,
+  ShoppingBag
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,10 +25,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProducts } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
 import { Layout } from '@/components/layout/Layout';
-import { SectionHeading } from '@/components/ui/SectionHeading';
-import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
   Sheet,
@@ -38,16 +34,9 @@ import {
   SheetTitle,
   SheetTrigger
 } from '@/components/ui/sheet';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { StoreHeroSlider } from '@/components/StoreHeroSlider';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
+import { Badge } from '@/components/ui/badge';
 
 interface Product {
   id: string;
@@ -70,737 +59,383 @@ const Store = () => {
   const [activeCategory, setActiveCategory] = useState('All');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'name'>('newest');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const { user, isAuthReady } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { getSetting, currencySymbol } = useSiteSettings();
+  const { getSetting } = useSiteSettings();
 
-  const handleShare = async (product: Product) => {
-    const shareUrl = `${window.location.origin}/product/${product.id}`;
-    const shareData = {
-      title: product.title,
-      text: product.description || 'Check out this amazing product on Oflex Creative Studio!',
-      url: shareUrl,
-    };
-
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-      } catch (err) {
-        if (err instanceof Error && err.name !== 'AbortError') {
-          console.error('Error sharing:', err);
-        }
-      }
-    } else {
-      try {
-        await navigator.clipboard.writeText(shareUrl);
-        toast({
-          title: 'Link copied!',
-          description: 'Product link copied to clipboard.',
-        });
-      } catch (err) {
-        console.error('Error copying link:', err);
-      }
-    }
-  };
-
-  // Fetch products using centralized hook
+  // Fetch site stats/products
   const { data: products = [], isLoading: productsLoading } = useProducts({
     isActive: true
   });
 
-  // Fetch cart items
+  // Fetch cart
   const { data: cartItems = [] as CartItem[] } = useQuery<CartItem[]>({
     queryKey: ['cart', user?.id],
     queryFn: async () => {
       if (!user) return [];
       const { data, error } = await supabase
         .from('cart_items')
-        .select(`
-          *,
-          product:products(*)
-        `)
+        .select(`*, product:products(*)`)
         .eq('user_id', user.id);
-
       if (error) throw error;
-
       return data as CartItem[];
     },
     enabled: isAuthReady && !!user,
   });
 
-  // Fetch categories dynamically from actual products
+  // Dynamic Categories
   const [categories, setCategories] = useState<string[]>(['All']);
-
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('products')
-          .select('category')
-          .eq('is_active', true);
+    if (products.length > 0) {
+      const unique = [...new Set(products.map(p => p.category))].filter(Boolean);
+      setCategories(['All', ...unique.sort()]);
+    }
+  }, [products]);
 
-        if (error) throw error;
+  // Filter Logic
+  const filteredProducts = products.filter(p => {
+    const matchesCategory = activeCategory === 'All' || p.category === activeCategory;
+    const searchLower = searchQuery.toLowerCase().trim();
+    const matchesSearch = !searchLower || p.title.toLowerCase().includes(searchLower) || (p.description?.toLowerCase().includes(searchLower));
+    return matchesCategory && matchesSearch;
+  });
 
-        if (data) {
-          // Get unique categories from active products
-          const uniqueCategories = [...new Set(data.map((item: { category: string }) => item.category).filter(Boolean))];
-          setCategories(['All', ...uniqueCategories.sort()]);
-        }
-      } catch (err) {
-        console.error('Failed to fetch categories:', err);
-        // Fallback to just 'All' if fetch fails
-        setCategories(['All']);
-      }
-    };
-    fetchCategories();
-  }, [products]); // Re-fetch when products change
-
-  // Filter and sort products
-  const filteredProducts = products
-    .filter((p) => {
-      if (!p.is_active) return false;
-      const matchesCategory = activeCategory === 'All' || p.category === activeCategory;
-      const searchLower = searchQuery.toLowerCase().trim();
-      if (!searchLower) return matchesCategory;
-
-      const matchesSearch =
-        p.title.toLowerCase().includes(searchLower) ||
-        (p.description && p.description.toLowerCase().includes(searchLower)) ||
-        p.category.toLowerCase().includes(searchLower);
-      return matchesCategory && matchesSearch;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'price-low':
-          return a.price - b.price;
-        case 'price-high':
-          return b.price - a.price;
-        case 'name':
-          return a.title.localeCompare(b.title);
-        default:
-          return 0; // Already sorted by newest from query
-      }
-    });
-
-  // Add to cart mutation
+  // Cart Mutations
   const addToCartMutation = useMutation({
     mutationFn: async (productId: string) => {
-      if (!user) throw new Error('Please login to add items to cart');
-
-      const { data: existingItem, error: fetchError } = await supabase
-        .from('cart_items')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('product_id', productId)
-        .single();
-
-      if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
-
-      if (existingItem) {
-        const { error: updateError } = await supabase
-          .from('cart_items')
-          .update({ quantity: (existingItem.quantity || 0) + 1 })
-          .eq('id', existingItem.id);
-
-        if (updateError) throw updateError;
+      if (!user) throw new Error('Auth required');
+      const { data: existing } = await supabase.from('cart_items').select('*').eq('user_id', user.id).eq('product_id', productId).single();
+      if (existing) {
+        await supabase.from('cart_items').update({ quantity: (existing.quantity || 0) + 1 }).eq('id', existing.id);
       } else {
-        const { error: insertError } = await supabase
-          .from('cart_items')
-          .insert({
-            user_id: user.id,
-            product_id: productId,
-            quantity: 1
-          });
-
-        if (insertError) throw insertError;
+        await supabase.from('cart_items').insert({ user_id: user.id, product_id: productId, quantity: 1 });
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
-      toast({ title: 'Added to cart!', description: 'Item added successfully' });
-    },
-    onError: (error: Error) => {
-      if (error.message.includes('login')) {
-        toast({
-          title: 'Please login',
-          description: 'You need to login to add items to cart',
-          action: <Button variant="outline" size="sm" onClick={() => navigate('/auth')}>Login</Button>
-        });
-      } else {
-        toast({ title: 'Error', description: error.message, variant: 'destructive' });
-      }
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['cart'] }); toast({ title: 'Added to cart' }); },
+    onError: () => toast({ title: 'Error', description: 'Please login to add items', variant: 'destructive' })
   });
 
-  // Update cart quantity mutation
   const updateQuantityMutation = useMutation({
     mutationFn: async ({ itemId, quantity }: { itemId: string; quantity: number }) => {
-      if (!user) return;
-
-      if (quantity <= 0) {
-        const { error } = await supabase
-          .from('cart_items')
-          .delete()
-          .eq('id', itemId);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('cart_items')
-          .update({ quantity })
-          .eq('id', itemId);
-        if (error) throw error;
-      }
+      if (quantity <= 0) await supabase.from('cart_items').delete().eq('id', itemId);
+      else await supabase.from('cart_items').update({ quantity }).eq('id', itemId);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cart'] })
   });
 
-  // Remove from cart mutation
   const removeFromCartMutation = useMutation({
     mutationFn: async (itemId: string) => {
-      if (!user) throw new Error('User not authenticated');
-      const { error } = await supabase
-        .from('cart_items')
-        .delete()
-        .eq('id', itemId);
-      if (error) throw error;
+      await supabase.from('cart_items').delete().eq('id', itemId);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
-      toast({ title: 'Item permanently deleted from cart' });
-    },
-    onError: (error: Error) => {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cart'] })
   });
 
-  const cartTotal = cartItems.reduce(
-    (sum, item) => sum + (item.product?.price || 0) * item.quantity,
-    0
-  );
-
+  const cartTotal = cartItems.reduce((sum, item) => sum + (item.product?.price || 0) * item.quantity, 0);
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  const handleCheckout = () => {
-    setIsCartOpen(false);
-    navigate('/checkout');
-  };
-
+  const handleCheckout = () => { setIsCartOpen(false); navigate('/checkout'); };
 
   return (
     <Layout>
-      {/* Hero Section - Immersive Design */}
-      <section className="relative pt-20 pb-10 md:pt-32 md:pb-16 overflow-hidden">
-        {/* Dynamic Background */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background z-0" />
-          <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-r from-primary/10 via-purple-500/5 to-blue-500/10 opacity-60 blur-[100px]" />
-          <div className="absolute -top-40 right-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] opacity-40 animate-pulse" />
-        </div>
+      <div className="flex flex-col min-h-screen bg-[#f8f9fa] dark:bg-background">
+        {/* Custom Exact-Size Dashboard Banner Header */}
+        <div className="sticky top-0 z-[49]">
+          <section className="relative bg-[#1A1028] h-[400px] border-b border-white/10 overflow-hidden shadow-2xl flex items-center">
+            {/* Custom Banner Header Background */}
+            <div className="absolute inset-0 z-0">
+              <img
+                src="/Banner.jpg"
+                className="w-full h-full object-cover md:object-center object-right opacity-35 grayscale-0 transition-all duration-1000"
+                alt="Store Banner"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-[#FF6B35]/25 to-transparent" />
+              <div className="absolute inset-0 bg-black/10" />
+            </div>
 
-        <div className="container mx-auto px-4 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-4xl mx-auto text-center"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-primary text-[12px] uppercase font-bold tracking-[0.2em] mb-8 backdrop-blur-md shadow-xl"
-            >
-              <Crown className="w-4 h-4 text-yellow-500" />
-              <span className="text-foreground/80">{getSetting('store_badge', 'Premium Digital Assets')}</span>
-            </motion.div>
+            <div className="container mx-auto px-4 relative z-10">
+              <div className="flex flex-col gap-6">
+                <div className="flex items-center gap-2 text-white/70 text-xs uppercase tracking-widest font-black [text-shadow:0_2px_10px_rgba(0,0,0,0.5)]">
+                  <Link to="/" className="hover:text-[#FF6B35] transition-colors">Home</Link>
+                  <span className="opacity-30">/</span>
+                  <span className="text-white">Premium Templates</span>
+                </div>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground mb-6"
-            >
-              {getSetting('store_title', 'The Digital Creator Store')}
-            </motion.h1>
+                <div className="flex flex-col lg:flex-row gap-8 items-center justify-between">
+                  <div className="max-w-[280px] sm:max-w-xl md:max-w-4xl mr-auto">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight [text-shadow:0_4px_25px_rgba(0,0,0,0.4)]">
+                      {filteredProducts.length}+ Premium Templates for{' '}
+                      <span className="text-[#FF6B35]">
+                        {searchQuery || 'Creative Projects'}
+                      </span>
+                    </h1>
+                  </div>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-xl md:text-2xl text-muted-foreground/90 max-w-2xl mx-auto leading-relaxed"
-            >
-              {getSetting('store_description', 'High-quality design resources, AI prompt collections, and creative assets to supercharge your workflow.')}
-            </motion.p>
+                  <div className="flex items-center gap-4 w-full lg:w-auto">
+                    <div className="relative flex-1 lg:w-96 group">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+                      <Input
+                        placeholder="Search for templates, designs..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full h-14 pl-12 pr-4 bg-white/20 backdrop-blur-md border border-white/30 focus-visible:ring-[#FF6B35] focus-visible:border-[#FF6B35] text-white placeholder:text-white/80 text-lg rounded-none transition-all shadow-2xl"
+                      />
+                    </div>
 
-            {/* Search and Cart - Glassmorphic Container */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-2xl mx-auto"
-            >
-              <div className="relative w-full group">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/50 to-purple-600/50 rounded-full opacity-30 group-hover:opacity-100 transition duration-500 blur"></div>
-                <div className="relative flex items-center bg-background/50 backdrop-blur-xl border border-white/10 rounded-full px-2">
-                  <Search className="ml-4 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                  <Input
-                    placeholder="Search for templates, assets..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 h-11 sm:h-12 text-base sm:text-lg placeholder:text-muted-foreground/70"
-                  />
+                    <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
+                      <SheetTrigger asChild>
+                        <Button className="h-14 bg-white hover:bg-slate-50 text-black border-none px-8 font-bold text-sm flex items-center gap-3 rounded-none transition-transform active:scale-95 shadow-lg group">
+                          <ShoppingCart className="w-5 h-5 text-[#FF6B35]" />
+                          <span className="hidden sm:inline">My Cart</span>
+                          {cartCount > 0 && (
+                            <span className="bg-[#FF6B35] text-white text-[10px] px-2 py-0.5 rounded-full">
+                              {cartCount}
+                            </span>
+                          )}
+                        </Button>
+                      </SheetTrigger>
+                      <SheetContent className="w-full sm:max-w-md flex flex-col bg-background border-l border-border">
+                        <SheetHeader className="pb-6 border-b">
+                          <SheetTitle className="text-2xl font-black flex items-center gap-3">
+                            <ShoppingBag className="w-7 h-7 text-[#FF6B35]" />
+                            Shopping Cart
+                          </SheetTitle>
+                        </SheetHeader>
+                        <div className="flex-1 flex flex-col mt-6 overflow-hidden">
+                          {cartItems.length === 0 ? (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-muted-foreground">
+                              <Package className="w-12 h-12 mb-4 opacity-20" />
+                              <p>Your cart is empty</p>
+                            </div>
+                          ) : (
+                            <div className="flex-1 overflow-auto space-y-4 pr-2">
+                              {cartItems.map((item) => (
+                                <div key={item.id} className="flex gap-4 p-3 bg-accent/5 rounded-lg border border-border/50">
+                                  <div className="w-16 h-16 rounded bg-muted overflow-hidden flex-shrink-0">
+                                    {item.product?.image_url && <img src={item.product.image_url} className="w-full h-full object-cover" />}
+                                  </div>
+                                  <div className="flex-1 flex flex-col justify-between">
+                                    <h4 className="font-bold text-sm truncate">{item.product?.title}</h4>
+                                    <p className="text-xs text-[#FF6B35] font-bold">${item.product?.price}</p>
+                                    <div className="flex items-center gap-2 mt-2">
+                                      <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateQuantityMutation.mutate({ itemId: item.id, quantity: item.quantity - 1 })}><Minus className="h-3 w-3" /></Button>
+                                      <span className="text-xs font-medium">{item.quantity}</span>
+                                      <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateQuantityMutation.mutate({ itemId: item.id, quantity: item.quantity + 1 })}><Plus className="h-3 w-3" /></Button>
+                                      <Button size="icon" variant="ghost" className="h-6 w-6 ml-auto text-muted-foreground hover:text-red-500" onClick={() => removeFromCartMutation.mutate(item.id)}>
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {cartItems.length > 0 && (
+                            <div className="p-6 border-t border-border mt-auto bg-card">
+                              <div className="flex justify-between mb-4 font-bold text-lg"><span>Total</span><span>${cartTotal.toFixed(2)}</span></div>
+                              <Button className="w-full h-12 bg-[#FF6B35] hover:bg-[#E85D2A] font-bold text-white shadow-xl" onClick={handleCheckout}>Checkout Now</Button>
+                            </div>
+                          )}
+                        </div>
+                      </SheetContent>
+                    </Sheet>
+                  </div>
                 </div>
               </div>
+            </div>
+          </section>
+        </div>
 
-              <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
-                <SheetTrigger asChild>
-                  <Button size="lg" className="h-14 px-8 rounded-full shadow-lg shadow-primary/20 hover:scale-105 transition-transform bg-gradient-to-r from-primary to-primary/90">
-                    <ShoppingCart className="w-5 h-5 mr-2" />
-                    <span className="font-bold text-[13px] uppercase tracking-wider">Cart</span>
-                    {cartCount > 0 && (
-                      <span className="ml-2 bg-white text-primary text-xs font-bold px-2 py-0.5 rounded-full">
-                        {cartCount}
-                      </span>
-                    )}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent className="w-full sm:max-w-lg flex flex-col bg-background/95 backdrop-blur-xl border-l border-white/10">
-                  <SheetHeader>
-                    <SheetTitle className="flex items-center gap-2 text-xl font-bold">
-                      <ShoppingCart className="w-6 h-6 text-primary" />
-                      Your Cart ({cartCount})
-                    </SheetTitle>
-                  </SheetHeader>
-                  <div className="flex-1 flex flex-col mt-6 overflow-hidden">
-                    {!user ? (
-                      <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center p-8">
-                        <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-                          <ShoppingCart className="w-10 h-10 text-muted-foreground" />
-                        </div>
-                        <h3 className="text-xl font-semibold">Login Required</h3>
-                        <p className="text-muted-foreground mb-4">Please sign in to manage your cart and checkout.</p>
-                        <Button onClick={() => { setIsCartOpen(false); navigate('/auth'); }} className="w-full">
-                          Login / Sign Up
-                        </Button>
-                      </div>
-                    ) : cartItems.length === 0 ? (
-                      <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center p-8">
-                        <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-                          <Package className="w-10 h-10 text-muted-foreground" />
-                        </div>
-                        <h3 className="text-xl font-semibold">Your cart is empty</h3>
-                        <p className="text-muted-foreground mb-4">Looks like you haven't added any premium goodies yet.</p>
-                        <Button variant="outline" onClick={() => setIsCartOpen(false)} className="w-full">
-                          Start Shopping
-                        </Button>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex-1 overflow-auto space-y-4 pr-2 -mr-2">
-                          {cartItems.map((item) => (
+        {/* Main Content Area */}
+        <section className="flex-1">
+          <div className="container mx-auto px-4 py-12">
+            <div className="flex flex-col lg:flex-row gap-12">
+              {/* Sidebar Upgraded with Nice Background */}
+              <aside className="w-full lg:w-64 flex-shrink-0">
+                <div className="sticky top-[150px] p-6 rounded-[24px] overflow-hidden relative group">
+                  {/* Sidebar Visual Background */}
+                  <div className="absolute inset-0 z-0">
+                    <img
+                      src="https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&q=80&w=1000"
+                      className="w-full h-full object-cover opacity-10 group-hover:opacity-15 transition-opacity"
+                      alt="Sidebar Background"
+                    />
+                    <div className="absolute inset-0 bg-[#f8f9fa] dark:bg-[#1A1028] opacity-70 backdrop-blur-xl" />
+                    <div className="absolute inset-0 border border-black/5 dark:border-white/5" />
+                  </div>
+
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-8 px-2 text-[#FF6B35] uppercase text-[10px] font-black tracking-[0.2em]">Category List</div>
+                    <nav className="flex flex-col gap-2">
+                      {categories.map(cat => (
+                        <button
+                          key={cat}
+                          onClick={() => setActiveCategory(cat)}
+                          className={`w-full text-left px-5 py-3.5 text-sm font-bold transition-all rounded-xl flex items-center justify-between group/item ${activeCategory === cat
+                            ? 'bg-[#FF6B35] text-white shadow-[0_8px_20px_rgba(255,107,53,0.3)] scale-[1.02]'
+                            : 'text-muted-foreground hover:bg-white dark:hover:bg-white/5 hover:text-foreground hover:translate-x-1'
+                            }`}
+                        >
+                          <span className="truncate">{cat}</span>
+                          {activeCategory === cat ? (
+                            <ArrowRight className="w-4 h-4 animate-in slide-in-from-left-2 duration-300" />
+                          ) : (
+                            <Tag className="w-3.5 h-3.5 opacity-30 group-hover/item:opacity-100 transition-opacity" />
+                          )}
+                        </button>
+                      ))}
+                    </nav>
+                  </div>
+                </div>
+              </aside>
+
+              {/* Product Right Area */}
+              <div className="flex-1">
+                {/* High-Impact Vibrant Promotional Banner */}
+                <div className="relative overflow-hidden rounded-[32px] bg-[#FF6B35] min-h-[280px] p-10 md:p-14 mb-14 flex flex-col md:flex-row items-center justify-between group shadow-[0_20px_50px_rgba(255,107,53,0.2)] border-none">
+                  {/* Decorative Elements */}
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
+                  <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-xl" />
+
+                  <div className="relative z-10 text-black text-center md:text-left max-w-md">
+                    <span className="inline-block text-black/60 font-black tracking-[0.2em] text-[10px] uppercase mb-4">Elite Creative Studio</span>
+                    <h2 className="text-4xl md:text-5xl font-black mb-6 md:mb-8 leading-tight tracking-tight text-black">Elevate your agency with <span className="text-white">elite designs</span></h2>
+                    <Button className="bg-white text-black hover:bg-white/90 rounded-none font-black px-8 h-12 text-base flex items-center gap-3 shadow-[0_10px_30px_rgba(0,0,0,0.1)] transition-all hover:scale-105 active:scale-95 border-none w-fit mx-auto md:mx-0" asChild>
+                      <Link to="/contact">
+                        Get Custom Design
+                        <ArrowRight className="w-5 h-5" />
+                      </Link>
+                    </Button>
+                  </div>
+
+                  <div className="relative w-full md:w-[45%] h-64 mt-12 md:mt-0 hidden lg:block overflow-hidden rounded-2xl">
+                    {products.length > 0 ? (
+                      <AnimatePresence mode="wait">
+                        {(() => {
+                          const [currentIndex, setCurrentIndex] = useState(0);
+                          useEffect(() => {
+                            const timer = setInterval(() => {
+                              setCurrentIndex((prev) => (prev + 1) % Math.min(products.length, 5));
+                            }, 3500);
+                            return () => clearInterval(timer);
+                          }, []);
+
+                          const featuredProd = products[currentIndex];
+                          return (
                             <motion.div
-                              key={item.id}
-                              layout
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, x: -20 }}
-                              className="flex gap-4 p-4 border border-white/5 bg-white/5 rounded-2xl backdrop-blur-sm hover:bg-white/10 transition-colors"
+                              key={featuredProd.id}
+                              initial={{ opacity: 0, x: 50, scale: 0.95 }}
+                              animate={{ opacity: 1, x: 0, scale: 1 }}
+                              exit={{ opacity: 0, x: -50, scale: 0.95 }}
+                              transition={{ duration: 0.5, ease: "easeInOut" }}
+                              className="absolute inset-0 flex items-center justify-center p-4 bg-black/10 backdrop-blur-xl rounded-[24px] border border-white/10 group/item"
                             >
-                              {item.product?.image_url && (
-                                <OptimizedImage
-                                  src={item.product.image_url}
-                                  alt={item.product.title}
-                                  width={80}
-                                  className="w-20 h-20"
-                                  imageClassName="object-cover rounded-xl shadow-sm"
-                                />
-                              )}
-                              <div className="flex-1 min-w-0 flex flex-col justify-between">
-                                <div>
-                                  <h4 className="font-semibold text-foreground truncate text-base">
-                                    {item.product?.title}
-                                  </h4>
-                                  <p className="text-sm font-bold text-primary mt-1">
-                                    ${item.product?.price?.toFixed(2)}
-                                  </p>
+                              <div className="flex gap-6 w-full h-full items-center">
+                                <div className="w-1/2 aspect-square rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 transform group-hover/item:scale-105 transition-transform duration-700">
+                                  <img src={featuredProd.image_url || ''} className="w-full h-full object-cover" alt={featuredProd.title} />
                                 </div>
-                                <div className="flex items-center gap-3 mt-2">
-                                  <div className="flex items-center bg-background rounded-lg border border-border p-0.5">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-7 w-7 rounded-md"
-                                      onClick={() =>
-                                        updateQuantityMutation.mutate({
-                                          itemId: item.id,
-                                          quantity: item.quantity - 1,
-                                        })
-                                      }
-                                    >
-                                      <Minus className="h-3 w-3" />
-                                    </Button>
-                                    <span className="w-8 text-center text-sm font-medium">
-                                      {item.quantity}
-                                    </span>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-7 w-7 rounded-md"
-                                      onClick={() =>
-                                        updateQuantityMutation.mutate({
-                                          itemId: item.id,
-                                          quantity: item.quantity + 1,
-                                        })
-                                      }
-                                    >
-                                      <Plus className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 ml-auto text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg"
-                                    onClick={() => removeFromCartMutation.mutate(item.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
+                                <div className="flex-1 flex flex-col justify-center text-white text-left">
+                                  <span className="text-[10px] font-black uppercase tracking-widest text-[#FF6B35] mb-2">{featuredProd.category}</span>
+                                  <h4 className="text-xl md:text-2xl font-black mb-2 line-clamp-1">{featuredProd.title}</h4>
+                                  <div className="text-2xl md:text-3xl font-black mb-6 text-white">${featuredProd.price.toFixed(2)}</div>
+                                  <Button size="sm" className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white border-none w-fit font-black rounded-none px-6 h-10 shadow-lg shadow-orange-600/20 transition-all active:scale-95" onClick={() => navigate(`/product/${featuredProd.id}`)}>Take a Look</Button>
                                 </div>
                               </div>
                             </motion.div>
-                          ))}
-                        </div>
-                        <div className="border-t border-white/10 pt-6 mt-4 space-y-4">
-                          <div className="flex justify-between items-end">
-                            <span className="text-muted-foreground">Total</span>
-                            <span className="text-2xl font-bold tracking-tight">${cartTotal.toFixed(2)}</span>
-                          </div>
-                          <Button
-                            className="w-full h-12 text-base rounded-xl font-bold shadow-lg shadow-primary/20"
-                            size="lg"
-                            onClick={handleCheckout}
-                          >
-                            Proceed to Checkout
-                            <ArrowRight className="w-5 h-5 ml-2" />
-                          </Button>
-                        </div>
-                      </>
+                          );
+                        })()}
+                      </AnimatePresence>
+                    ) : (
+                      <div className="w-full h-full bg-black/20 rounded-2xl animate-pulse" />
                     )}
                   </div>
-                </SheetContent>
-              </Sheet>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Store Hero Slider */}
-      <StoreHeroSlider />
-
-      {/* Products Section */}
-      <section className="pb-32">
-        <div className="container mx-auto px-4">
-          {/* Enhanced Filters */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="mb-12"
-          >
-            {/* Category Filter Pills */}
-            <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
-              {categories.map((category) => (
-                <Button
-                  key={category}
-                  variant={activeCategory === category ? 'default' : 'outline'}
-                  size="lg"
-                  onClick={() => setActiveCategory(category)}
-                  className={`rounded-full px-6 h-11 transition-all duration-300 ${activeCategory === category
-                    ? 'shadow-lg shadow-primary/25 scale-105'
-                    : 'bg-background/50 hover:bg-background hover:scale-105 border-white/10'
-                    }`}
-                >
-                  {category}
-                </Button>
-              ))}
-            </div>
-
-            {/* Sort and View controls - Glass Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-4 p-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl">
-              <div className="flex items-center gap-3 px-4 py-2">
-                <div className="bg-primary/20 p-2 rounded-lg">
-                  <Tag className="w-4 h-4 text-primary" />
                 </div>
-                <span className="text-sm font-medium"><span className="text-foreground">{filteredProducts.length}</span> items found</span>
-              </div>
 
-              <div className="flex items-center gap-3">
-                <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-                  <SelectTrigger className="w-44 bg-transparent border-0 focus:ring-0 focus:ring-offset-0 text-right">
-                    <div className="flex items-center text-muted-foreground hover:text-foreground transition-colors">
-                      <SlidersHorizontal className="w-4 h-4 mr-2" />
-                      <SelectValue placeholder="Sort by" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">Newest First</SelectItem>
-                    <SelectItem value="price-low">Price: Low to High</SelectItem>
-                    <SelectItem value="price-high">Price: High to Low</SelectItem>
-                    <SelectItem value="name">Name A-Z</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <div className="hidden sm:flex items-center bg-black/20 rounded-xl p-1 gap-1">
-                  <Button
-                    variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-                    size="sm"
-                    className="h-8 w-8 rounded-lg p-0"
-                    onClick={() => setViewMode('grid')}
-                  >
-                    <Grid3X3 className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === 'list' ? 'secondary' : 'ghost'}
-                    size="sm"
-                    className="h-8 w-8 rounded-lg p-0"
-                    onClick={() => setViewMode('list')}
-                  >
-                    <LayoutList className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Products Grid/List */}
-          {productsLoading ? (
-            <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <div key={i} className="animate-pulse">
-                  <div className={`bg-muted rounded-2xl ${viewMode === 'grid' ? 'aspect-[4/3]' : 'h-32'}`} />
-                  <div className="p-5 bg-card rounded-b-2xl border border-border border-t-0">
-                    <div className="h-3 bg-muted rounded w-1/4 mb-2" />
-                    <div className="h-4 bg-muted rounded w-3/4 mb-2" />
-                    <div className="h-3 bg-muted rounded w-full mb-4" />
-                    <div className="h-9 bg-muted rounded" />
+                {/* Grid Area - Optimized for High Density Mobile View */}
+                {productsLoading ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <div key={i} className="aspect-square bg-muted rounded-2xl animate-pulse" />)}
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : filteredProducts.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-16"
-            >
-              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
-                <Package className="w-10 h-10 text-muted-foreground" />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">No products found</h3>
-              <p className="text-muted-foreground text-lg">
-                {products.length === 0
-                  ? 'No products available yet. Check back soon!'
-                  : 'Try adjusting your search or filter criteria'}
-              </p>
-              {searchQuery && (
-                <Button
-                  variant="outline"
-                  className="mt-4"
-                  onClick={() => { setSearchQuery(''); setActiveCategory('All'); }}
-                >
-                  Clear filters
-                </Button>
-              )}
-            </motion.div>
-          ) : (
-            <motion.div
-              layout
-              className={`grid gap-6 ${viewMode === 'grid'
-                ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-                : 'grid-cols-1'
-                }`}
-            >
-              <AnimatePresence mode="popLayout">
-                {filteredProducts.map((product, index) => (
-                  <motion.div
-                    key={product.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ delay: index * 0.03 }}
-                  >
-                    {viewMode === 'grid' ? (
-                      <GlassCard className="overflow-hidden p-0 group h-full flex flex-col">
-                        <div className="relative aspect-[4/3] overflow-hidden">
+                ) : (
+                  <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-8 md:gap-10">
+                    {filteredProducts.map((product, index) => (
+                      <motion.div
+                        key={product.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="group bg-white dark:bg-card rounded-none overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_60px_rgba(0,0,0,0.08)] border border-border/40 transition-all flex flex-col h-full"
+                      >
+                        <div className="relative aspect-square sm:aspect-[16/11] overflow-hidden">
                           <OptimizedImage
                             src={product.image_url || ''}
                             alt={product.title}
-                            width={400}
+                            width={600}
                             className="w-full h-full"
-                            imageClassName="object-cover transition-transform duration-500 group-hover:scale-105"
+                            imageClassName="object-cover transition-transform duration-1000 group-hover:scale-105"
                           />
-                          <div className="absolute top-3 left-3 flex flex-col gap-2">
-                            {product.dimensions && (
-                              <Badge variant="outline" className="bg-black/50 backdrop-blur-sm border-none text-white text-[9px] py-0 px-1.5 h-4 w-fit">
-                                {product.dimensions}
-                              </Badge>
-                            )}
+                          <div className="absolute top-2 right-2 md:top-5 md:right-5 bg-white/95 dark:bg-black/90 px-2 md:px-4 py-1 md:py-1.5 rounded-full shadow-lg z-10 border border-white/20">
+                            <span className="text-[10px] md:text-base font-black text-foreground">${product.price.toFixed(2)}</span>
                           </div>
-                          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          <div className="absolute inset-0 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <Button
-                              size="icon"
-                              variant="secondary"
-                              className="rounded-full shadow-lg"
-                              onClick={() => navigate(`/product/${product.id}`)}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="secondary"
-                              className="rounded-full shadow-lg"
-                              onClick={() => handleShare(product)}
-                            >
-                              <Share2 className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              className="rounded-full shadow-lg"
-                              onClick={() => addToCartMutation.mutate(product.id)}
-                              disabled={addToCartMutation.isPending}
-                            >
-                              <ShoppingCart className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          <span className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-background/90 backdrop-blur-sm text-foreground text-sm font-bold shadow-lg">
-                            {currencySymbol}{product.price.toFixed(2)}
-                          </span>
                         </div>
-                        <div className="p-5 flex-1 flex flex-col">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge variant="secondary" className="text-[10px] font-bold tracking-wider py-0 px-2 h-5 bg-primary/10 text-primary border-primary/20">
+
+                        <div className="p-3 md:p-8 flex-1 flex flex-col">
+                          <div className="mb-2 md:mb-4 text-left">
+                            <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.1em] px-2 md:px-4 py-1 md:py-2 rounded-full bg-orange-50 dark:bg-orange-950/20 text-[#FF6B35] border border-orange-100/50 dark:border-orange-900/30">
                               {product.category}
-                            </Badge>
+                            </span>
                           </div>
-                          <h3 className="font-semibold text-foreground mb-2 line-clamp-1">{product.title}</h3>
-                          <p className="text-sm text-muted-foreground line-clamp-2 flex-1">{product.description}</p>
-                          <div className="flex gap-2 mt-4">
-                            <Button
-                              className="flex-1"
-                              size="sm"
-                              onClick={() => addToCartMutation.mutate(product.id)}
-                              disabled={addToCartMutation.isPending}
-                            >
-                              <ShoppingCart className="w-4 h-4 mr-2" />
-                              Add to Cart
+                          <h3 className="text-sm md:text-2xl font-bold text-foreground mb-1 md:mb-3 line-clamp-1 text-left">{product.title}</h3>
+                          <p className="text-muted-foreground text-[10px] md:text-sm leading-relaxed mb-4 md:mb-8 line-clamp-1 md:line-clamp-2 text-left hidden sm:block">
+                            {product.description || 'Premium design resources for your projects.'}
+                          </p>
+                          <div className="mt-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-3 w-full">
+                            <Button className="flex-[4] h-9 md:h-14 bg-[#FF6B35] hover:bg-[#E85D2A] text-white font-black rounded-none shadow-lg shadow-orange-600/10 active:scale-95 transition-all text-[10px] md:text-base whitespace-nowrap" onClick={() => addToCartMutation.mutate(product.id)} disabled={addToCartMutation.isPending}>
+                              <ShoppingCart className="w-3 h-3 md:w-5 md:h-5 mr-1.5 md:mr-3" /> Add
                             </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => navigate(`/product/${product.id}`)}
-                            >
+                            <Button variant="outline" className="flex-1 h-9 md:h-14 border border-slate-200/60 dark:border-border/60 hover:bg-slate-50 dark:hover:bg-accent bg-white dark:bg-transparent text-foreground rounded-none font-bold transition-all text-[10px] md:text-base" onClick={() => navigate(`/product/${product.id}`)}>
                               View
                             </Button>
                           </div>
                         </div>
-                      </GlassCard>
-                    ) : (
-                      <GlassCard className="overflow-hidden p-0 group">
-                        <div className="flex flex-col sm:flex-row">
-                          <div className="relative w-full sm:w-48 h-48 sm:h-auto overflow-hidden flex-shrink-0">
-                            <OptimizedImage
-                              src={product.image_url || ''}
-                              alt={product.title}
-                              width={400}
-                              className="w-full h-full"
-                              imageClassName="object-cover transition-transform duration-500 group-hover:scale-105"
-                            />
-                          </div>
-                          <div className="p-6 flex-1 flex flex-col justify-center">
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex-1">
-                                <Badge variant="secondary" className="mb-2 text-xs">
-                                  {product.category}
-                                </Badge>
-                                <h3 className="font-semibold text-foreground text-lg mb-2">{product.title}</h3>
-                                <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{product.description}</p>
-                              </div>
-                              <div className="flex flex-col">
-                                <span className="text-xl font-bold text-foreground">
-                                  {currencySymbol}{product.price.toFixed(2)}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex gap-3 mt-auto">
-                              <Button
-                                onClick={() => addToCartMutation.mutate(product.id)}
-                                disabled={addToCartMutation.isPending}
-                              >
-                                <ShoppingCart className="w-4 h-4 mr-2" />
-                                Add to Cart
-                              </Button>
-                              <Button
-                                variant="outline"
-                                onClick={() => navigate(`/product/${product.id}`)}
-                              >
-                                <Eye className="w-4 h-4 mr-2" />
-                                View Details
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="rounded-full hover:bg-primary/20"
-                                onClick={() => handleShare(product)}
-                              >
-                                <Share2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </GlassCard>
-                    )}
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </motion.div>
-          )}
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 bg-card border-t border-border">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="max-w-3xl mx-auto text-center"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-              <Palette className="w-4 h-4" />
-              Custom Designs Available
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-            <h2 className="font-sans text-3xl md:text-4xl font-bold text-foreground mb-6">
-              Need Something Custom?
-            </h2>
-            <p className="text-muted-foreground text-lg mb-8">
-              Can't find what you're looking for? I create custom Canva templates and designs tailored to your brand.
-            </p>
-            <Button size="lg" asChild>
-              <Link to="/contact">
-                Get Custom Quote
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </Link>
-            </Button>
-          </motion.div>
-        </div>
-      </section>
+          </div>
+        </section>
+
+        {/* Catchy Footer CTA Section */}
+        <section className="relative py-32 overflow-hidden bg-[#1A1028]">
+          {/* Vibrant & Beautiful Background Background Visual Layer */}
+          <div className="absolute inset-0 z-0">
+            <img
+              src="/B3.jpg"
+              className="w-full h-full object-cover opacity-80 brightness-95"
+              alt="Premium Creative Workspace"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#1A1028] via-transparent to-[#1A1028] opacity-40" />
+            <div className="absolute inset-0 bg-black/25" />
+          </div>
+
+          <div className="container mx-auto px-4 text-center relative z-10">
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}>
+              <h2 className="text-4xl md:text-7xl font-black mb-8 leading-tight text-white tracking-tighter [text-shadow:0_4px_30px_rgba(0,0,0,0.7)]">
+                Start your next <span className="text-[#FF6B35]">success story.</span>
+              </h2>
+              <p className="text-white text-lg md:text-2xl mb-12 max-w-3xl mx-auto font-medium leading-relaxed [text-shadow:0_2px_15px_rgba(0,0,0,0.7)]">
+                Elevate your agency with elite templates, high-performance design assets, and premium creative resources.
+              </p>
+              <Button className="h-16 px-14 bg-white hover:bg-white/90 text-black font-black text-xl rounded-none shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-all hover:scale-105 active:scale-95" asChild>
+                <Link to="/contact">Request Custom Design</Link>
+              </Button>
+            </motion.div>
+          </div>
+        </section>
+      </div>
     </Layout>
   );
 };

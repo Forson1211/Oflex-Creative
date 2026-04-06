@@ -279,13 +279,13 @@ const About = () => {
               {getSetting('about_cta_description', "Let's collaborate and bring your vision to life.")}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" className="w-56 sm:w-auto" asChild>
+              <Button size="lg" className="w-56 sm:w-auto rounded-sm h-12" asChild>
                 <Link to="/contact">
                   Get In Touch
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="w-56 sm:w-auto" asChild>
+              <Button size="lg" variant="outline" className="w-56 sm:w-auto rounded-sm h-12" asChild>
                 <Link to="/portfolio">View Our Work</Link>
               </Button>
             </div>

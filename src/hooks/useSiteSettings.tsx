@@ -103,15 +103,41 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
         if (accent?.startsWith('#')) {
             document.documentElement.style.setProperty('--accent', hexToHSL(accent));
         }
-        const logoUrl = getSetting('logo_url');
-        if (logoUrl) {
+        // Meta Tags Management
+        const siteTitle = getSetting('site_name', 'Oflex Creative');
+        const siteDesc = getSetting('site_tagline', 'Premium Digital Products & Design Services');
+        const ogImage = getSetting('og_image_url', '/og-image.png');
+
+        document.title = siteTitle;
+
+        const updateMeta = (selector: string, attr: string, value: string) => {
+            let meta: HTMLMetaElement | null = document.querySelector(selector);
+            if (!meta) {
+                meta = document.createElement('meta');
+                if (selector.includes('property')) meta.setAttribute('property', selector.match(/"([^"]+)"/)?.[1] || '');
+                else meta.name = selector.match(/"([^"]+)"/)?.[1] || '';
+                document.head.appendChild(meta);
+            }
+            meta.setAttribute(attr, value);
+        };
+
+        updateMeta('meta[name="description"]', 'content', siteDesc);
+        updateMeta('meta[property="og:title"]', 'content', siteTitle);
+        updateMeta('meta[property="og:description"]', 'content', siteDesc);
+        updateMeta('meta[property="og:image"]', 'content', ogImage);
+        updateMeta('meta[name="twitter:title"]', 'content', siteTitle);
+        updateMeta('meta[name="twitter:description"]', 'content', siteDesc);
+        updateMeta('meta[name="twitter:image"]', 'content', ogImage);
+
+        const faviconUrl = getSetting('site_favicon_url', '/favicon.png');
+        if (faviconUrl) {
             let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
             if (!link) {
                 link = document.createElement('link');
                 link.rel = 'icon';
                 document.head.appendChild(link);
             }
-            link.href = logoUrl;
+            link.href = faviconUrl;
         }
     }, [siteSettings, getSetting]);
 

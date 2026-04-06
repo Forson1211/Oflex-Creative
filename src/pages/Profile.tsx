@@ -212,7 +212,7 @@ const Profile = () => {
                     />
                     <label
                       htmlFor="avatar-upload"
-                      className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 p-2 sm:p-3 bg-primary text-white rounded-xl sm:rounded-2xl shadow-2xl z-20 hover:scale-110 active:scale-95 transition-all cursor-pointer"
+                      className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 p-2 sm:p-3 bg-primary text-white rounded-none shadow-2xl z-20 hover:scale-110 active:scale-95 transition-all cursor-pointer"
                     >
                       <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
                     </label>
@@ -263,7 +263,7 @@ const Profile = () => {
                   <div className="flex flex-col gap-2 sm:gap-3 w-full sm:w-auto mt-4 md:mt-0 min-w-[180px]">
                     <Button
                       onClick={() => setIsEditingProfile(true)}
-                      className="rounded-xl sm:rounded-2xl h-11 sm:h-14 text-sm sm:text-base font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all gap-2"
+                      className="rounded-none h-11 sm:h-14 text-sm sm:text-base font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all gap-2"
                     >
                       <Edit2 className="w-4 h-4 sm:w-5 sm:h-5" />
                       Edit Profile
@@ -271,7 +271,7 @@ const Profile = () => {
                     <Button
                       variant="outline"
                       onClick={handleSignOut}
-                      className="rounded-xl sm:rounded-2xl h-11 sm:h-14 text-sm sm:text-base font-bold border-destructive/20 text-destructive hover:bg-destructive/5 hover:border-destructive transition-all gap-2"
+                      className="rounded-none h-11 sm:h-14 text-sm sm:text-base font-bold border-destructive/20 text-destructive hover:bg-destructive/5 hover:border-destructive transition-all gap-2"
                     >
                       <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
                       Sign Out
@@ -291,7 +291,7 @@ const Profile = () => {
                         key={item.id}
                         onClick={() => setActiveTab(item.id)}
                         className={cn(
-                          "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                          "w-full flex items-center gap-3 px-4 py-3 rounded-none text-sm font-medium transition-all",
                           activeTab === item.id
                             ? "bg-primary text-primary-foreground shadow-md"
                             : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -414,7 +414,7 @@ const Profile = () => {
                             <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
                             <h3 className="text-xl font-semibold">Your library is empty</h3>
                             <p className="text-muted-foreground mt-2 max-w-sm mx-auto">Explore our store and get high-quality assets for your creative projects.</p>
-                            <Button className="mt-6 rounded-full px-8" onClick={() => navigate('/store')}>Visit Shop</Button>
+                            <Button className="mt-6 rounded-none px-8" onClick={() => navigate('/store')}>Visit Shop</Button>
                           </GlassCard>
                         ) : (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -430,11 +430,11 @@ const Profile = () => {
                                   </div>
                                   <div className="flex flex-col gap-2">
                                     {purchase.file_url ? (
-                                      <Button size="sm" className="rounded-full shadow-lg" asChild>
+                                      <Button size="sm" className="rounded-none shadow-lg" asChild>
                                         <a href={purchase.file_url} download><Download className="w-4 h-4 mr-2" /> Download</a>
                                       </Button>
                                     ) : purchase.template_link && (
-                                      <Button size="sm" variant="secondary" className="rounded-full" asChild>
+                                      <Button size="sm" variant="secondary" className="rounded-none" asChild>
                                         <a href={purchase.template_link} target="_blank" rel="noopener noreferrer"><ExternalLink className="w-4 h-4 mr-2" /> Access</a>
                                       </Button>
                                     )}
@@ -549,7 +549,7 @@ const Profile = () => {
                             <Button
                               onClick={handleUpdateProfile}
                               disabled={updateProfile.isPending}
-                              className="w-full sm:w-auto px-8 rounded-full"
+                              className="w-full sm:w-auto px-8 rounded-none"
                             >
                               {updateProfile.isPending ? 'Saving...' : 'Save Profile Changes'}
                             </Button>
@@ -613,7 +613,7 @@ const Profile = () => {
                               </li>
                             </ul>
 
-                            <Button type="submit" disabled={isUpdatingPassword} className="w-full sm:w-auto px-8 rounded-full">
+                            <Button type="submit" disabled={isUpdatingPassword} className="w-full sm:w-auto px-8 rounded-none">
                               {isUpdatingPassword ? 'Updating...' : 'Update Password'}
                             </Button>
                           </div>
@@ -653,7 +653,7 @@ const Profile = () => {
                 placeholder="Full Name"
               />
             </div>
-            <Button onClick={handleUpdateProfile} disabled={updateProfile.isPending} className="w-full rounded-full">
+            <Button onClick={handleUpdateProfile} disabled={updateProfile.isPending} className="w-full rounded-none">
               {updateProfile.isPending ? 'Saving...' : 'Update Changes'}
             </Button>
           </div>

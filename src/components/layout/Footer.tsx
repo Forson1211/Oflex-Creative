@@ -102,11 +102,11 @@ export const Footer = () => {
           {/* Logo */}
           <Link to="/" className="inline-block">
             <img
-              src={logoUrl ? getOptimizedImageUrl(logoUrl, 200) : ""}
+              src={getSetting('logo_white_url') || getSetting('logo_dark_url') || "/logo-white.png"}
               alt={siteName}
               loading="lazy"
               decoding="async"
-              className="h-10 w-auto"
+              className="h-12 w-auto object-contain"
             />
           </Link>
 
@@ -121,7 +121,7 @@ export const Footer = () => {
                   rel="noopener noreferrer"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
-                  className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-primary hover:text-primary-foreground transition-colors"
+                  className="w-10 h-10 rounded-none bg-white/10 flex items-center justify-center text-white hover:bg-primary hover:text-primary-foreground transition-colors"
                   aria-label={social.label}
                 >
                   <social.icon className="w-4 h-4" />
@@ -146,19 +146,19 @@ export const Footer = () => {
                     <div className="flex flex-col gap-3 pl-2">
                       <Link
                         to="/about"
-                        className="text-sm text-white/70 hover:text-primary transition-colors"
+                        className="text-[15px] text-white hover:text-primary transition-colors"
                       >
                         Our Story
                       </Link>
                       <Link
                         to="/about"
-                        className="text-sm text-white/70 hover:text-primary transition-colors"
+                        className="text-[15px] text-white hover:text-primary transition-colors"
                       >
                         Team
                       </Link>
                       <Link
                         to="/contact"
-                        className="text-sm text-white/70 hover:text-primary transition-colors"
+                        className="text-[15px] text-white hover:text-primary transition-colors"
                       >
                         Contact
                       </Link>
@@ -174,19 +174,19 @@ export const Footer = () => {
                     <div className="flex flex-col gap-3 pl-2">
                       <Link
                         to="/portfolio"
-                        className="text-sm text-white/70 hover:text-primary transition-colors"
+                        className="text-[15px] text-white hover:text-primary transition-colors"
                       >
                         Portfolio
                       </Link>
                       <Link
                         to="/store"
-                        className="text-sm text-white/70 hover:text-primary transition-colors"
+                        className="text-[15px] text-white hover:text-primary transition-colors"
                       >
                         Store
                       </Link>
                       <Link
                         to="/blog"
-                        className="text-sm text-white/70 hover:text-primary transition-colors"
+                        className="text-[15px] text-white hover:text-primary transition-colors"
                       >
                         Blog
                       </Link>
@@ -202,19 +202,19 @@ export const Footer = () => {
                     <div className="flex flex-col gap-3 pl-2">
                       <Link
                         to="/services"
-                        className="text-sm text-white/70 hover:text-primary transition-colors"
+                        className="text-[15px] text-white hover:text-primary transition-colors"
                       >
                         Prompt Engineering
                       </Link>
                       <Link
                         to="/services"
-                        className="text-sm text-white/70 hover:text-primary transition-colors"
+                        className="text-[15px] text-white hover:text-primary transition-colors"
                       >
                         Digital Design
                       </Link>
                       <Link
                         to="/services"
-                        className="text-sm text-white/70 hover:text-primary transition-colors"
+                        className="text-[15px] text-white hover:text-primary transition-colors"
                       >
                         Branding
                       </Link>
@@ -230,13 +230,13 @@ export const Footer = () => {
                     <div className="flex flex-col gap-3 pl-2">
                       <Link
                         to="#"
-                        className="text-sm text-white/70 hover:text-primary transition-colors"
+                        className="text-[15px] text-white hover:text-primary transition-colors"
                       >
                         Privacy Policy
                       </Link>
                       <Link
                         to="#"
-                        className="text-sm text-white/70 hover:text-primary transition-colors"
+                        className="text-[15px] text-white hover:text-primary transition-colors"
                       >
                         Terms of Service
                       </Link>
@@ -250,37 +250,37 @@ export const Footer = () => {
             {/* Desktop Navigation Grid */}
             <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-8">
               <div>
-                <h4 className="text-[15px] uppercase font-bold text-white tracking-widest mb-6">About</h4>
+                <h4 className="text-[16px] uppercase font-bold text-white tracking-widest mb-6">About</h4>
                 <div className="flex flex-col gap-3">
-                  <Link to="/about" className="text-[15px] text-white/70 hover:text-primary transition-colors">Our Story</Link>
-                  <Link to="/about" className="text-[15px] text-white/70 hover:text-primary transition-colors">Team</Link>
-                  <Link to="/contact" className="text-[15px] text-white/70 hover:text-primary transition-colors">Contact</Link>
+                  <Link to="/about" className="text-[16px] text-white hover:text-primary transition-colors">Our Story</Link>
+                  <Link to="/about" className="text-[16px] text-white hover:text-primary transition-colors">Team</Link>
+                  <Link to="/contact" className="text-[16px] text-white hover:text-primary transition-colors">Contact</Link>
                 </div>
               </div>
 
               <div>
-                <h4 className="text-[15px] uppercase font-bold text-white tracking-widest mb-6">Discover</h4>
+                <h4 className="text-[16px] uppercase font-bold text-white tracking-widest mb-6">Discover</h4>
                 <div className="flex flex-col gap-3">
-                  <Link to="/portfolio" className="text-[15px] text-white/70 hover:text-primary transition-colors">Portfolio</Link>
-                  <Link to="/store" className="text-[15px] text-white/70 hover:text-primary transition-colors">Store</Link>
-                  <Link to="/blog" className="text-[15px] text-white/70 hover:text-primary transition-colors">Blog</Link>
+                  <Link to="/portfolio" className="text-[16px] text-white hover:text-primary transition-colors">Portfolio</Link>
+                  <Link to="/store" className="text-[16px] text-white hover:text-primary transition-colors">Store</Link>
+                  <Link to="/blog" className="text-[16px] text-white hover:text-primary transition-colors">Blog</Link>
                 </div>
               </div>
 
               <div>
-                <h4 className="text-[15px] uppercase font-bold text-white tracking-widest mb-6">Services</h4>
+                <h4 className="text-[16px] uppercase font-bold text-white tracking-widest mb-6">Services</h4>
                 <div className="flex flex-col gap-3">
-                  <Link to="/services" className="text-[15px] text-white/70 hover:text-primary transition-colors">Prompt Engineering</Link>
-                  <Link to="/services" className="text-[15px] text-white/70 hover:text-primary transition-colors">Digital Design</Link>
-                  <Link to="/services" className="text-[15px] text-white/70 hover:text-primary transition-colors">Branding</Link>
+                  <Link to="/services" className="text-[16px] text-white hover:text-primary transition-colors">Prompt Engineering</Link>
+                  <Link to="/services" className="text-[16px] text-white hover:text-primary transition-colors">Digital Design</Link>
+                  <Link to="/services" className="text-[16px] text-white hover:text-primary transition-colors">Branding</Link>
                 </div>
               </div>
 
               <div>
-                <h4 className="text-[15px] uppercase font-bold text-white tracking-widest mb-6">Support</h4>
+                <h4 className="text-[16px] uppercase font-bold text-white tracking-widest mb-6">Support</h4>
                 <div className="flex flex-col gap-3">
-                  <Link to="#" className="text-[15px] text-white/70 hover:text-primary transition-colors">Privacy Policy</Link>
-                  <Link to="#" className="text-[15px] text-white/70 hover:text-primary transition-colors">Terms of Service</Link>
+                  <Link to="#" className="text-[16px] text-white hover:text-primary transition-colors">Privacy Policy</Link>
+                  <Link to="#" className="text-[16px] text-white hover:text-primary transition-colors">Terms of Service</Link>
                 </div>
               </div>
             </div>
@@ -316,8 +316,8 @@ export const Footer = () => {
           <div className="lg:col-span-4 xl:col-span-5 lg:pl-8 lg:border-l lg:border-white/10 space-y-10">
             {/* Newsletter Subscription */}
             <div>
-              <h4 className="text-[15px] uppercase font-bold text-white tracking-widest mb-6">Stay Updated</h4>
-              <p className="text-[15px] text-white/70 leading-relaxed max-w-sm">
+              <h4 className="text-[16px] uppercase font-bold text-white tracking-widest mb-6">Stay Updated</h4>
+              <p className="text-[16px] text-white leading-relaxed max-w-sm mb-4">
                 Subscribe to our newsletter for the latest design trends and updates.
               </p>
               <form className="flex gap-2" onSubmit={(e) => e.preventDefault()}>
@@ -337,16 +337,16 @@ export const Footer = () => {
 
             {/* Visit Store Section */}
             <div>
-              <h4 className="font-semibold text-white mb-4">Visit Store</h4>
+              <h4 className="text-[16px] uppercase font-bold text-white tracking-widest mb-6">Visit Store</h4>
               <div className="space-y-4">
                 {footerProducts.length > 0 ? (
                   footerProducts.map((product) => (
                     <Link
                       key={product.id}
                       to={`/product/${product.id}`}
-                      className="group flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                      className="group flex items-center gap-3 p-3 rounded-none bg-white/5 hover:bg-white/10 transition-colors"
                     >
-                      <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-white/10">
+                      <div className="w-16 h-16 rounded-none overflow-hidden flex-shrink-0 bg-white/10">
                         <img
                           src={product.image_url ? getOptimizedImageUrl(product.image_url, 100) : ""}
                           alt={product.title}
@@ -356,10 +356,10 @@ export const Footer = () => {
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h5 className="text-sm font-medium text-white truncate">
+                        <h5 className="text-[15px] font-medium text-white truncate">
                           {product.title}
                         </h5>
-                        <p className="text-xs text-white/60">{product.category}</p>
+                        <p className="text-[13px] text-white/80">{product.category}</p>
                         <p className="text-xs font-bold text-primary mt-1">${product.price}</p>
                       </div>
                       <ExternalLink className="w-4 h-4 text-white/40 group-hover:text-primary transition-colors flex-shrink-0" />

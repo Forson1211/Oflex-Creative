@@ -10,7 +10,7 @@ export default {
 			center: true,
 			padding: '2rem',
 			screens: {
-				'2xl': '1400px'
+				'2xl': '1280px'
 			}
 		},
 		extend: {
@@ -97,26 +97,21 @@ export default {
 			},
 			fontFamily: {
 				sans: [
-					'Outfit',
+					'Roboto',
 					'Inter',
 					'ui-sans-serif',
 					'system-ui',
 					'-apple-system',
 					'BlinkMacSystemFont',
 					'Segoe UI',
-					'Roboto',
 					'Helvetica Neue',
 					'Arial',
-					'Noto Sans',
 					'sans-serif'
 				],
 				serif: [
-					'Lora',
+					'Montserrat',
 					'ui-serif',
 					'Georgia',
-					'Cambria',
-					'Times New Roman',
-					'Times',
 					'serif'
 				],
 				mono: [

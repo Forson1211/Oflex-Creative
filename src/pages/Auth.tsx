@@ -342,7 +342,7 @@ const Auth = () => {
               <img
                 src={logoUrl || ""}
                 alt={siteName || 'Site logo'}
-                className="h-10 w-auto"
+                className="h-16 w-auto"
                 loading="eager"
               />
             </Link>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles, Palette, Code, Zap, Layers, Wand2, Star, ShoppingBag, ShoppingCart, Users, Package, Briefcase, Share2, ChevronRight } from 'lucide-react';
+import { ArrowRight, Sparkles, Palette, Code, Zap, Layers, Wand2, Star, ShoppingBag, ShoppingCart, Users, Package, Briefcase, Share2, ChevronRight, Camera, Smartphone, Quote } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -46,6 +46,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Zap,
   Layers,
   Wand2,
+  Camera,
+  Smartphone
 };
 
 const getInitials = (name: string) => {
@@ -64,6 +66,9 @@ const Index = () => {
   const { getSetting } = useSiteSettings();
   const [projectApi, setProjectApi] = useState<CarouselApi>();
   const [currentProject, setCurrentProject] = useState(0);
+  const [testimonialApi, setTestimonialApi] = useState<CarouselApi>();
+  const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const [testimonialCount, setTestimonialCount] = useState(0);
 
   useEffect(() => {
     if (!projectApi) return;
@@ -72,6 +77,15 @@ const Index = () => {
       setCurrentProject(projectApi.selectedScrollSnap());
     });
   }, [projectApi]);
+
+  useEffect(() => {
+    if (!testimonialApi) return;
+    setTestimonialCount(testimonialApi.scrollSnapList().length);
+    setCurrentTestimonial(testimonialApi.selectedScrollSnap());
+    testimonialApi.on("select", () => {
+      setCurrentTestimonial(testimonialApi.selectedScrollSnap());
+    });
+  }, [testimonialApi]);
 
   const handleShare = async (product: any) => {
     const shareUrl = `${window.location.origin}/product/${product.id}`;
@@ -131,7 +145,7 @@ const Index = () => {
 
   // Fetch services from Supabase
   const { data: allServices = [] } = useServices();
-  const dynamicServices = allServices.filter(s => s.is_active).slice(0, 4);
+  const dynamicServices = allServices.filter(s => s.is_active).slice(0, 3);
 
   // Add to cart mutation
   const addToCartMutation = useMutation({
@@ -197,7 +211,7 @@ const Index = () => {
             className="absolute inset-0 w-full h-full object-cover object-center"
             style={{ display: getSetting('hero_background_url') ? 'block' : 'none' }}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/20" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/80 lg:to-background/20" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/30 via-primary/5 to-transparent opacity-100" />
         </div>
 
@@ -210,22 +224,20 @@ const Index = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-foreground leading-[1.1] mb-6"
+                className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-normal capitalize text-black dark:text-white leading-[1.2] lg:leading-[1.1] mb-6"
               >
-                {getSetting('hero_title', 'Crafting Digital')}
-                <br />
-                <span className="text-primary font-extrabold">
-                  {getSetting('hero_subtitle', 'Experiences')}
-                </span>
+                Digital Solutions<br />
+                Engineered To Boost<br />
+                <span className="text-primary font-extrabold">Your Growth!</span>
               </motion.h1>
 
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-xl md:text-2xl text-muted-foreground/90 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed text-center lg:text-left px-4 sm:px-0"
+                className="text-xl md:text-2xl text-black dark:text-white mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed text-center lg:text-left px-4 sm:px-0"
               >
-                {getSetting('hero_description', 'From AI prompts to stunning designs, we bring your creative visions to life. Explore our portfolio and discover premium digital products.')}
+                Oflex Creative specializes in end-to-end web and mobile development, intuitive UI/UX design, and custom software solutions engineered for growth.
               </motion.p>
 
               <motion.div
@@ -234,15 +246,13 @@ const Index = () => {
                 transition={{ duration: 0.6, delay: 0.3 }}
                 className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start items-center lg:items-start"
               >
-                <Button size="lg" className="w-56 sm:w-auto h-11 sm:h-14 px-5 sm:px-8 rounded-full text-sm sm:text-base shadow-lg shadow-primary/20 hover:scale-105 transition-transform" asChild>
+                <Button className="w-56 sm:w-auto h-12 sm:h-14 px-10 rounded-none bg-[#FF6B35] hover:bg-[#e85a25] text-white font-bold text-base border-none shadow-sm transition-all" asChild>
                   <Link to="/portfolio">
                     {getSetting('hero_button1_text', 'View Portfolio')}
-                    <ArrowRight className="ml-1.5 sm:ml-2 w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" className="w-56 sm:w-auto h-11 sm:h-14 px-5 sm:px-8 rounded-full text-sm sm:text-base backdrop-blur-sm bg-background/50 hover:bg-background/80" asChild>
+                <Button className="w-56 sm:w-auto h-12 sm:h-14 px-10 rounded-none bg-[#1A1028] hover:bg-[#251838] dark:bg-white dark:hover:bg-white/90 text-white dark:text-black font-bold text-base border-none shadow-sm transition-all" asChild>
                   <Link to="/store">
-                    <ShoppingBag className="mr-1.5 sm:mr-2 w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     {getSetting('hero_button2_text', 'Visit Store')}
                   </Link>
                 </Button>
@@ -272,8 +282,8 @@ const Index = () => {
                             <Package className="w-6 h-6" />
                           </div>
                           <div>
-                            <h3 className="text-3xl font-bold text-foreground">{siteStats.productCount}+</h3>
-                            <p className="text-sm text-muted-foreground">{getSetting('hero_stat1_label', 'Digital Products Available')}</p>
+                            <h3 className="text-3xl font-bold text-black dark:text-white">{siteStats.productCount}+</h3>
+                            <p className="text-sm text-black dark:text-white/80">{getSetting('hero_stat1_label', 'Digital Products Available')}</p>
                           </div>
                         </div>
                         <div className="mt-4 h-1 w-full bg-white/10 rounded-full overflow-hidden">
@@ -289,8 +299,8 @@ const Index = () => {
                           <Users className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-2xl font-bold">{siteStats.userCount}+</p>
-                          <p className="text-xs text-muted-foreground">{getSetting('hero_stat2_label', 'Happy Clients')}</p>
+                          <p className="text-2xl font-bold text-black dark:text-white">{siteStats.userCount}+</p>
+                          <p className="text-xs text-black dark:text-white/80">{getSetting('hero_stat2_label', 'Happy Clients')}</p>
                         </div>
                       </div>
                     </GlassCard>
@@ -301,8 +311,8 @@ const Index = () => {
                           <Briefcase className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-2xl font-bold">{siteStats.projectCount}+</p>
-                          <p className="text-xs text-muted-foreground">{getSetting('hero_stat3_label', 'Completed Projects')}</p>
+                          <p className="text-2xl font-bold text-black dark:text-white">{siteStats.projectCount}+</p>
+                          <p className="text-xs text-black dark:text-white/80">{getSetting('hero_stat3_label', 'Completed Projects')}</p>
                         </div>
                       </div>
                     </GlassCard>
@@ -317,15 +327,15 @@ const Index = () => {
                 <div className="grid grid-cols-3 gap-3">
                   <div className="bg-card/50 p-3 rounded-xl border text-center">
                     <p className="text-xl font-bold text-primary">{siteStats.productCount}+</p>
-                    <p className="text-[10px] text-muted-foreground">Products</p>
+                    <p className="text-[10px] text-black dark:text-white/80">Products</p>
                   </div>
                   <div className="bg-card/50 p-3 rounded-xl border text-center">
-                    <p className="text-xl font-bold text-foreground">{siteStats.userCount}+</p>
-                    <p className="text-[10px] text-muted-foreground">Clients</p>
+                    <p className="text-xl font-bold text-black dark:text-white">{siteStats.userCount}+</p>
+                    <p className="text-[10px] text-black dark:text-white/80">Clients</p>
                   </div>
                   <div className="bg-card/50 p-3 rounded-xl border text-center">
-                    <p className="text-xl font-bold text-foreground">{siteStats.projectCount}+</p>
-                    <p className="text-[10px] text-muted-foreground">Projects</p>
+                    <p className="text-xl font-bold text-black dark:text-white">{siteStats.projectCount}+</p>
+                    <p className="text-[10px] text-black dark:text-white/80">Projects</p>
                   </div>
                 </div>
               )}
@@ -333,11 +343,6 @@ const Index = () => {
 
           </div>
         </div>
-      </section>
-
-      {/* Hero Banner Slider - With proper spacing */}
-      <section className="py-8 md:py-12">
-        <HeroBannerSlider />
       </section>
 
       {/* Featured Products */}
@@ -349,65 +354,67 @@ const Index = () => {
             description={getSetting('home_store_description', 'Premium digital assets for your creative projects')}
           />
 
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 -mx-4 px-4 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6 md:pb-0 md:mx-0 md:px-0 scrollbar-none">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 mt-12">
             {featuredProducts.map((product, index) => (
               <motion.div
                 key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="group min-w-[260px] md:min-w-0 snap-center"
+                transition={{ duration: 0.4, delay: index * 0.1 }}
+                className="bg-white dark:bg-card border border-border/40 rounded-[20px] shadow-[0_4px_25px_-4px_rgba(0,0,0,0.03)] hover:shadow-[0_15px_40px_-10px_rgba(0,0,0,0.08)] transition-all duration-300 overflow-hidden group h-full flex flex-col"
               >
-                <div className="bg-card rounded-2xl border border-border overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300 h-full flex flex-col">
-                  <div className="relative aspect-square overflow-hidden">
-                    <OptimizedImage
-                      src={product.image_url || ''}
-                      alt={product.title}
-                      width={400}
-                      className="w-full h-full"
-                      imageClassName="object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
+                <div className="aspect-square relative overflow-hidden bg-slate-50">
+                  <OptimizedImage
+                    src={product.image_url || ''}
+                    alt={product.title}
+                    width={500}
+                    className="w-full h-full"
+                    imageClassName="object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  
+                  {/* Subtle Share Button */}
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleShare(product);
+                    }}
+                    className="absolute top-4 right-4 p-2.5 rounded-full bg-white/80 backdrop-blur-md text-[#1A1028] border border-white/20 hover:bg-white transition-all transform opacity-0 group-hover:opacity-100 translate-y-[-10px] group-hover:translate-y-0"
+                  >
+                    <Share2 className="w-3 link:h-3" />
+                  </button>
+                </div>
 
-                    {/* Overlay on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end justify-center pb-6 gap-2">
-                      <motion.button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          addToCartMutation.mutate(product.id);
-                        }}
-                        className="px-6 py-3 rounded-full bg-primary text-primary-foreground font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors shadow-lg"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <ShoppingCart className="w-4 h-4" />
-                        Add to Cart
-                      </motion.button>
-                      <motion.button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleShare(product);
-                        }}
-                        className="p-3 rounded-full bg-background/80 backdrop-blur-md text-foreground border border-white/10 hover:bg-background transition-colors shadow-lg"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Share2 className="w-4 h-4" />
-                      </motion.button>
+                <div className="p-5 flex flex-col flex-grow">
+                  <div>
+                    <p className="text-[9px] uppercase tracking-[0.2em] text-[#FF6B35] font-roboto font-bold mb-1">
+                      {product.category}
+                    </p>
+                    <Link to={`/product/${product.id}`}>
+                      <h3 className="font-bold text-[#1A1028] dark:text-white text-[17px] leading-tight hover:text-[#FF6B35] transition-colors line-clamp-1">
+                        {product.title}
+                      </h3>
+                    </Link>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-2 mb-3">
+                    <span className="text-[#FF6B35] font-extrabold text-lg sm:text-2xl">${product.price}</span>
+                    <div className="hidden xs:block px-2 py-0.5 rounded-none bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10">
+                      <span className="text-[7px] font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Digital</span>
                     </div>
                   </div>
 
-                  <div className="p-5">
-                    <p className="text-xs uppercase tracking-wider text-primary font-medium mb-2">
-                      {product.category}
-                    </p>
-                    <h3 className="font-semibold text-foreground text-lg leading-snug line-clamp-2 mb-3 min-h-[3.5rem]">
-                      {product.title}
-                    </h3>
-                    <div className="flex items-center justify-between">
-                      <p className="text-primary font-bold text-xl">${product.price}</p>
-                      <Badge variant="secondary" className="text-xs">Digital</Badge>
-                    </div>
+                  <div className="mt-auto">
+                    <Button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        addToCartMutation.mutate(product.id);
+                      }}
+                      className="w-full bg-[#FF6B35] hover:bg-[#E85D2A] text-white rounded-sm font-bold text-[10px] sm:text-xs py-3 sm:py-5 transition-all duration-300 shadow-sm flex items-center justify-center gap-1.5"
+                    >
+                      <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                      Add to Cart
+                    </Button>
                   </div>
                 </div>
               </motion.div>
@@ -421,19 +428,25 @@ const Index = () => {
           )}
 
           <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-center mt-12"
           >
-            <Button size="lg" variant="outline" asChild>
+            <Button variant="ghost" className="rounded-none px-10 h-14 bg-white dark:bg-white border border-border/50 shadow-md hover:shadow-lg hover:bg-white/90 dark:hover:bg-white/90 transition-all group font-bold text-[#1A1028] dark:text-black" asChild>
               <Link to="/store">
-                <ShoppingBag className="mr-2 w-4 h-4" />
+                <ShoppingBag className="mr-2 w-4 h-4 transition-transform group-hover:-translate-y-0.5" />
                 View All Products
+                <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
           </motion.div>
         </div>
+      </section>
+
+      {/* Hero Banner Slider - With proper spacing */}
+      <section className="py-8 md:py-12">
+        <HeroBannerSlider />
       </section>
 
       {/* Services Preview - Modern Enhanced Layout */}
@@ -445,18 +458,16 @@ const Index = () => {
 
         <div className="container mx-auto px-4 relative z-10">
           <SectionHeading
-            badge={getSetting('home_services_badge', 'What We Do')}
             title={getSetting('home_services_title', 'Our Services')}
             description={getSetting('home_services_description', 'Comprehensive creative solutions tailored to your needs')}
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
-            {(dynamicServices.length > 0 ? dynamicServices : [
-              { icon: 'Sparkles', title: 'Prompt Engineering', description: 'AI-powered creative prompts crafted for stunning visual results.' },
-              { icon: 'Palette', title: 'Brand Design', description: 'Complete visual identity systems that make your business stand out.' },
-              { icon: 'Code', title: 'UI/UX Design', description: 'User-centered digital interfaces that are beautiful and functional.' },
-              { icon: 'Zap', title: 'AI Automation', description: 'Smart workflow optimization to supercharge your productivity.' },
-            ]).map((service, index) => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
+            {[
+              { icon: 'Code', title: 'Development', description: 'Full-Stack Engineering for Web & Mobile. We build robust websites, scalable web apps, custom software, and native mobile applications tailored to your business logic.' },
+              { icon: 'Palette', title: 'Graphic Design', description: 'Strategic UI/UX & Visual Identity. We design intuitive user interfaces and striking brand visuals that bridge the gap between aesthetic beauty and functional performance.' },
+              { icon: 'Camera', title: 'Photography', description: 'Professional Visual Storytelling. High-quality commercial and product photography designed to elevate your brand’s aesthetic and showcase your work with professional clarity.' },
+            ].map((service, index) => {
               const IconComponent = typeof service.icon === 'string' ? (iconMap[service.icon] || Sparkles) : service.icon;
               return (
                 <motion.div
@@ -469,33 +480,32 @@ const Index = () => {
                     delay: index * 0.1,
                     ease: [0.21, 0.47, 0.32, 0.98]
                   }}
-                  whileHover={{ y: -10 }}
                   className="h-full"
                 >
-                  <GlassCard className="text-center h-full p-8 border-white/5 hover:border-primary/20 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.3)] transition-all duration-500 group relative overflow-hidden">
-                    {/* Hover Glow Effect */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-                    <div className="relative z-10">
-                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-500 shadow-inner">
-                        <IconComponent className="w-8 h-8 text-primary group-hover:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)] transition-all duration-300" />
-                      </div>
-
-                      <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors duration-300">
-                        {service.title}
-                      </h3>
-
-                      <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-                        {service.description}
-                      </p>
-
-                      <div className="pt-2">
-                        <div className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-primary opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-                          Explore Service <ArrowRight className="ml-2 w-3 h-3" />
-                        </div>
-                      </div>
+                  <div className="bg-white dark:bg-card rounded-2xl p-10 flex flex-col items-center text-center shadow-[0_4px_25px_-5px_rgba(0,0,0,0.05)] border border-border/40 h-full group hover:shadow-[0_15px_35px_-10px_rgba(0,0,0,0.1)] transition-all duration-300">
+                    <div className="mb-8">
+                      <IconComponent className="w-16 h-16 text-[#FF6B35] transition-transform duration-500 group-hover:scale-110" />
                     </div>
-                  </GlassCard>
+
+                    <h3 className="text-2xl font-bold text-[#1A1028] dark:text-white mb-4 font-roboto">
+                      {service.title}
+                    </h3>
+
+                    <p className="text-[15px] leading-relaxed text-muted-foreground mb-10 flex-grow">
+                      {service.description}
+                    </p>
+
+                    <div className="mt-auto">
+                      <Button
+                        className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white px-10 py-6 rounded-sm font-bold text-base transition-all duration-300 shadow-sm"
+                        asChild
+                      >
+                        <Link to="/services">
+                          Learn More
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
                 </motion.div>
               );
             })}
@@ -503,219 +513,170 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Works - Premium Wide Layout */}
-      <section className="py-24 relative overflow-hidden">
+      {/* Featured Works - Our Softwares Grid Layout */}
+      <section className="py-24 relative overflow-hidden bg-slate-50 dark:bg-background border-t border-border/10">
         <div className="container mx-auto px-4">
-          <SectionHeading
-            badge={getSetting('home_portfolio_badge', 'Our Work')}
-            title={getSetting('home_portfolio_title', 'Premium Showcase')}
-            description={getSetting('home_portfolio_description', 'A glimpse into our creative portfolio')}
-          />
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-[#1A1028] dark:text-white mb-3 font-roboto">
+              Our Softwares
+            </h2>
+            <p className="text-muted-foreground font-medium uppercase tracking-[0.2em] text-xs">
+              Secure & Reliable
+            </p>
+          </div>
 
-          <div className="relative mt-8">
-            <Carousel
-              setApi={setProjectApi}
-              opts={{
-                align: "start",
-                loop: true,
-                duration: 60,
-              }}
-              plugins={[
-                Autoplay({
-                  delay: 6000,
-                  stopOnInteraction: false,
-                }),
-              ]}
-              className="w-full"
-            >
-              <CarouselContent>
-                {featuredProjects.map((project, index) => {
-                  const isActive = currentProject === index;
-                  return (
-                    <CarouselItem key={project.id}>
-                      <Link to="/portfolio" className="block group font-sans">
-                        <GlassCard className="p-0 border-white/10 overflow-hidden bg-[#1a1a1a]/90 backdrop-blur-xl">
-                          <div className="grid lg:grid-cols-2 lg:h-[480px] gap-0">
-                            {/* Image Side */}
-                            <div className="relative aspect-video lg:aspect-auto overflow-hidden">
-                              <motion.div
-                                animate={{ scale: isActive ? 1.05 : 1 }}
-                                transition={{ duration: 6, ease: "linear" }}
-                                className="w-full h-full"
-                              >
-                                <OptimizedImage
-                                  src={project.image_url}
-                                  alt={project.title}
-                                  width={1200}
-                                  className="w-full h-full"
-                                  imageClassName="object-cover transition-transform duration-700 group-hover:scale-110"
-                                />
-                              </motion.div>
-                              <div className="absolute top-6 left-6">
-                                <motion.div
-                                  initial={{ opacity: 0, x: -20 }}
-                                  animate={isActive ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
-                                  transition={{ duration: 0.6, delay: 0.2 }}
-                                >
-                                  <Badge className="bg-yellow-500/90 text-black px-4 py-1.5 rounded-full border-none shadow-xl font-bold text-xs uppercase tracking-wider">
-                                    Featured Project
-                                  </Badge>
-                                </motion.div>
-                              </div>
-                            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {featuredProjects.map((project, index) => (
+              <motion.div
+                key={project.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="bg-white dark:bg-card border border-border/40 rounded-[24px] p-10 flex flex-col items-center shadow-[0_8px_30px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_15px_40px_-5px_rgba(0,0,0,0.08)] transition-all duration-500 h-full group"
+              >
+                {/* Logo Area - High visibility for logos */}
+                <div className="h-24 w-full mb-8 relative flex items-center justify-center grayscale hover:grayscale-0 transition-all duration-500 transform group-hover:scale-105">
+                  {project.image_url ? (
+                    <OptimizedImage
+                      src={project.image_url}
+                      alt={project.title}
+                      width={400}
+                      className="w-full h-full"
+                      imageClassName="object-contain"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      <h3 className="text-3xl font-bold text-[#1A1028] dark:text-white">{project.title}</h3>
+                    </div>
+                  )}
+                </div>
 
-                            {/* Content Side */}
-                            <div className="p-8 md:p-12 lg:p-16 flex flex-col justify-center bg-white/[0.02] text-white">
-                              <motion.div
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={isActive ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
-                                transition={{ duration: 0.8, delay: 0.2 }}
-                                className="flex items-center gap-2 mb-6"
-                              >
-                                <span className="text-xs font-bold text-primary tracking-[0.2em] uppercase">{project.category}</span>
-                                <span className="w-1 h-1 bg-primary/30 rounded-full" />
-                                <span className="text-xs font-bold text-white/50 tracking-[0.2em] uppercase">Digital Excellence</span>
-                              </motion.div>
+                <div className="text-center flex-grow">
+                  <p className="text-[15px] leading-relaxed text-muted-foreground mb-10">
+                    <span className="font-bold text-[#FF6B35]">{project.title}</span> {project.description || "is an innovative software solution designed to empower digital operations for modern businesses."}
+                  </p>
+                </div>
 
-                              <motion.h3
-                                initial={{ opacity: 0, y: 30 }}
-                                animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-                                transition={{ duration: 0.8, delay: 0.3 }}
-                                className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 tracking-tight text-white group-hover:text-primary transition-colors duration-300 leading-tight"
-                              >
-                                {project.title}
-                              </motion.h3>
-
-                              <motion.p
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                                transition={{ duration: 0.8, delay: 0.4 }}
-                                className="text-lg text-white/70 leading-relaxed mb-10 line-clamp-3"
-                              >
-                                {project.description || "A premium digital experience crafted with precision and creative excellence to elevate brand identity and user engagement."}
-                              </motion.p>
-
-                              <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                                transition={{ duration: 0.8, delay: 0.5 }}
-                                className="flex items-center justify-between mt-auto"
-                              >
-                                <div className="flex items-center gap-3">
-                                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
-                                    <Users className="w-6 h-6 text-primary" />
-                                  </div>
-                                  <div className="flex flex-col">
-                                    <span className="text-sm font-bold text-white">Premium Client</span>
-                                    <span className="text-[10px] uppercase tracking-widest text-white/50">Digital Strategy</span>
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest group/btn">
-                                  <span>View Project</span>
-                                  <ChevronRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
-                                </div>
-                              </motion.div>
-                            </div>
-                          </div>
-                        </GlassCard>
-                      </Link>
-                    </CarouselItem>
-                  );
-                })}
-              </CarouselContent>
-              <div className="hidden md:block">
-                <CarouselPrevious className="left-8 z-20 border-white/10 bg-black/40 backdrop-blur-md hover:bg-black/60 text-white" />
-                <CarouselNext className="right-8 z-20 border-white/10 bg-black/40 backdrop-blur-md hover:bg-black/60 text-white" />
-              </div>
-            </Carousel>
+                <div className="mt-auto w-full flex justify-center">
+                  <Button
+                    className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white px-10 py-6 rounded-sm font-bold text-base transition-all duration-300 shadow-sm"
+                    asChild
+                  >
+                    <Link to="/portfolio">
+                      Learn more
+                    </Link>
+                  </Button>
+                </div>
+              </motion.div>
+            ))}
           </div>
 
           <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mt-16"
+            className="text-center mt-20"
           >
-            <Button variant="outline" size="lg" className="rounded-full px-12 h-14 border-white/10 bg-white/5 hover:bg-white/10" asChild>
+            <Button variant="ghost" className="rounded-none px-10 h-14 bg-white dark:bg-white border border-border/50 shadow-md hover:shadow-lg hover:bg-white/90 dark:hover:bg-white/90 transition-all group font-bold text-[#1A1028] dark:text-black" asChild>
               <Link to="/portfolio">
                 Explore Full Portfolio
-                <ArrowRight className="ml-2 w-4 h-4" />
+                <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
           </motion.div>
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-20">
+      {/* Custom Customer Reviews Section */}
+      <section className="py-24 bg-white dark:bg-background overflow-hidden">
         <div className="container mx-auto px-4">
-          <SectionHeading
-            badge={getSetting('home_testimonials_badge', 'Testimonials')}
-            title={getSetting('home_testimonials_title', 'What Clients Say')}
-            description={getSetting('home_testimonials_description', "Hear from those who've experienced our work")}
-          />
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-[#1A1028] dark:text-white mb-4 font-roboto">
+              Customer Reviews
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-[15px] leading-relaxed">
+              Explore the unfiltered voices of our satisfied customers and discover why they choose Oflex Creative.
+            </p>
+          </div>
 
-          <div className="relative max-w-5xl mx-auto px-12">
+          <div className="relative max-w-6xl mx-auto px-4 md:px-12">
             <Carousel
+              setApi={setTestimonialApi}
               opts={{
                 align: "start",
                 loop: true,
               }}
               plugins={[
                 Autoplay({
-                  delay: 4000,
+                  delay: 5000,
                 }),
               ]}
               className="w-full"
             >
-              <CarouselContent className="-ml-4">
+              <CarouselContent className="-ml-6">
                 {testimonials.map((testimonial, index) => (
-                  <CarouselItem key={testimonial.id || index} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                  <CarouselItem key={testimonial.id || index} className="pl-6 md:basis-1/2 lg:basis-1/3">
                     <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
                       viewport={{ once: true }}
                       transition={{ delay: index * 0.1 }}
-                      className="h-full py-2"
+                      className="relative pb-20 h-full"
                     >
-                      <GlassCard hover={false} className="h-full flex flex-col justify-between">
-                        <div>
-                          <div className="flex items-center gap-1 mb-4">
-                            {[...Array(testimonial.rating || 5)].map((_, i) => (
-                              <Star key={i} className="w-4 h-4 fill-primary text-primary" />
-                            ))}
-                          </div>
-                          <p className="text-muted-foreground mb-6 leading-relaxed italic">
+                      <div className="bg-white dark:bg-card border border-border shadow-[0_10px_40px_-5px_rgba(0,0,0,0.03)] rounded-2xl p-8 md:p-10 flex flex-col items-center group transition-all duration-300 relative z-10">
+                        <Quote className="w-12 h-12 md:w-16 md:h-16 text-primary/10 mb-6 flex-shrink-0" />
+
+                        <div className="flex-grow text-center min-h-[120px] flex items-center justify-center">
+                          <p className="text-muted-foreground text-[15px] leading-relaxed mb-6 px-2">
                             "{testimonial.content}"
                           </p>
                         </div>
-                        <div className="flex items-center gap-3 mt-auto">
-                          <Avatar className="w-12 h-12 border border-border">
-                            <AvatarImage src={getOptimizedImageUrl(testimonial.avatar_url || '', 100)} alt={testimonial.name} className="object-cover" />
-                            <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                              {getInitials(testimonial.name)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="text-left">
-                            <p className="font-semibold text-foreground text-sm">{testimonial.name}</p>
-                            <p className="text-[11px] text-muted-foreground uppercase tracking-wider">{testimonial.role}</p>
+
+                        <div className="flex items-center gap-1.5 mb-2 mt-auto">
+                          {[...Array(testimonial.rating || 5)].map((_, i) => (
+                            <Star key={i} className="w-4 h-4 fill-[#FFB81C] text-[#FFB81C] drop-shadow-sm" />
+                          ))}
+                        </div>
+
+                        {/* Overlapping Avatar */}
+                        <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 z-20">
+                          <div className="w-20 h-20 rounded-full p-1 bg-white dark:bg-card shadow-lg">
+                            <Avatar className="w-full h-full border-none">
+                              <AvatarImage src={getOptimizedImageUrl(testimonial.avatar_url || '', 150)} alt={testimonial.name} className="object-cover rounded-full" />
+                              <AvatarFallback className="bg-primary/5 text-primary text-lg font-bold">
+                                {getInitials(testimonial.name)}
+                              </AvatarFallback>
+                            </Avatar>
                           </div>
                         </div>
-                      </GlassCard>
+                      </div>
+
+                      {/* Info below card and avatar */}
+                      <div className="mt-14 mb-4 text-center">
+                        <h4 className="font-bold text-[#1A1028] dark:text-white text-lg">
+                          {testimonial.name}
+                        </h4>
+                        <p className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider mt-1">
+                          {testimonial.role}
+                        </p>
+                      </div>
                     </motion.div>
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <div className="hidden md:block">
-                <CarouselPrevious className="-left-12 border-primary/20 hover:bg-primary/10" />
-                <CarouselNext className="-right-12 border-primary/20 hover:bg-primary/10" />
-              </div>
 
-              {/* Mobile pagination dots */}
-              <div className="flex justify-center gap-2 mt-8 md:hidden">
-                {testimonials.map((_, i) => (
-                  <div key={i} className="w-2 h-2 rounded-full bg-primary/20" />
+              {/* Enhanced dynamic indicators - matching target image */}
+              <div className="flex justify-center gap-3 mt-4">
+                {Array.from({ length: testimonialCount }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => testimonialApi?.scrollTo(i)}
+                    className={`h-3 rounded-full transition-all duration-300 ${currentTestimonial === i
+                        ? 'bg-[#FF6B35] w-6'
+                        : 'bg-slate-200 w-3 hover:bg-slate-300'
+                      }`}
+                  />
                 ))}
               </div>
             </Carousel>
@@ -762,13 +723,13 @@ const Index = () => {
                   </p>
 
                   <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                    <Button size="lg" className="h-14 px-8 rounded-full text-base shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all duration-300" asChild>
+                    <Button size="lg" className="h-14 px-8 rounded-none text-base shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all duration-300" asChild>
                       <Link to="/contact">
                         Start a Project
                         <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                       </Link>
                     </Button>
-                    <Button size="lg" variant="outline" className="h-14 px-8 rounded-full text-base bg-background/50 border-white/10 hover:bg-background/80" asChild>
+                    <Button size="lg" variant="outline" className="h-14 px-8 rounded-none text-base bg-background/50 border-white/10 hover:bg-background/80" asChild>
                       <Link to="/portfolio">
                         View Our Work
                       </Link>

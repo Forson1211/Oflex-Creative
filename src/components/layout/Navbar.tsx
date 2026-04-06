@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Sun, Moon, Shield, UserCog, ShoppingCart, User, LogOut } from 'lucide-react';
+import { Menu, X, Sun, Moon, Shield, UserCog, ShoppingCart, ShoppingBag, User, LogOut } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,6 @@ const navLinks = [
   { name: 'About', path: '/about' },
   { name: 'Services', path: '/services' },
   { name: 'Portfolio', path: '/portfolio' },
-  { name: 'Store', path: '/store' },
   { name: 'Blog', path: '/blog' },
   { name: 'Contact', path: '/contact' },
 ];
@@ -154,9 +153,12 @@ export const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <motion.img
-              src={logoUrl ? getOptimizedImageUrl(logoUrl, 200) : ""}
+              src={theme === 'dark' 
+                ? (getSetting('logo_white_url') || getSetting('logo_dark_url') || "/logo-white.png")
+                : (getSetting('logo_url') || "/logo.png")
+              }
               alt={getSetting('site_name', 'Oflex Creative')}
-              className="h-10 w-auto"
+              className="h-12 md:h-16 w-auto object-contain"
               loading="eager"
               decoding="sync"
               whileHover={{ scale: 1.05 }}
@@ -164,144 +166,168 @@ export const Navbar = () => {
             />
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Link key={link.path} to={link.path} className="relative group">
-                <span className={`text-[14px] uppercase font-bold tracking-wider transition-colors ${location.pathname === link.path
-                  ? 'text-primary'
-                  : 'text-muted-foreground hover:text-foreground'
-                  }`}>
-                  {link.name}
-                </span>
-                {location.pathname === link.path && (
-                  <motion.div
-                    layoutId="navbar-indicator"
-                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary rounded-full"
-                  />
-                )}
-              </Link>
-            ))}
-          </div>
-
-          {/* Desktop Actions */}
-          <div className="hidden lg:flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full">
-              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-            </Button>
-
-            {/* Cart */}
-            <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative rounded-full">
-                  <ShoppingCart className="w-5 h-5" />
-                  {cartCount > 0 && (
-                    <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
-                      {cartCount}
-                    </Badge>
+          {/* Desktop Nav & Actions Group */}
+          <div className="hidden lg:flex items-center gap-8 xl:gap-12">
+            {/* Desktop Navigation */}
+            <div className="flex items-center gap-5">
+              {navLinks.map((link) => (
+                <Link key={link.path} to={link.path} className="relative group">
+                  <span className={`text-[15px] uppercase font-bold tracking-wider transition-colors ${location.pathname === link.path
+                    ? 'text-primary'
+                    : 'text-black dark:text-white hover:text-primary'
+                    }`}>
+                    {link.name}
+                  </span>
+                  {location.pathname === link.path && (
+                    <motion.div
+                      layoutId="navbar-indicator"
+                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary rounded-full"
+                    />
                   )}
-                </Button>
-              </SheetTrigger>
-              <SheetContent className="w-full sm:max-w-lg flex flex-col">
-                <SheetHeader>
-                  <SheetTitle>Shopping Cart ({cartCount} items)</SheetTitle>
-                </SheetHeader>
-                <div className="flex-1 flex flex-col mt-6 overflow-hidden">
-                  {!user ? (
-                    <div className="flex-1 flex flex-col items-center justify-center gap-4">
-                      <p className="text-muted-foreground">Please login to view your cart</p>
-                      <Button onClick={() => { setIsCartOpen(false); navigate('/auth'); }}>Login</Button>
-                    </div>
-                  ) : cartItems.length === 0 ? (
-                    <div className="flex-1 flex items-center justify-center">
-                      <p className="text-muted-foreground">Your cart is empty</p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex-1 overflow-auto space-y-4 pr-2">
-                        {cartItems.map((item) => (
-                          <div key={item.id} className="flex gap-4 p-4 border border-border rounded-lg bg-card">
-                            {item.product?.image_url && (
-                              <img src={item.product.image_url} alt={item.product.title} className="w-16 h-16 object-cover rounded-md" />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-foreground truncate">{item.product?.title}</h4>
-                              <p className="text-sm text-muted-foreground">${item.product?.price?.toFixed(2)}</p>
-                              <div className="flex items-center gap-2 mt-2">
-                                <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantityMutation.mutate({ itemId: item.id, quantity: item.quantity - 1 })}>
-                                  <Minus className="h-3 w-3" />
-                                </Button>
-                                <span className="w-6 text-center text-sm text-foreground">{item.quantity}</span>
-                                <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantityMutation.mutate({ itemId: item.id, quantity: item.quantity + 1 })}>
-                                  <Plus className="h-3 w-3" />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto text-destructive hover:text-destructive" onClick={() => removeFromCartMutation.mutate(item.id)}>
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
+                </Link>
+              ))}
+            </div>
+
+            {/* Desktop Actions */}
+            <div className="flex items-center gap-3 ml-6 lg:ml-10">
+              <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-none">
+                {theme === 'light' ? <Moon className="w-6 h-6" /> : <Sun className="w-6 h-6" />}
+              </Button>
+
+              {/* Store Icon */}
+              <Button variant="ghost" size="icon" className="rounded-none" asChild>
+                <Link to="/store">
+                  <ShoppingBag className="w-6 h-6" />
+                </Link>
+              </Button>
+
+              {/* Cart */}
+              <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative rounded-none">
+                    <ShoppingCart className="w-6 h-6" />
+                    {cartCount > 0 && (
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
+                        {cartCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="w-full sm:max-w-lg flex flex-col">
+                  <SheetHeader>
+                    <SheetTitle>Shopping Cart ({cartCount} items)</SheetTitle>
+                  </SheetHeader>
+                  <div className="flex-1 flex flex-col mt-6 overflow-hidden">
+                    {!user ? (
+                      <div className="flex-1 flex flex-col items-center justify-center gap-4">
+                        <p className="text-muted-foreground">Please login to view your cart</p>
+                        <Button onClick={() => { setIsCartOpen(false); navigate('/auth'); }}>Login</Button>
+                      </div>
+                    ) : cartItems.length === 0 ? (
+                      <div className="flex-1 flex items-center justify-center">
+                        <p className="text-muted-foreground">Your cart is empty</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex-1 overflow-auto space-y-4 pr-2">
+                          {cartItems.map((item) => (
+                            <div key={item.id} className="flex gap-4 p-4 border border-border rounded-lg bg-card">
+                              {item.product?.image_url && (
+                                <img src={item.product.image_url} alt={item.product.title} className="w-16 h-16 object-cover rounded-md" />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium text-foreground truncate">{item.product?.title}</h4>
+                                <p className="text-sm text-muted-foreground">${item.product?.price?.toFixed(2)}</p>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantityMutation.mutate({ itemId: item.id, quantity: item.quantity - 1 })}>
+                                    <Minus className="h-3 w-3" />
+                                  </Button>
+                                  <span className="w-6 text-center text-sm text-foreground">{item.quantity}</span>
+                                  <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantityMutation.mutate({ itemId: item.id, quantity: item.quantity + 1 })}>
+                                    <Plus className="h-3 w-3" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto text-destructive hover:text-destructive" onClick={() => removeFromCartMutation.mutate(item.id)}>
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="border-t border-border pt-4 mt-4">
-                        <div className="flex justify-between text-lg font-semibold mb-4 text-foreground">
-                          <span>Total:</span>
-                          <span>${cartTotal.toFixed(2)}</span>
+                          ))}
                         </div>
-                        <Button className="w-full" size="lg" onClick={() => { setIsCartOpen(false); navigate('/checkout'); }}>
-                          Proceed to Checkout
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </SheetContent>
-            </Sheet>
+                        <div className="border-t border-border pt-4 mt-4">
+                          <div className="flex justify-between text-lg font-semibold mb-4 text-foreground">
+                            <span>Total:</span>
+                            <span>${cartTotal.toFixed(2)}</span>
+                          </div>
+                          <Button className="w-full rounded-none" size="lg" onClick={() => { setIsCartOpen(false); navigate('/checkout'); }}>
+                            Proceed to Checkout
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
 
-            {/* User Account */}
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <Avatar className="h-8 w-8 border-2 border-primary rounded-full">
-                      <AvatarImage src={getOptimizedImageUrl(profile?.avatar_url || '', 100)} className="object-cover" />
-                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                        {userInitials}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => navigate('/profile')}>
-                    <User className="w-4 h-4 mr-2" />
-                    Profile
-                  </DropdownMenuItem>
-                  {(isAdmin || isModerator) && (
-                    <DropdownMenuItem onClick={() => navigate('/admin')}>
-                      {isAdmin ? <Shield className="w-4 h-4 mr-2" /> : <UserCog className="w-4 h-4 mr-2" />}
-                      {isAdmin ? 'Admin Dashboard' : 'Moderator Dashboard'}
+              {/* User Account */}
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="rounded-full">
+                      <Avatar className="h-9 w-9 border-2 border-primary rounded-full">
+                        <AvatarImage src={getOptimizedImageUrl(profile?.avatar_url || '', 100)} className="object-cover" />
+                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                          {userInitials}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={() => navigate('/profile')}>
+                      <User className="w-4 h-4 mr-2" />
+                      Profile
                     </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut}>
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Button asChild size="sm">
-                <Link to="/auth">Login</Link>
-              </Button>
-            )}
+                    {(isAdmin || isModerator) && (
+                      <DropdownMenuItem onClick={() => navigate('/admin')}>
+                        {isAdmin ? <Shield className="w-4 h-4 mr-2" /> : <UserCog className="w-4 h-4 mr-2" />}
+                        {isAdmin ? 'Admin Dashboard' : 'Moderator Dashboard'}
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut}>
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button asChild size="sm" className="h-10 px-5 rounded-none font-bold text-sm uppercase tracking-wide shadow-md hover:scale-105 transition-transform">
+                  <Link to="/contact">Get A Quote</Link>
+                </Button>
+              )}
+
+              {/* Get A Quote CTA (always visible when logged in) */}
+              {user && (
+                <Button asChild size="sm" className="h-10 px-5 rounded-none font-bold text-sm uppercase tracking-wide shadow-md hover:scale-105 transition-transform">
+                  <Link to="/contact">Get A Quote</Link>
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="flex lg:hidden items-center gap-2">
+          <div className="flex lg:hidden items-center gap-1 sm:gap-2">
+            {/* Mobile Store Icon */}
+            <Button variant="ghost" size="icon" className="rounded-none" asChild>
+              <Link to="/store">
+                <ShoppingBag className="w-5 h-5" />
+              </Link>
+            </Button>
+
             {/* Mobile Cart */}
             <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative rounded-full">
+                <Button variant="ghost" size="icon" className="relative rounded-none">
                   <ShoppingCart className="w-5 h-5" />
                   {cartCount > 0 && (
                     <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
@@ -312,7 +338,7 @@ export const Navbar = () => {
               </SheetTrigger>
             </Sheet>
 
-            <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full">
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-none">
               {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
             </Button>
             <Button variant="ghost" size="icon" onClick={() => setIsOpen(!isOpen)}>
@@ -344,7 +370,7 @@ export const Navbar = () => {
                     onClick={() => setIsOpen(false)}
                     className={`block py-3 px-4 rounded-lg transition-colors text-[14px] uppercase font-bold tracking-wider ${location.pathname === link.path
                       ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      : 'text-black dark:text-white hover:bg-muted hover:text-primary'
                       }`}
                   >
                     {link.name}
@@ -359,7 +385,7 @@ export const Navbar = () => {
               >
                 {user ? (
                   <div className="space-y-2">
-                    <Button asChild variant="outline" className="w-full h-12">
+                    <Button asChild variant="outline" className="w-full h-12 rounded-none">
                       <Link to="/profile" onClick={() => setIsOpen(false)} className="flex items-center justify-center gap-3">
                         <Avatar className="h-6 w-6 border-2 border-primary rounded-full">
                           <AvatarImage src={getOptimizedImageUrl(profile?.avatar_url || '', 50)} className="object-cover" />
@@ -371,20 +397,20 @@ export const Navbar = () => {
                       </Link>
                     </Button>
                     {(isAdmin || isModerator) && (
-                      <Button asChild variant="outline" className="w-full">
+                      <Button asChild variant="outline" className="w-full rounded-none">
                         <Link to="/admin" onClick={() => setIsOpen(false)}>
                           {isAdmin ? <Shield className="w-4 h-4 mr-2" /> : <UserCog className="w-4 h-4 mr-2" />}
                           {isAdmin ? 'Admin Dashboard' : 'Moderator Dashboard'}
                         </Link>
                       </Button>
                     )}
-                    <Button variant="secondary" className="w-full" onClick={() => { handleSignOut(); setIsOpen(false); }}>
+                    <Button variant="secondary" className="w-full rounded-none" onClick={() => { handleSignOut(); setIsOpen(false); }}>
                       <LogOut className="w-4 h-4 mr-2" />
                       Sign Out
                     </Button>
                   </div>
                 ) : (
-                  <Button asChild className="w-full">
+                  <Button asChild className="w-full rounded-none">
                     <Link to="/auth" onClick={() => setIsOpen(false)}>Login / Sign Up</Link>
                   </Button>
                 )}
