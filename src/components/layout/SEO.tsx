@@ -17,7 +17,7 @@ export const SEO = ({ title, description, image, article, pathname }: SEOProps) 
     const defaultDescription = getSetting('site_description', siteTagline);
 
     // Use the actual domain instead of just localhost if available
-    const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://oflexcreative.vercel.app';
+    const siteUrl = import.meta.env.VITE_APP_URL || (typeof window !== 'undefined' ? window.location.origin : 'https://oflexcreative.vercel.app');
     const sitePreviewImage = getSetting('site_preview_image_url', '');
 
     // Determine the final image URL - must be absolute for social scrapers
