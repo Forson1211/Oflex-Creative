@@ -13,7 +13,7 @@ export const SEO = ({ title, description, image, article, pathname }: SEOProps) 
     const { getSetting } = useSiteSettings();
 
     const siteName = getSetting('site_name', 'Oflex Creative Studio');
-    const siteTagline = getSetting('site_tagline', 'Premium Digital Products & Design Services');
+    const siteTagline = getSetting('site_tagline', 'We create modern websites, designs and digital experiences that stand out');
     const defaultDescription = getSetting('site_description', siteTagline);
 
     // Use the actual domain instead of just localhost if available
