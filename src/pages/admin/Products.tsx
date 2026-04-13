@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useProducts, useProductMutations } from '@/hooks/useProducts';
-import { Package } from 'lucide-react';
-import { Plus, Pencil, Trash2, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, CheckCircle2, BarChart3, Layers, ShoppingBag, Briefcase } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ProtectedRoute } from '@/components/admin/ProtectedRoute';
 import { Button } from '@/components/ui/button';
@@ -143,28 +142,7 @@ const Products = () => {
     setEditingProduct(null);
   };
 
-  const handleEdit = (product: Product) => {
-    setEditingProduct(product);
-    setFormData({
-      title: product.title,
-      description: product.description || '',
-      price: product.price.toString(),
-      category: product.category,
-      image_url: product.image_url || '',
-      file_url: product.file_url || '',
-      template_link: product.template_link || '',
-      resolution: product.resolution || '',
-      dimensions: product.dimensions || '',
-      file_size: product.file_size || '',
-      is_active: product.is_active ?? true,
-    });
-    setIsDialogOpen(true);
-  };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
-    deleteProduct.mutate(id);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -265,7 +243,7 @@ const Products = () => {
             <AdminPageHeader
               title="Products"
               description="Manage your digital products"
-              icon={<Package className="w-5 h-5" />}
+              icon={<ShoppingBag className="w-5 h-5" />}
               actions={
                 <DialogTrigger asChild>
                   <Button>
@@ -275,13 +253,15 @@ const Products = () => {
                 </DialogTrigger>
               }
             />
-            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
+
+            <DialogContent className="max-w-2xl flex flex-col p-0 gap-0 max-h-[90vh] overflow-hidden">
+              <DialogHeader className="px-6 py-4 border-b border-border flex-shrink-0">
                 <DialogTitle>
                   {editingProduct ? 'Edit Product' : 'Add New Product'}
                 </DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+              <div className="overflow-y-auto flex-1 p-6 space-y-4 custom-scrollbar" data-lenis-prevent>
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">Title</Label>
                   <Input
@@ -322,19 +302,27 @@ const Products = () => {
                     <Label htmlFor="category">Category</Label>
                     <div className="space-y-2">
                       <div className="flex items-center space-x-2">
-                        <Input
+                        <select
                           id="category"
                           value={formData.category}
                           onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                          placeholder="Select or type category"
-                          list="category-options"
                           required
-                        />
-                        <datalist id="category-options">
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="" disabled>Select a category</option>
                           {allCategories.map((cat) => (
-                            <option key={cat} value={cat} />
+                            <option key={cat} value={cat}>{cat}</option>
                           ))}
-                        </datalist>
+                        </select>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setIsCategoryManagerOpen(true)}
+                          title="Manage Categories"
+                        >
+                          <Settings className="w-4 h-4 text-muted-foreground" />
+                        </Button>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Input
@@ -348,15 +336,6 @@ const Products = () => {
                           disabled={!newCategory.trim() || allCategories.includes(newCategory)}
                         >
                           Add
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setIsCategoryManagerOpen(true)}
-                          title="Manage Categories"
-                        >
-                          <Settings className="w-4 h-4 text-muted-foreground" />
                         </Button>
                       </div>
                     </div>
@@ -466,29 +445,108 @@ const Products = () => {
                   </Button>
                 </div>
               </form>
+              </div>
             </DialogContent>
           </Dialog>
 
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search products..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-full sm:max-w-sm"
-            />
+          {/* Professional Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+            <div className="bg-card border border-border/50 p-0 rounded-none relative overflow-hidden group hover:border-primary/50 transition-all duration-500 shadow-sm hover:shadow-md">
+              <div className="h-1 w-full bg-primary/20 group-hover:bg-primary transition-colors" />
+              <div className="p-6">
+                <div className="absolute top-4 right-4 p-4 opacity-[0.03] group-hover:opacity-[0.08] group-hover:scale-110 transition-all duration-700 pointer-events-none">
+                  <BarChart3 className="w-20 h-20" />
+                </div>
+                <div className="flex items-start justify-between">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                       <div className="p-1.5 bg-primary/5 border border-primary/10">
+                         <ShoppingBag className="w-4 h-4 text-primary" />
+                       </div>
+                       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/80">Inventory</p>
+                    </div>
+                    <div>
+                      <h3 className="text-4xl font-black tracking-tight leading-none">{products.length}</h3>
+                      <p className="text-[10px] text-muted-foreground mt-2 font-medium uppercase tracking-wider">Total digital assets</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-card border border-border/50 p-0 rounded-none relative overflow-hidden group hover:border-chart-3/50 transition-all duration-500 shadow-sm hover:shadow-md text-slate-900 dark:text-white">
+              <div className="h-1 w-full bg-chart-3/20 group-hover:bg-chart-3 transition-colors" />
+              <div className="p-6">
+                <div className="absolute top-4 right-4 p-4 opacity-[0.03] group-hover:opacity-[0.08] group-hover:scale-110 transition-all duration-700 pointer-events-none">
+                  <CheckCircle2 className="w-20 h-20" />
+                </div>
+                <div className="flex items-start justify-between">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                       <div className="p-1.5 bg-chart-3/5 border border-chart-3/10">
+                         <CheckCircle2 className="w-4 h-4 text-chart-3" />
+                       </div>
+                       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/80">Live Status</p>
+                    </div>
+                    <div>
+                      <h3 className="text-4xl font-black tracking-tight leading-none">
+                        {products.filter(p => p.is_active).length}
+                      </h3>
+                      <p className="text-[10px] text-muted-foreground mt-2 font-medium uppercase tracking-wider">Currently active in store</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-card border border-border/50 p-0 rounded-none relative overflow-hidden group hover:border-accent/50 transition-all duration-500 shadow-sm hover:shadow-md">
+              <div className="h-1 w-full bg-accent/20 group-hover:bg-accent transition-colors" />
+              <div className="p-6">
+                <div className="absolute top-4 right-4 p-4 opacity-[0.03] group-hover:opacity-[0.08] group-hover:scale-110 transition-all duration-700 pointer-events-none">
+                  <Layers className="w-20 h-20" />
+                </div>
+                <div className="flex items-start justify-between">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                       <div className="p-1.5 bg-accent/5 border border-accent/10">
+                         <Layers className="w-4 h-4 text-accent-foreground" />
+                       </div>
+                       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/80">Segments</p>
+                    </div>
+                    <div>
+                      <h3 className="text-4xl font-black tracking-tight leading-none">{allCategories.length}</h3>
+                      <p className="text-[10px] text-muted-foreground mt-2 font-medium uppercase tracking-wider">Distinct product categories</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-10 mt-10 border-t border-border/10">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Filter by title or segment..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-12 w-full h-12 bg-card border-border/50 rounded-none focus:border-primary/50 transition-all font-medium"
+              />
+            </div>
+          </div>
+
+
+
           {loading ? (
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="bg-card border border-border rounded-none overflow-hidden">
               <div className="animate-pulse">
                 {[...Array(5)].map((_, i) => (
                   <div key={i} className="p-4 border-b border-border last:border-0">
                     <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-muted rounded-lg"></div>
+                      <div className="w-16 h-16 bg-muted rounded-none"></div>
                       <div className="flex-1">
-                        <div className="h-4 bg-muted rounded w-48 mb-2"></div>
-                        <div className="h-3 bg-muted rounded w-24"></div>
+                        <div className="h-4 bg-muted rounded-none w-48 mb-2"></div>
+                        <div className="h-3 bg-muted rounded-none w-24"></div>
                       </div>
                     </div>
                   </div>
@@ -496,17 +554,17 @@ const Products = () => {
               </div>
             </div>
           ) : filteredProducts.length === 0 ? (
-            <div className="bg-card border border-border rounded-xl p-12 text-center">
-              <p className="text-muted-foreground">No products found</p>
+            <div className="bg-card border border-border rounded-none p-12 text-center">
+              <p className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">No products found</p>
             </div>
           ) : (
             <>
               {/* Mobile View - Cards */}
               <div className="grid grid-cols-1 gap-4 md:hidden">
                 {filteredProducts.map((product) => (
-                  <div key={product.id} className="bg-card p-4 rounded-xl border border-border shadow-sm">
+                  <div key={product.id} className="bg-card p-4 rounded-none border border-border shadow-sm hover:border-primary/30 transition-colors">
                     <div className="flex gap-4 mb-3">
-                      <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted border border-border">
+                      <div className="w-20 h-20 flex-shrink-0 rounded-none overflow-hidden bg-muted border border-border">
                         {product.image_url ? (
                           <img
                             src={product.image_url}
@@ -515,42 +573,67 @@ const Products = () => {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <Package className="w-8 h-8 text-muted-foreground/50" />
+                            <ShoppingBag className="w-8 h-8 text-muted-foreground/50" />
                           </div>
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex justify-between items-start">
                           <div>
-                            <span className="text-xs px-2 py-1 rounded-full bg-accent text-accent-foreground mb-1 inline-block">
+                            <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-none bg-accent text-accent-foreground mb-1 inline-block">
                               {product.category}
                             </span>
-                            <h3 className="font-semibold text-foreground truncate">{product.title}</h3>
+                            <h3 className="font-bold text-foreground truncate uppercase text-sm">{product.title}</h3>
                           </div>
                           <span
-                            className={`px-2 py-1 text-xs rounded-full ml-2 ${product.is_active
-                              ? 'bg-chart-3/20 text-chart-3'
-                              : 'bg-muted text-muted-foreground'
+                            className={`px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter rounded-none ml-2 ${product.is_active
+                              ? 'bg-chart-3/10 text-chart-3 border border-chart-3/20'
+                              : 'bg-muted text-muted-foreground border border-border'
                               }`}
                           >
-                            {product.is_active ? 'Active' : 'Inactive'}
+                            {product.is_active ? 'ACTIVE' : 'INACTIVE'}
                           </span>
                         </div>
-                        <p className="text-lg font-bold text-foreground mt-1">
+                        <p className="text-lg font-black text-foreground mt-1">
                           ${Number(product.price).toFixed(2)}
                         </p>
                       </div>
                     </div>
 
                     <div className="flex items-center justify-end gap-2 border-t border-border pt-3">
-                      <Button variant="outline" size="sm" className="flex-1" onClick={() => handleEdit(product)}>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1 rounded-none border-border/50 text-[10px] font-bold uppercase tracking-widest" 
+                        onClick={() => {
+                          setEditingProduct(product);
+                          setFormData({
+                            title: product.title,
+                            description: product.description || '',
+                            price: product.price.toString(),
+                            category: product.category,
+                            image_url: product.image_url || '',
+                            file_url: product.file_url || '',
+                            template_link: product.template_link || '',
+                            resolution: product.resolution || '',
+                            dimensions: product.dimensions || '',
+                            file_size: product.file_size || '',
+                            is_active: product.is_active,
+                          });
+                          setIsDialogOpen(true);
+                        }}
+                      >
                         <Pencil className="w-3 h-3 mr-2" /> Edit
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-destructive hover:bg-destructive/10 hover:text-destructive px-3"
-                        onClick={() => handleDelete(product.id)}
+                        className="text-destructive hover:bg-destructive/10 hover:text-destructive rounded-none px-3"
+                        onClick={() => {
+                          if (confirm('Are you sure you want to delete this product?')) {
+                            deleteProduct.mutate(product.id);
+                          }
+                        }}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -560,73 +643,100 @@ const Products = () => {
               </div>
 
               {/* Desktop View - Table */}
-              <div className="hidden md:block">
-                <AdminTable minWidthClassName="min-w-[760px]">
-                  <thead className={ADMIN_TABLE_HEADER_CLASS}>
-                    <tr className="border-b border-border bg-muted/50">
-                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Product</th>
-                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Category</th>
-                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Price</th>
-                      <th className="text-left p-4 font-medium text-foreground whitespace-nowrap">Status</th>
-                      <th className="text-right p-4 font-medium text-foreground whitespace-nowrap">Actions</th>
+              <div className="hidden md:block bg-card border border-border rounded-none overflow-hidden shadow-sm">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-muted/50 border-b border-border">
+                      <th className="px-6 py-4 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Product</th>
+                      <th className="px-6 py-4 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pricing</th>
+                      <th className="px-6 py-4 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Segment</th>
+                      <th className="px-6 py-4 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Status</th>
+                      <th className="px-6 py-4 text-right text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredProducts.map((product) => (
-                      <tr key={product.id} className="border-b border-border last:border-0">
-                        <td className="p-4">
-                          <div className="flex items-center gap-3 min-w-[18rem]">
-                            {product.image_url ? (
-                              <img
-                                src={product.image_url}
-                                alt={product.title}
-                                className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
-                                <Package className="w-6 h-6 text-muted-foreground" />
-                              </div>
-                            )}
-                            <div className="min-w-0">
-                              <p className="font-medium text-foreground truncate">{product.title}</p>
-                              <p className="text-sm text-muted-foreground line-clamp-1">
-                                {product.description}
-                              </p>
+                      <tr key={product.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-none overflow-hidden bg-muted border border-border flex-shrink-0">
+                              {product.image_url ? (
+                                <img
+                                  src={product.image_url}
+                                  alt={product.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <ShoppingBag className="w-6 h-6 text-muted-foreground/50" />
+                                </div>
+                              )}
                             </div>
+                            <div className="font-bold text-sm uppercase tracking-tight text-foreground line-clamp-1">{product.title}</div>
                           </div>
                         </td>
-                        <td className="p-4 whitespace-nowrap">
-                          <span className="px-2 py-1 text-xs rounded-full bg-accent text-accent-foreground">
+                        <td className="px-6 py-4 font-black text-sm">
+                          ${Number(product.price).toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-none bg-accent text-accent-foreground border border-border/50">
                             {product.category}
                           </span>
                         </td>
-                        <td className="p-4 font-medium text-foreground whitespace-nowrap">
-                          ${Number(product.price).toFixed(2)}
-                        </td>
-                        <td className="p-4 whitespace-nowrap">
+                        <td className="px-6 py-4">
                           <span
-                            className={`px-2 py-1 text-xs rounded-full ${product.is_active
-                              ? 'bg-chart-3/20 text-chart-3'
-                              : 'bg-muted text-muted-foreground'
+                            className={`px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter rounded-none inline-block ${product.is_active
+                              ? 'bg-chart-3/10 text-chart-3 border border-chart-3/20'
+                              : 'bg-muted text-muted-foreground border border-border'
                               }`}
                           >
-                            {product.is_active ? 'Active' : 'Inactive'}
+                            {product.is_active ? 'ACTIVE' : 'INACTIVE'}
                           </span>
                         </td>
-                        <td className="p-4">
-                          <div className="flex items-center justify-end gap-2 whitespace-nowrap">
-                            <Button variant="ghost" size="icon" onClick={() => handleEdit(product)}>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 rounded-none hover:bg-primary/10 hover:text-primary"
+                              onClick={() => {
+                                setEditingProduct(product);
+                                setFormData({
+                                  title: product.title,
+                                  description: product.description || '',
+                                  price: product.price.toString(),
+                                  category: product.category,
+                                  image_url: product.image_url || '',
+                                  file_url: product.file_url || '',
+                                  template_link: product.template_link || '',
+                                  resolution: product.resolution || '',
+                                  dimensions: product.dimensions || '',
+                                  file_size: product.file_size || '',
+                                  is_active: product.is_active,
+                                });
+                                setIsDialogOpen(true);
+                              }}
+                            >
                               <Pencil className="w-4 h-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleDelete(product.id)}>
-                              <Trash2 className="w-4 h-4 text-destructive" />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 rounded-none hover:bg-destructive/10 hover:text-destructive"
+                              onClick={() => {
+                                if (confirm('Are you sure you want to delete this product?')) {
+                                  deleteProduct.mutate(product.id);
+                                }
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         </td>
                       </tr>
                     ))}
                   </tbody>
-                </AdminTable>
+                </table>
               </div>
             </>
           )}

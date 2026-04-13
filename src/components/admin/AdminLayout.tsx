@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard,
-  Package,
   ShoppingCart,
   Users,
   Settings,
@@ -30,6 +29,7 @@ import {
   Store,
   FileText,
   Sparkles,
+  ShoppingBag,
   User,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -57,7 +57,7 @@ const navItems = [
   { path: '/admin/featured-projects', label: 'Featured Projects', icon: Star, access: 'moderator' },
   { path: '/admin/portfolio', label: 'Portfolio', icon: Briefcase, access: 'moderator' },
   { path: '/admin/services', label: 'Services', icon: Sparkles, access: 'moderator' },
-  { path: '/admin/products', label: 'Products', icon: Package, access: 'moderator' },
+  { path: '/admin/products', label: 'Products', icon: ShoppingBag, access: 'moderator' },
   { path: '/admin/testimonials', label: 'Testimonials', icon: MessageSquare, access: 'moderator' },
   { path: '/admin/faqs', label: 'FAQs', icon: HelpCircle, access: 'moderator' },
   { path: '/admin/about', label: 'About Page', icon: Info, access: 'moderator' },
@@ -167,7 +167,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
-                  className={`relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
+                  className={`relative flex items-center gap-3 px-4 py-3 rounded-none transition-all duration-200 group ${isActive
                     ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
                     : 'text-muted-foreground hover:bg-primary/5 hover:text-primary'
                     }`}

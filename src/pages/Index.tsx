@@ -138,7 +138,7 @@ const Index = () => {
 
   // Fetch featured products using centralized hook
   const { data: allProducts = [] } = useProducts({ isActive: true });
-  const featuredProducts = allProducts.slice(0, 4);
+  const featuredProducts = allProducts.slice(0, 8);
 
   // Fetch testimonials using centralized hook
   const { data: testimonials = [] } = useTestimonials();
