@@ -135,6 +135,7 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
 
         const faviconUrl = getSetting('site_favicon_url', '/favicon.png');
         if (faviconUrl) {
+            // Update standard favicon
             let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
             if (!link) {
                 link = document.createElement('link');
@@ -142,6 +143,15 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
                 document.head.appendChild(link);
             }
             link.href = faviconUrl;
+
+            // Update apple-touch-icon for mobile home screens
+            let appleLink: HTMLLinkElement | null = document.querySelector("link[rel='apple-touch-icon']");
+            if (!appleLink) {
+                appleLink = document.createElement('link');
+                appleLink.rel = 'apple-touch-icon';
+                document.head.appendChild(appleLink);
+            }
+            appleLink.href = faviconUrl;
         }
     }, [siteSettings, getSetting]);
 
