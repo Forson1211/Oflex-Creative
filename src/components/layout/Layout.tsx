@@ -6,7 +6,7 @@ import { PageTransition } from './PageTransition';
 
 import { useSiteTracking } from '@/hooks/useSiteTracking';
 
-import { AICreativeAssistant } from '@/components/ui/AICreativeAssistant';
+
 
 interface LayoutProps {
   children: ReactNode;
@@ -24,7 +24,6 @@ export const Layout = ({ children }: LayoutProps) => {
         </PageTransition>
       </main>
       <Footer />
-      <AICreativeAssistant />
     </div>
   );
 };

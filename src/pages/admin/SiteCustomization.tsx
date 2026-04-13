@@ -36,7 +36,6 @@ import {
   MessageSquare,
   Zap,
   Store,
-  Bot,
   Info
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -230,7 +229,7 @@ const SiteCustomization = () => {
                   { id: 'homepage', label: 'Home', icon: Globe },
                   { id: 'pages', label: 'Pages', icon: FileText },
                   { id: 'store', label: 'Store', icon: Store },
-                  { id: 'ai', label: 'AI Training', icon: Sparkles },
+
                   { id: 'contact', label: 'Contact', icon: MapPin },
                   { id: 'social', label: 'Social', icon: Share2 },
                 ].map((tab) => (
@@ -1130,91 +1129,6 @@ const SiteCustomization = () => {
             </TabsContent>
 
 
-            {/* AI Training Tab */}
-            <TabsContent value="ai" className="space-y-6 sm:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-                <GlassCard className="lg:col-span-2 p-6 sm:p-8 border-primary/10">
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center shadow-inner">
-                      <Bot className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-bold text-foreground">AI Intelligence & Personality</h2>
-                      <p className="text-sm text-muted-foreground font-medium">Train your assistant to represent your brand</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-10">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-3">
-                        <Label htmlFor="ai_assistant_name" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Assistant Identity</Label>
-                        <Input
-                          id="ai_assistant_name"
-                          value={settings.ai_assistant_name || 'Oflex Creative Assistant'}
-                          className="bg-background/50 rounded-xl h-12 border-primary/10"
-                          onChange={(e) => updateSetting('ai_assistant_name', e.target.value)}
-                          placeholder="e.g. Oflex Pro"
-                        />
-                      </div>
-                      <div className="space-y-3 font-medium">
-                        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Tone of Voice</Label>
-                        <div className="flex items-center gap-2 p-3 bg-primary/5 rounded-xl border border-primary/10">
-                          <Zap className="w-4 h-4 text-primary" />
-                          <span className="text-xs">Professional, Architectural, Elite</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4 pt-4 border-t border-border/40">
-                      <Label htmlFor="ai_company_bio" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Company Bio (Historical Context)</Label>
-                      <Textarea
-                        id="ai_company_bio"
-                        value={settings.ai_company_bio || ''}
-                        className="bg-background/50 rounded-xl min-h-[120px] leading-relaxed"
-                        onChange={(e) => updateSetting('ai_company_bio', e.target.value)}
-                        placeholder="Tell the AI about your studio's origins, mission, and unique '90-degree' design philosophy..."
-                      />
-                    </div>
-
-                    <div className="space-y-4 pt-4 border-t border-border/40">
-                      <Label htmlFor="ai_custom_knowledge" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Knowledge Base (Facts & FAQs)</Label>
-                      <Textarea
-                        id="ai_custom_knowledge"
-                        value={settings.ai_custom_knowledge || ''}
-                        className="bg-background/50 rounded-xl min-h-[250px] font-mono text-xs leading-relaxed"
-                        onChange={(e) => updateSetting('ai_custom_knowledge', e.target.value)}
-                        placeholder="Price for flyers: $50&#10;Turnaround time: 24 hours&#10;Software used: Adobe Suite & Canva&#10;Location: Global..."
-                      />
-                      <p className="text-[10px] text-muted-foreground">The AI will use these facts to answer client inquiries accurately.</p>
-                    </div>
-                  </div>
-                </GlassCard>
-
-                <div className="space-y-6">
-                  <GlassCard className="p-6 border-accent/20">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
-                        <Palette className="w-4 h-4 text-accent-foreground" />
-                      </div>
-                      <h3 className="font-bold text-sm">Design Logic Training</h3>
-                    </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Your AI is automatically trained on the <strong>Oflex Design Ethos</strong>: Architectural precision, intentional geometry, and surgical clarity.
-                    </p>
-                  </GlassCard>
-
-                  <GlassCard className="p-6 border-primary/20 bg-primary/5">
-                    <div className="flex items-center gap-3 mb-4">
-                      <Sparkles className="w-5 h-5 text-primary" />
-                      <h3 className="font-bold text-sm">Real-time Syncing</h3>
-                    </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Any training data added here is instantly distributed to the <strong>Creative Assistant</strong> floating on your live storefront.
-                    </p>
-                  </GlassCard>
-                </div>
-              </div>
-            </TabsContent>
             
             <TabsContent value="contact" className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
