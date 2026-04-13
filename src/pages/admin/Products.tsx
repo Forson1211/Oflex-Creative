@@ -74,6 +74,30 @@ const Products = () => {
   const [allCategories, setAllCategories] = useState<string[]>([]);
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
+  const generateAIDescription = async () => {
+    if (!formData.title) return;
+    
+    setIsGeneratingAI(true);
+    // Simulate AI generation delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    const titles = [
+      `Elevate your design game with this premium ${formData.title}. Meticulously crafted for creative professionals who demand excellence. This high-resolution template features clean layouts, modern typography, and fully customizable elements to fit your brand perfectly.`,
+      `Transform your creative workflow with our exclusive ${formData.title}. Designed with a focus on impact and professional aesthetics, this digital asset provides the perfect foundation for your next masterpiece. Easy to use, highly flexible, and ready for deployment.`,
+      `The definitive ${formData.title} for creators. Whether you are building a brand or launching a new campaign, this professional-grade template offers the surgical precision and elite design language your project deserves. Experience the next level of creative studio assets.`
+    ];
+    
+    const randomDesc = titles[Math.floor(Math.random() * titles.length)];
+    setFormData(prev => ({ ...prev, description: randomDesc }));
+    setIsGeneratingAI(false);
+    
+    toast({
+      title: 'AI Generated',
+      description: 'Professional product description has been generated successfully.',
+    });
+  };
 
   // ... (existing code) ...
 
@@ -289,12 +313,31 @@ const Products = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="description">Description</Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary hover:bg-primary/10 gap-2"
+                      onClick={() => generateAIDescription()}
+                      disabled={isGeneratingAI || !formData.title}
+                    >
+                      {isGeneratingAI ? (
+                        <Sparkles className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <Sparkles className="w-3 h-3" />
+                      )}
+                      {isGeneratingAI ? 'Generating...' : 'AI Enhance'}
+                    </Button>
+                  </div>
                   <Textarea
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={3}
+                    rows={4}
+                    placeholder="Enter description or use AI to generate professional copy..."
+                    className="resize-none"
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

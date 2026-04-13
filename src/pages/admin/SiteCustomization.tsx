@@ -36,11 +36,13 @@ import {
   MessageSquare,
   Zap,
   Store,
+  Bot,
   Info
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { cn } from '@/lib/utils';
+import { Slider } from '@/components/ui/slider';
 import {
   Select,
   SelectContent,
@@ -228,6 +230,7 @@ const SiteCustomization = () => {
                   { id: 'homepage', label: 'Home', icon: Globe },
                   { id: 'pages', label: 'Pages', icon: FileText },
                   { id: 'store', label: 'Store', icon: Store },
+                  { id: 'ai', label: 'AI Training', icon: Sparkles },
                   { id: 'contact', label: 'Contact', icon: MapPin },
                   { id: 'social', label: 'Social', icon: Share2 },
                 ].map((tab) => (
@@ -1020,67 +1023,106 @@ const SiteCustomization = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                    <div className="space-y-4">
-                      <Label className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Desktop Alignment</Label>
-                      <Select
-                        value={settings.store_banner_pos_desktop || 'object-right-top'}
-                        onValueChange={(val) => updateSetting('store_banner_pos_desktop', val)}
-                      >
-                        <SelectTrigger className="h-12 bg-background/50 rounded-xl">
-                          <SelectValue placeholder="Select position" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="object-center">Center</SelectItem>
-                          <SelectItem value="object-top">Top</SelectItem>
-                          <SelectItem value="object-bottom">Bottom</SelectItem>
-                          <SelectItem value="object-left">Left</SelectItem>
-                          <SelectItem value="object-right">Right</SelectItem>
-                          <SelectItem value="object-right-top">Right Top (Focus Face)</SelectItem>
-                          <SelectItem value="object-right-bottom">Right Bottom</SelectItem>
-                          <SelectItem value="object-left-top">Left Top</SelectItem>
-                          <SelectItem value="object-left-bottom">Left Bottom</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <p className="text-[10px] text-muted-foreground">Sets the focal point for computer screens.</p>
-                    </div>
-
-                    <div className="space-y-4">
-                      <Label className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Mobile Alignment</Label>
-                      <Select
-                        value={settings.store_banner_pos_mobile || 'object-center'}
-                        onValueChange={(val) => updateSetting('store_banner_pos_mobile', val)}
-                      >
-                        <SelectTrigger className="h-12 bg-background/50 rounded-xl">
-                          <SelectValue placeholder="Select position" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="object-center">Center</SelectItem>
-                          <SelectItem value="object-top">Top</SelectItem>
-                          <SelectItem value="object-bottom">Bottom</SelectItem>
-                          <SelectItem value="object-left">Left</SelectItem>
-                          <SelectItem value="object-right">Right</SelectItem>
-                          <SelectItem value="object-left-top">Left Top</SelectItem>
-                          <SelectItem value="object-right-top">Right Top</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <p className="text-[10px] text-muted-foreground">Sets the focal point for phone screens.</p>
-                    </div>
-
-                    <div className="space-y-4">
-                      <Label className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Dark Overlay Intensity (%)</Label>
-                      <div className="flex items-center gap-4">
-                        <Input
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={settings.store_banner_overlay_opacity || '70'}
-                          className="h-12 bg-background/50 rounded-xl"
-                          onChange={(e) => updateSetting('store_banner_overlay_opacity', e.target.value)}
-                        />
-                        <span className="text-xs font-bold text-muted-foreground uppercase">%</span>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="p-6 rounded-2xl bg-background/30 border border-border/50 space-y-6">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Layout className="w-4 h-4 text-primary" />
+                        <h3 className="text-sm font-bold uppercase tracking-widest text-foreground/70">Desktop Framing</h3>
                       </div>
-                      <p className="text-[10px] text-muted-foreground">Higher values make the banner darker for better text legibility.</p>
+                      
+                      <div className="space-y-4">
+                        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter flex justify-between">
+                          Horizontal Position
+                          <span className="text-primary">{settings.store_banner_x_desktop || '50'}%</span>
+                        </Label>
+                        <Slider
+                          value={[Number(settings.store_banner_x_desktop || '50')]}
+                          min={0}
+                          max={100}
+                          step={1}
+                          onValueChange={([val]) => updateSetting('store_banner_x_desktop', val.toString())}
+                          className="py-4"
+                        />
+                      </div>
+
+                      <div className="space-y-4">
+                        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter flex justify-between">
+                          Vertical Position
+                          <span className="text-primary">{settings.store_banner_y_desktop || '50'}%</span>
+                        </Label>
+                        <Slider
+                          value={[Number(settings.store_banner_y_desktop || '50')]}
+                          min={0}
+                          max={100}
+                          step={1}
+                          onValueChange={([val]) => updateSetting('store_banner_y_desktop', val.toString())}
+                          className="py-4"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="p-6 rounded-2xl bg-background/30 border border-border/50 space-y-6">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Sparkles className="w-4 h-4 text-accent-foreground" />
+                        <h3 className="text-sm font-bold uppercase tracking-widest text-foreground/70">Mobile Framing</h3>
+                      </div>
+
+                      <div className="space-y-4">
+                        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter flex justify-between">
+                          Horizontal Position
+                          <span className="text-primary">{settings.store_banner_x_mobile || '50'}%</span>
+                        </Label>
+                        <Slider
+                          value={[Number(settings.store_banner_x_mobile || '50')]}
+                          min={0}
+                          max={100}
+                          step={1}
+                          onValueChange={([val]) => updateSetting('store_banner_x_mobile', val.toString())}
+                          className="py-4"
+                        />
+                      </div>
+
+                      <div className="space-y-4">
+                        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter flex justify-between">
+                          Vertical Position
+                          <span className="text-primary">{settings.store_banner_y_mobile || '50'}%</span>
+                        </Label>
+                        <Slider
+                          value={[Number(settings.store_banner_y_mobile || '50')]}
+                          min={0}
+                          max={100}
+                          step={1}
+                          onValueChange={([val]) => updateSetting('store_banner_y_mobile', val.toString())}
+                          className="py-4"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="md:col-span-2 p-6 rounded-2xl bg-primary/10 border border-primary/20 space-y-6">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="space-y-1">
+                          <Label className="text-sm font-bold text-foreground">Dark Overlay Intensity</Label>
+                          <p className="text-[10px] text-muted-foreground">Adjust for maximum text contrast.</p>
+                        </div>
+                        <div className="flex items-center gap-3 bg-background/50 rounded-lg p-2 border border-border/40">
+                           <Input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={settings.store_banner_overlay_opacity || '70'}
+                            className="w-16 h-8 bg-transparent border-none text-center font-bold"
+                            onChange={(e) => updateSetting('store_banner_overlay_opacity', e.target.value)}
+                          />
+                          <span className="text-[10px] font-bold text-muted-foreground">%</span>
+                        </div>
+                      </div>
+                      <Slider
+                        value={[Number(settings.store_banner_overlay_opacity || '70')]}
+                        min={0}
+                        max={100}
+                        step={1}
+                        onValueChange={([val]) => updateSetting('store_banner_overlay_opacity', val.toString())}
+                      />
                     </div>
                   </div>
                 </GlassCard>
@@ -1088,6 +1130,92 @@ const SiteCustomization = () => {
             </TabsContent>
 
 
+            {/* AI Training Tab */}
+            <TabsContent value="ai" className="space-y-6 sm:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+                <GlassCard className="lg:col-span-2 p-6 sm:p-8 border-primary/10">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center shadow-inner">
+                      <Bot className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-foreground">AI Intelligence & Personality</h2>
+                      <p className="text-sm text-muted-foreground font-medium">Train your assistant to represent your brand</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-3">
+                        <Label htmlFor="ai_assistant_name" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Assistant Identity</Label>
+                        <Input
+                          id="ai_assistant_name"
+                          value={settings.ai_assistant_name || 'Oflex Creative Assistant'}
+                          className="bg-background/50 rounded-xl h-12 border-primary/10"
+                          onChange={(e) => updateSetting('ai_assistant_name', e.target.value)}
+                          placeholder="e.g. Oflex Pro"
+                        />
+                      </div>
+                      <div className="space-y-3 font-medium">
+                        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Tone of Voice</Label>
+                        <div className="flex items-center gap-2 p-3 bg-primary/5 rounded-xl border border-primary/10">
+                          <Zap className="w-4 h-4 text-primary" />
+                          <span className="text-xs">Professional, Architectural, Elite</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 pt-4 border-t border-border/40">
+                      <Label htmlFor="ai_company_bio" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Company Bio (Historical Context)</Label>
+                      <Textarea
+                        id="ai_company_bio"
+                        value={settings.ai_company_bio || ''}
+                        className="bg-background/50 rounded-xl min-h-[120px] leading-relaxed"
+                        onChange={(e) => updateSetting('ai_company_bio', e.target.value)}
+                        placeholder="Tell the AI about your studio's origins, mission, and unique '90-degree' design philosophy..."
+                      />
+                    </div>
+
+                    <div className="space-y-4 pt-4 border-t border-border/40">
+                      <Label htmlFor="ai_custom_knowledge" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Knowledge Base (Facts & FAQs)</Label>
+                      <Textarea
+                        id="ai_custom_knowledge"
+                        value={settings.ai_custom_knowledge || ''}
+                        className="bg-background/50 rounded-xl min-h-[250px] font-mono text-xs leading-relaxed"
+                        onChange={(e) => updateSetting('ai_custom_knowledge', e.target.value)}
+                        placeholder="Price for flyers: $50&#10;Turnaround time: 24 hours&#10;Software used: Adobe Suite & Canva&#10;Location: Global..."
+                      />
+                      <p className="text-[10px] text-muted-foreground">The AI will use these facts to answer client inquiries accurately.</p>
+                    </div>
+                  </div>
+                </GlassCard>
+
+                <div className="space-y-6">
+                  <GlassCard className="p-6 border-accent/20">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
+                        <Palette className="w-4 h-4 text-accent-foreground" />
+                      </div>
+                      <h3 className="font-bold text-sm">Design Logic Training</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Your AI is automatically trained on the <strong>Oflex Design Ethos</strong>: Architectural precision, intentional geometry, and surgical clarity.
+                    </p>
+                  </GlassCard>
+
+                  <GlassCard className="p-6 border-primary/20 bg-primary/5">
+                    <div className="flex items-center gap-3 mb-4">
+                      <Sparkles className="w-5 h-5 text-primary" />
+                      <h3 className="font-bold text-sm">Real-time Syncing</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Any training data added here is instantly distributed to the <strong>Creative Assistant</strong> floating on your live storefront.
+                    </p>
+                  </GlassCard>
+                </div>
+              </div>
+            </TabsContent>
+            
             <TabsContent value="contact" className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
                 <GlassCard className="md:col-span-2 p-6 sm:p-8 lg:p-10 border-primary/10">

@@ -141,8 +141,12 @@ const Store = () => {
   const bannerHeightMobile = getSetting('store_banner_height_mobile', '600');
   const bannerHeightDesktop = getSetting('store_banner_height_desktop', '750');
   const bannerUrl = getSetting('store_banner_url', '/Banner.jpg');
-  const posMobile = getSetting('store_banner_pos_mobile', 'object-center');
-  const posDesktop = getSetting('store_banner_pos_desktop', 'object-right-top');
+  
+  const posXDesktop = getSetting('store_banner_x_desktop', '50');
+  const posYDesktop = getSetting('store_banner_y_desktop', '50');
+  const posXMobile = getSetting('store_banner_x_mobile', '50');
+  const posYMobile = getSetting('store_banner_y_mobile', '50');
+  
   const overlayOpacity = Number(getSetting('store_banner_overlay_opacity', '70')) / 100;
 
   return (
@@ -162,7 +166,14 @@ const Store = () => {
               <OptimizedImage
                 src={bannerUrl}
                 className="w-full h-full"
-                imageClassName={cn("w-full h-full object-cover grayscale-0 transition-all duration-700", posMobile, `md:${posDesktop}`)}
+                style={{ 
+                  ['--desktop-pos' as any]: `${posXDesktop}% ${posYDesktop}%`,
+                  ['--mobile-pos' as any]: `${posXMobile}% ${posYMobile}%`,
+                } as any}
+                imageClassName={cn(
+                  "w-full h-full object-cover grayscale-0 transition-all duration-700",
+                  "object-[var(--mobile-pos)] md:object-[var(--desktop-pos)]"
+                )}
                 alt="Store Banner"
                 priority
                 width={1920}
