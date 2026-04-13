@@ -516,12 +516,9 @@ const Index = () => {
       <section className="py-24 relative overflow-hidden bg-slate-50 dark:bg-background border-t border-border/10">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-extrabold text-[#1A1028] dark:text-white mb-3 font-roboto">
-              Our Softwares
+            <h2 className="text-4xl md:text-5xl font-extrabold text-[#1A1028] dark:text-white mb-3 font-roboto uppercase tracking-tighter">
+              Our Projects
             </h2>
-            <p className="text-muted-foreground font-medium uppercase tracking-[0.2em] text-xs">
-              Secure & Reliable
-            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -532,10 +529,10 @@ const Index = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-white dark:bg-card border border-border/40 rounded-[24px] p-10 flex flex-col items-center shadow-[0_8px_30px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_15px_40px_-5px_rgba(0,0,0,0.08)] transition-all duration-500 h-full group"
+                className="bg-white dark:bg-card border border-border/40 rounded-none p-10 flex flex-col items-center shadow-[0_8px_30px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_15px_40px_-5px_rgba(0,0,0,0.08)] transition-all duration-500 h-full group"
               >
-                {/* Logo Area - High visibility for logos */}
-                <div className="h-24 w-full mb-8 relative flex items-center justify-center grayscale hover:grayscale-0 transition-all duration-500 transform group-hover:scale-105">
+                {/* Logo Area - High visibility for logos - REMOVED GRAYSCALE */}
+                <div className="h-24 w-full mb-8 relative flex items-center justify-center transition-all duration-500 transform group-hover:scale-105">
                   {project.image_url ? (
                     <OptimizedImage
                       src={project.image_url}

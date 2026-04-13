@@ -54,6 +54,40 @@ const Portfolio = () => {
       : portfolioItems.filter(item => item.category === activeCategory);
   }, [activeCategory, portfolioItems]);
 
+  // Helper to check if a URL is embeddable (Canva, PosterMyWall, etc.)
+  const getEmbedUrl = (url: string | null) => {
+    if (!url) return null;
+    
+    // Canva detection
+    if (url.includes('canva.com')) {
+      if (url.includes('/design/')) {
+        const baseUrl = url.split('?')[0];
+        return `${baseUrl}/view?embed`;
+      }
+      // Profiles are usually not directly embeddable as interactive designs,
+      // but we'll try to handle typical design URLs if they appear.
+    }
+    
+    // PosterMyWall detection
+    if (url.includes('postermywall.com')) {
+      // Handle design links like /index.php/d/...
+      if (url.includes('/index.php/d/')) {
+        const id = url.split('/d/')[1]?.split('?')[0];
+        if (id) {
+          return `https://www.postermywall.com/index.php/poster/embed/${id}`;
+        }
+      }
+      // Standard embed links
+      if (url.includes('/poster/embed/')) {
+        return url;
+      }
+    }
+
+    return null;
+  };
+
+  const embedUrl = useMemo(() => getEmbedUrl(selectedItem?.project_url || null), [selectedItem]);
+
   return (
     <Layout>
       {/* Hero Section */}
@@ -163,6 +197,11 @@ const Portfolio = () => {
                           className="w-full h-full"
                           imageClassName="object-cover object-top transition-transform duration-700 group-hover:scale-105"
                         />
+                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Button variant="outline" className="text-white border-white hover:bg-white hover:text-black font-bold uppercase tracking-widest text-[10px]">
+                               Expand Project
+                            </Button>
+                         </div>
                       </div>
                       
                       <div className="p-6 md:p-8 flex flex-col flex-1 bg-white dark:bg-card">
@@ -193,49 +232,87 @@ const Portfolio = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center p-4"
+            className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-md flex items-center justify-center p-4 md:p-8"
             onClick={() => setSelectedItem(null)}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative max-w-4xl w-full"
+              className="relative max-w-6xl w-full bg-card shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
               onClick={(e) => e.stopPropagation()}
             >
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute -top-12 right-0 text-foreground"
+                className="absolute top-4 right-4 z-50 text-foreground bg-background/50 backdrop-blur-md hover:bg-background/80"
                 onClick={() => setSelectedItem(null)}
               >
                 <X className="w-6 h-6" />
               </Button>
-              <div className="rounded-2xl overflow-hidden">
-                <OptimizedImage
-                  src={selectedItem.image_url}
-                  alt={selectedItem.title}
-                  width={1200}
-                  className="w-full h-auto"
-                  priority
-                />
-              </div>
-              <div className="mt-4 text-center space-y-4">
-                <div>
-                  <span className="inline-block px-3 py-1 rounded-full bg-primary text-primary-foreground text-sm font-medium mb-2">
-                    {selectedItem.category}
-                  </span>
-                  <h3 className="text-2xl font-semibold text-foreground">{selectedItem.title}</h3>
+              
+              <div className="flex-1 overflow-y-auto custom-scrollbar">
+                <div className="grid lg:grid-cols-[1fr_350px] divide-x divide-border">
+                  {/* Visual Content */}
+                  <div className="p-0 bg-muted/20">
+                    {embedUrl ? (
+                      <div className="relative aspect-video lg:aspect-auto lg:h-full min-h-[400px]">
+                        <iframe
+                          src={embedUrl}
+                          className="absolute inset-0 w-full h-full border-0"
+                          allowFullScreen
+                          loading="lazy"
+                          title={selectedItem.title}
+                        />
+                      </div>
+                    ) : (
+                      <div className="p-4 md:p-8 flex items-center justify-center min-h-[400px]">
+                        <OptimizedImage
+                          src={selectedItem.image_url}
+                          alt={selectedItem.title}
+                          width={1200}
+                          className="w-full h-auto shadow-sm"
+                          priority
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Info Panel */}
+                  <div className="p-8 space-y-8 bg-card flex flex-col h-full">
+                    <div className="space-y-4">
+                      <span className="inline-block px-3 py-1 rounded-none bg-[#FF6B35]/10 text-[#FF6B35] text-[10px] font-black uppercase tracking-widest border border-[#FF6B35]/20">
+                        {selectedItem.category}
+                      </span>
+                      <h3 className="text-3xl font-black text-foreground leading-tight uppercase tracking-tight">{selectedItem.title}</h3>
+                      <div className="h-1 w-12 bg-[#FF6B35]" />
+                    </div>
+
+                    <div className="flex-grow">
+                      <p className="text-muted-foreground leading-relaxed text-[15px]">
+                        {selectedItem.description || "Detailed project documentation and creative walkthrough."}
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-4 pt-8 border-t border-border">
+                      {selectedItem.project_url && (
+                        <Button asChild className="w-full bg-[#1A1028] hover:bg-[#251838] dark:bg-white dark:hover:bg-white/90 text-white dark:text-black font-bold h-12 rounded-sm shadow-sm transition-all group">
+                          <a href={selectedItem.project_url} target="_blank" rel="noopener noreferrer">
+                            Visit Live Project
+                            <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+                          </a>
+                        </Button>
+                      )}
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setSelectedItem(null)}
+                        className="w-full border-border/50 hover:bg-muted font-bold h-12 rounded-sm transition-all"
+                      >
+                         Return to Portfolio
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                
-                {selectedItem.project_url && (
-                  <Button asChild className="bg-primary hover:bg-primary/90">
-                    <a href={selectedItem.project_url} target="_blank" rel="noopener noreferrer">
-                      Visit Live Project
-                      <ArrowRight className="ml-2 w-4 h-4" />
-                    </a>
-                  </Button>
-                )}
               </div>
             </motion.div>
           </motion.div>
