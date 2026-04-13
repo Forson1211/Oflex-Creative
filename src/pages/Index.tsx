@@ -516,47 +516,49 @@ const Index = () => {
       <section className="py-24 relative overflow-hidden bg-slate-50 dark:bg-background border-t border-border/10">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-extrabold text-[#1A1028] dark:text-white mb-3 font-roboto uppercase tracking-tighter">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-[#1A1028] dark:text-white mb-3 font-roboto uppercase">
               Our Projects
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredProjects.map((project, index) => (
-              <motion.div
-                key={project.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-white dark:bg-card border border-border/40 rounded-none p-10 flex flex-col items-center shadow-[0_8px_30px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_15px_40px_-5px_rgba(0,0,0,0.08)] transition-all duration-500 h-full group"
-              >
-                {/* Logo Area - High visibility for logos - REMOVED GRAYSCALE */}
-                <div className="h-24 w-full mb-8 relative flex items-center justify-center transition-all duration-500 transform group-hover:scale-105">
-                  {project.image_url ? (
-                    <OptimizedImage
-                      src={project.image_url}
-                      alt={project.title}
-                      width={400}
-                      className="w-full h-full"
-                      imageClassName="object-contain"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center gap-2">
-                      <h3 className="text-3xl font-bold text-[#1A1028] dark:text-white">{project.title}</h3>
-                    </div>
-                  )}
-                </div>
+            <motion.div
+              key={project.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className="bg-white dark:bg-card border border-border/40 rounded-none flex flex-col shadow-[0_8px_30px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_15px_40px_-5px_rgba(0,0,0,0.08)] transition-all duration-500 h-full group overflow-hidden"
+            >
+              {/* Logo Area - High visibility for logos - Full Width Cover */}
+              <div className="aspect-video w-full relative overflow-hidden transition-all duration-500">
+                {project.image_url ? (
+                  <OptimizedImage
+                    src={project.image_url}
+                    alt={project.title}
+                    width={600}
+                    className="w-full h-full transform group-hover:scale-105 transition-transform duration-700"
+                    imageClassName="object-cover w-full h-full"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                    <h3 className="text-xl font-bold text-[#1A1028] dark:text-white uppercase">{project.title}</h3>
+                  </div>
+                )}
+              </div>
 
-                <div className="text-center flex-grow">
-                  <p className="text-[15px] leading-relaxed text-muted-foreground mb-10">
-                    <span className="font-bold text-[#FF6B35]">{project.title}</span> {project.description || "is an innovative software solution designed to empower digital operations for modern businesses."}
+              <div className="p-8 flex flex-col flex-grow">
+                <div className="flex-grow mb-6">
+                  <p className="text-[14px] leading-relaxed text-muted-foreground">
+                    <span className="font-black text-[#FF6B35] uppercase mr-1">{project.title}</span>
+                    {project.description || "is an innovative software solution designed to empower digital operations for modern businesses."}
                   </p>
                 </div>
 
-                <div className="mt-auto w-full flex justify-center">
+                <div className="w-full">
                   <Button
-                    className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white px-10 py-6 rounded-sm font-bold text-base transition-all duration-300 shadow-sm"
+                    className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white w-full py-6 rounded-none font-bold text-xs uppercase transition-all duration-300 shadow-sm"
                     asChild
                   >
                     {project.project_url ? (
@@ -570,8 +572,9 @@ const Index = () => {
                     )}
                   </Button>
                 </div>
-              </motion.div>
-            ))}
+              </div>
+            </motion.div>
+          ))}
           </div>
 
           <motion.div
