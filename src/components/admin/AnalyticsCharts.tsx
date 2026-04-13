@@ -5,13 +5,13 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 
-export const AnalyticsCharts = () => {
-  const { data: rawData = [], isLoading: loading } = useAnalytics();
+export const AnalyticsCharts = ({ daysRange = 'last7' }: { daysRange?: string }) => {
+  const { data: rawData = [], isLoading: loading } = useAnalytics(daysRange);
 
   const data = useMemo(() => {
     return rawData.map(item => ({
       ...item,
-      date: new Date(item.date).toLocaleDateString('en-US', { weekday: 'short' })
+      date: new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     }));
   }, [rawData]);
 

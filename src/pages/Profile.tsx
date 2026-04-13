@@ -177,136 +177,110 @@ const Profile = () => {
         <div className="container mx-auto px-4 relative">
           <div className="max-w-7xl mx-auto">
 
-            {/* Profile Header - Modern & Integrated (No Banner) */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="relative mb-8 md:mb-12"
-            >
-              <GlassCard className="p-5 sm:p-8 md:p-12 border-primary/10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] bg-gradient-to-br from-card/60 via-card/40 to-background/60 backdrop-blur-3xl relative overflow-hidden group">
-                {/* Decorative background element */}
-                <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors duration-700" />
 
-                <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10 relative z-10">
-                  {/* Avatar with Multi-layer Glow */}
-                  <div className="relative">
-                    <div className="absolute inset-[-4px] bg-gradient-to-tr from-primary via-accent to-primary rounded-full blur-md opacity-20 group-hover:opacity-40 transition-opacity duration-500" />
-                    <Avatar className="w-28 h-28 sm:w-32 sm:h-32 md:w-44 md:h-44 border-[3px] md:border-[4px] border-background shadow-2xl relative z-10">
-                      <AvatarImage src={getOptimizedImageUrl(profile?.avatar_url || '', 400)} className="object-cover" />
-                      <AvatarFallback className="text-3xl sm:text-4xl md:text-6xl bg-muted text-primary font-bold">
-                        {profile?.full_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
-                      </AvatarFallback>
-                      {isUploadingAvatar && (
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20">
-                          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                        </div>
-                      )}
-                    </Avatar>
-                    <input
-                      type="file"
-                      id="avatar-upload"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      disabled={isUploadingAvatar}
-                    />
-                    <label
-                      htmlFor="avatar-upload"
-                      className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 p-2 sm:p-3 bg-primary text-white rounded-none shadow-2xl z-20 hover:scale-110 active:scale-95 transition-all cursor-pointer"
-                    >
-                      <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </label>
-                  </div>
-
-                  <div className="flex-1 text-center md:text-left space-y-3 sm:space-y-4">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[9px] sm:text-[10px] font-bold tracking-[0.2em] uppercase">
-                      Member of Creative Studio
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
-                        <h1 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tight leading-tight text-foreground">
-                          {isLoading ? "Loading..." : profile?.full_name || 'Creative Member'}
-                        </h1>
-                        {(isAdmin || isModerator) && (
-                          <Badge className={cn(
-                            "w-fit mx-auto md:mx-0 px-3 py-0.5 rounded-full text-[9px] font-bold tracking-widest border backdrop-blur-xl animate-pulse",
-                            isAdmin
-                              ? "bg-red-500/20 text-red-500 border-red-500/30"
-                              : "bg-blue-500/20 text-blue-500 border-blue-500/30"
-                          )}>
-                            {isAdmin ? "ADMIN" : "MODERATOR"}
-                          </Badge>
-                        )}
-                      </div>
-
-                      <div className="flex flex-wrap justify-center md:justify-start gap-4 sm:gap-6 text-muted-foreground pt-1">
-                        <div className="flex items-center gap-2 group/item">
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-muted flex items-center justify-center group-hover/item:bg-primary/10 transition-colors">
-                            <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                          </div>
-                          <span className="text-sm sm:text-base font-semibold tracking-tight">{user?.email}</span>
-                        </div>
-                        <div className="flex items-center gap-2 group/item">
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-muted flex items-center justify-center group-hover/item:bg-primary/10 transition-colors">
-                            <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                          </div>
-                          <span className="text-sm sm:text-base font-semibold tracking-tight capitalize">
-                            {isAdmin ? 'Owner' : isModerator ? 'Staff' : 'Pro Member'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex flex-col gap-2 sm:gap-3 w-full sm:w-auto mt-4 md:mt-0 min-w-[180px]">
-                    <Button
-                      onClick={() => setIsEditingProfile(true)}
-                      className="rounded-none h-11 sm:h-14 text-sm sm:text-base font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all gap-2"
-                    >
-                      <Edit2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                      Edit Profile
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={handleSignOut}
-                      className="rounded-none h-11 sm:h-14 text-sm sm:text-base font-bold border-destructive/20 text-destructive hover:bg-destructive/5 hover:border-destructive transition-all gap-2"
-                    >
-                      <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
-                      Sign Out
-                    </Button>
-                  </div>
-                </div>
-              </GlassCard>
-            </motion.div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               {/* Sidebar Navigation */}
-              <div className="lg:col-span-3 space-y-2">
-                <div className="sticky top-28">
-                  <GlassCard className="p-2 border-none shadow-lg">
+              <div className="lg:col-span-3 space-y-4">
+                <div className="sticky top-28 space-y-4">
+                  
+                  {/* Vertical Profile Info Card */}
+                  <GlassCard className="p-6 flex flex-col items-center text-center border-border/50 shadow-none">
+                    <div className="relative mb-4 group">
+                      <Avatar className="w-24 h-24 border-[3px] border-background shadow-none relative z-10 transition-transform duration-300 group-hover:scale-105">
+                        <AvatarImage src={getOptimizedImageUrl(profile?.avatar_url || '', 200)} className="object-cover" />
+                        <AvatarFallback className="text-2xl font-bold bg-muted text-foreground">
+                          {profile?.full_name?.charAt(0) || user?.email?.charAt(0)?.toUpperCase()}
+                        </AvatarFallback>
+                        {isUploadingAvatar && (
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20">
+                            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                          </div>
+                        )}
+                      </Avatar>
+                      <input
+                        type="file"
+                        id="avatar-upload"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        disabled={isUploadingAvatar}
+                      />
+                      <label
+                        htmlFor="avatar-upload"
+                        className="absolute bottom-0 right-0 p-1.5 bg-primary text-white rounded-full shadow-md border-[2px] border-background z-20 hover:scale-110 transition-transform cursor-pointer"
+                      >
+                        <Camera className="w-4 h-4" />
+                      </label>
+                    </div>
+
+                    <h2 className="text-xl font-bold text-foreground mb-1 tracking-tight">
+                      {isLoading ? 'Loading...' : profile?.full_name || 'Creative Member'}
+                    </h2>
+                    <Badge className={cn(
+                      "mb-4 uppercase text-[10px] font-bold tracking-widest px-3 py-1",
+                      isAdmin ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-primary text-primary-foreground hover:bg-primary/90"
+                    )}>
+                      {isAdmin ? 'ADMINISTRATOR' : isModerator ? 'MODERATOR' : 'PRO MEMBER'}
+                    </Badge>
+
+                    <div className="w-full text-left space-y-2 mt-2">
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground p-3 rounded-none bg-muted hover:bg-muted/80 transition-colors">
+                        <Mail className="w-4 h-4 text-primary shrink-0" />
+                        <span className="truncate font-medium">{user?.email}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground p-3 rounded-none bg-muted hover:bg-muted/80 transition-colors">
+                        <Shield className="w-4 h-4 text-primary shrink-0" />
+                        <span className="capitalize font-medium">Role: {isAdmin ? 'Admin' : isModerator ? 'Staff' : 'User'}</span>
+                      </div>
+                    </div>
+                  </GlassCard>
+
+                  {/* Navigation Menu */}
+                  <GlassCard className="p-2 border border-border/50 shadow-none">
                     {navItems.map((item) => (
                       <button
                         key={item.id}
                         onClick={() => setActiveTab(item.id)}
                         className={cn(
-                          "w-full flex items-center gap-3 px-4 py-3 rounded-none text-sm font-medium transition-all",
+                          "w-full flex items-center gap-3 px-4 py-3 rounded-none text-sm font-bold transition-all group",
                           activeTab === item.id
                             ? "bg-primary text-primary-foreground shadow-md"
-                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                         )}
                       >
-                        <item.icon className="w-4 h-4" />
+                        <item.icon className="w-4 h-4 shrink-0" />
                         {item.label}
-                        {activeTab === item.id && (
+                        {activeTab === item.id ? (
                           <motion.div layoutId="active-tab" className="ml-auto">
                             <ChevronRight className="w-4 h-4" />
                           </motion.div>
+                        ) : (
+                          <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
                         )}
                       </button>
                     ))}
                   </GlassCard>
+
+                  {/* Actions */}
+                  <div className="flex flex-col gap-2 pt-2">
+                    <Button
+                      onClick={() => setIsEditingProfile(true)}
+                      className="w-full rounded-none h-12 text-sm font-bold shadow-none transition-all gap-2"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                      Edit Profile
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleSignOut}
+                      className="w-full rounded-none h-12 text-sm font-bold border-border/50 text-muted-foreground hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition-all gap-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign Out
+                    </Button>
+                  </div>
+
                 </div>
               </div>
 
@@ -330,7 +304,7 @@ const Profile = () => {
                             { label: 'Completed', value: stats.completedOrders, icon: Calendar, color: 'text-purple-500' },
                             { label: 'Member Since', value: stats.memberSince, icon: UserCircle, color: 'text-amber-500' },
                           ].map((stat, i) => (
-                            <GlassCard key={i} className="p-6 border-none shadow-md hover:shadow-xl transition-shadow">
+                            <GlassCard key={i} className="p-6 border border-border/50 shadow-none hover:bg-muted/5 transition-colors">
                               <div className="flex items-center gap-4">
                                 <div className={cn("p-3 rounded-2xl bg-muted", stat.color)}>
                                   <stat.icon className="w-6 h-6" />
@@ -346,7 +320,7 @@ const Profile = () => {
 
                         {/* Recent Activity */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <GlassCard className="p-6 border-none shadow-md">
+                          <GlassCard className="p-6 border border-border/50 shadow-none">
                             <div className="flex items-center justify-between mb-6">
                               <h3 className="text-lg font-bold flex items-center gap-2">
                                 <Package className="w-5 h-5 text-primary" />
@@ -370,7 +344,7 @@ const Profile = () => {
                             </div>
                           </GlassCard>
 
-                          <GlassCard className="p-6 border-none shadow-md">
+                          <GlassCard className="p-6 border border-border/50 shadow-none">
                             <div className="flex items-center justify-between mb-6">
                               <h3 className="text-lg font-bold flex items-center gap-2">
                                 <ShoppingBag className="w-5 h-5 text-primary" />
@@ -419,7 +393,7 @@ const Profile = () => {
                         ) : (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {purchases.map(purchase => (
-                              <GlassCard key={purchase.id} className="p-5 border-none shadow-md group hover:shadow-xl transition-all">
+                              <GlassCard key={purchase.id} className="p-5 border border-border/50 shadow-none group hover:bg-muted/5 transition-colors">
                                 <div className="flex items-start justify-between gap-4">
                                   <div className="flex-1">
                                     <Badge variant="outline" className="mb-2 text-primary border-primary/20 bg-primary/5">Digital Asset</Badge>
@@ -430,7 +404,7 @@ const Profile = () => {
                                   </div>
                                   <div className="flex flex-col gap-2">
                                     {purchase.file_url ? (
-                                      <Button size="sm" className="rounded-none shadow-lg" asChild>
+                                      <Button size="sm" className="rounded-none shadow-none" asChild>
                                         <a href={purchase.file_url} download><Download className="w-4 h-4 mr-2" /> Download</a>
                                       </Button>
                                     ) : purchase.template_link && (
@@ -462,7 +436,7 @@ const Profile = () => {
                         ) : (
                           <div className="space-y-4">
                             {orders.map(order => (
-                              <GlassCard key={order.id} className="p-6 border-none shadow-md">
+                              <GlassCard key={order.id} className="p-6 border border-border/50 shadow-none">
                                 <div className="flex flex-col md:flex-row justify-between gap-6">
                                   <div className="flex-1">
                                     <div className="flex items-center gap-3 mb-2">
@@ -510,7 +484,7 @@ const Profile = () => {
                     )}
 
                     {activeTab === 'settings' && (
-                      <GlassCard className="p-8 border-none shadow-lg max-w-2xl">
+                      <GlassCard className="p-8 border border-border/50 shadow-none max-w-2xl">
                         <div className="flex items-center gap-4 mb-8">
                           <div className="p-3 rounded-2xl bg-primary/10 text-primary">
                             <User className="w-6 h-6" />
@@ -559,7 +533,7 @@ const Profile = () => {
                     )}
 
                     {activeTab === 'security' && (
-                      <GlassCard className="p-8 border-none shadow-lg max-w-2xl">
+                      <GlassCard className="p-8 border border-border/50 shadow-none max-w-2xl">
                         <div className="flex items-center gap-4 mb-8">
                           <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-500">
                             <Shield className="w-6 h-6" />

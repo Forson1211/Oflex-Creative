@@ -41,6 +41,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { cn } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 
 interface SiteSetting {
@@ -88,6 +95,11 @@ const SiteCustomization = () => {
   const { uploadImage: uploadOgImg, isUploading: isUploadingOgImg } = useImageUpload({
     bucket: 'site-assets',
     onSuccess: (url) => updateSetting('site_preview_image_url', url),
+  });
+
+  const { uploadImage: uploadStoreBanner, isUploading: isUploadingStoreBanner } = useImageUpload({
+    bucket: 'site-assets',
+    onSuccess: (url) => updateSetting('store_banner_url', url),
   });
 
   // Refine the useQuery call to remove 'prefetch' and ensure proper typing
@@ -215,6 +227,7 @@ const SiteCustomization = () => {
                   { id: 'hero', label: 'Hero', icon: Type },
                   { id: 'homepage', label: 'Home', icon: Globe },
                   { id: 'pages', label: 'Pages', icon: FileText },
+                  { id: 'store', label: 'Store', icon: Store },
                   { id: 'contact', label: 'Contact', icon: MapPin },
                   { id: 'social', label: 'Social', icon: Share2 },
                 ].map((tab) => (
@@ -376,8 +389,8 @@ const SiteCustomization = () => {
                               />
                             </div>
                           </div>
-                          <div className="flex gap-2 flex-wrap">
-                            {['#8B5CF6', '#3B82F6', '#EF4444', '#10B981', '#F59E0B'].map(color => (
+                          <div className="flex gap-2 flex-wrap mb-4">
+                            {['#8B5CF6', '#f97316', '#3B82F6', '#EF4444', '#10B981'].map(color => (
                               <button
                                 key={color}
                                 type="button"
@@ -387,6 +400,63 @@ const SiteCustomization = () => {
                               />
                             ))}
                           </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <Label htmlFor="primary_foreground_color" className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Button Text Color</Label>
+                        <div className="flex flex-col gap-4">
+                          <div className="flex items-center gap-3 p-3 bg-background/50 border border-border/50 rounded-2xl">
+                            <Input
+                              id="primary_foreground_color"
+                              type="color"
+                              value={settings.primary_foreground_color || '#FFFFFF'}
+                              onChange={(e) => updateSetting('primary_foreground_color', e.target.value)}
+                              className="w-14 h-14 p-1 rounded-xl border-none cursor-pointer overflow-hidden"
+                            />
+                            <div className="flex-1">
+                              <Input
+                                value={settings.primary_foreground_color || '#FFFFFF'}
+                                onChange={(e) => updateSetting('primary_foreground_color', e.target.value)}
+                                className="bg-transparent border-none text-lg font-mono focus-visible:ring-0"
+                              />
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground font-medium">Controls the text color inside solid primary buttons to ensure readability.</p>
+                          <div className="flex gap-2 flex-wrap mb-4">
+                            {['#FFFFFF', '#000000', '#1A1A1A'].map(color => (
+                              <button
+                                key={color}
+                                type="button"
+                                onClick={() => updateSetting('primary_foreground_color', color)}
+                                className="w-8 h-8 rounded-full border border-border/50 transition-transform hover:scale-125"
+                                style={{ backgroundColor: color }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <Label htmlFor="accent_color" className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Secondary / Accent Color</Label>
+                        <div className="flex flex-col gap-4">
+                          <div className="flex items-center gap-3 p-3 bg-background/50 border border-border/50 rounded-2xl">
+                            <Input
+                              id="accent_color"
+                              type="color"
+                              value={settings.accent_color || '#3B82F6'}
+                              onChange={(e) => updateSetting('accent_color', e.target.value)}
+                              className="w-14 h-14 p-1 rounded-xl border-none cursor-pointer overflow-hidden"
+                            />
+                            <div className="flex-1">
+                              <Input
+                                value={settings.accent_color || '#3B82F6'}
+                                onChange={(e) => updateSetting('accent_color', e.target.value)}
+                                className="bg-transparent border-none text-lg font-mono focus-visible:ring-0"
+                              />
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground font-medium">Used for interactive hovers and secondary elements.</p>
                         </div>
                       </div>
                     </div>
@@ -846,7 +916,178 @@ const SiteCustomization = () => {
               </div>
             </TabsContent>
 
-            {/* Contact Tab */}
+             {/* Store Tab Content */}
+            <TabsContent value="store" className="space-y-6 sm:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+                <GlassCard className="p-6 sm:p-8 border-primary/10">
+                  <div className="flex items-center gap-4 mb-6 sm:mb-8">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-primary/20 flex items-center justify-center shadow-inner text-primary">
+                      <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-foreground">Store Banner Imagery</h2>
+                      <p className="text-sm text-muted-foreground font-medium">Manage the main visual for your storefront</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      <Label className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Banner Background Image</Label>
+                      <ImageUpload
+                        value={settings.store_banner_url || ''}
+                        onChange={(url) => updateSetting('store_banner_url', url)}
+                        onUpload={uploadStoreBanner}
+                        isUploading={isUploadingStoreBanner}
+                        aspectRatio="video"
+                        className="rounded-2xl border-dashed border-2 p-4 hover:border-primary/50 transition-colors bg-background/50"
+                      />
+                      <p className="text-[10px] text-muted-foreground text-center">Recommended size: 2400x750px</p>
+                    </div>
+                    
+                    <div className="pt-4 border-t border-border/50">
+                      <Label htmlFor="store_banner_url_direct" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 block">Direct Image URL</Label>
+                      <Input
+                        id="store_banner_url_direct"
+                        value={settings.store_banner_url || ''}
+                        className="bg-background/50 rounded-xl"
+                        onChange={(e) => updateSetting('store_banner_url', e.target.value)}
+                        placeholder="https://..."
+                      />
+                    </div>
+                  </div>
+                </GlassCard>
+
+                <GlassCard className="p-6 sm:p-8 border-accent/10">
+                  <div className="flex items-center gap-4 mb-6 sm:mb-8">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-accent/20 flex items-center justify-center shadow-inner text-accent-foreground">
+                      <Layout className="w-5 h-5 sm:w-6 sm:h-6" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-foreground">Banner Adaptation</h2>
+                      <p className="text-sm text-muted-foreground font-medium">Adjust heights for perfect framing</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                        <Label htmlFor="store_banner_height_desktop" className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Desktop Height (px)</Label>
+                        <div className="flex items-center gap-3">
+                          <Input
+                            id="store_banner_height_desktop"
+                            type="number"
+                            value={settings.store_banner_height_desktop || '750'}
+                            className="h-12 bg-background/50 rounded-xl"
+                            onChange={(e) => updateSetting('store_banner_height_desktop', e.target.value)}
+                          />
+                          <span className="text-xs font-bold text-muted-foreground uppercase">px</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">Original image height is 750px</p>
+                      </div>
+                      <div className="space-y-3">
+                        <Label htmlFor="store_banner_height_mobile" className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Mobile Height (px)</Label>
+                        <div className="flex items-center gap-3">
+                          <Input
+                            id="store_banner_height_mobile"
+                            type="number"
+                            value={settings.store_banner_height_mobile || '600'}
+                            className="h-12 bg-background/50 rounded-xl"
+                            onChange={(e) => updateSetting('store_banner_height_mobile', e.target.value)}
+                          />
+                          <span className="text-xs font-bold text-muted-foreground uppercase">px</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">Recommended tall crop: 600px</p>
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
+                      <p className="text-xs text-muted-foreground leading-relaxed flex items-start gap-3">
+                        <Sparkles className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                        <span>Adjusting these values will instantly resize the Store banner space. Use these to frame your design perfectly for both desktop and mobile users.</span>
+                      </p>
+                    </div>
+                  </div>
+                </GlassCard>
+
+                <GlassCard className="p-6 sm:p-8 border-primary/10 lg:col-span-2">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center shadow-inner">
+                      <Zap className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-foreground">Advanced Banner Fine-Tuning</h2>
+                      <p className="text-sm text-muted-foreground font-medium">Positioning and visual effects</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                    <div className="space-y-4">
+                      <Label className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Desktop Alignment</Label>
+                      <Select
+                        value={settings.store_banner_pos_desktop || 'object-right-top'}
+                        onValueChange={(val) => updateSetting('store_banner_pos_desktop', val)}
+                      >
+                        <SelectTrigger className="h-12 bg-background/50 rounded-xl">
+                          <SelectValue placeholder="Select position" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="object-center">Center</SelectItem>
+                          <SelectItem value="object-top">Top</SelectItem>
+                          <SelectItem value="object-bottom">Bottom</SelectItem>
+                          <SelectItem value="object-left">Left</SelectItem>
+                          <SelectItem value="object-right">Right</SelectItem>
+                          <SelectItem value="object-right-top">Right Top (Focus Face)</SelectItem>
+                          <SelectItem value="object-right-bottom">Right Bottom</SelectItem>
+                          <SelectItem value="object-left-top">Left Top</SelectItem>
+                          <SelectItem value="object-left-bottom">Left Bottom</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-[10px] text-muted-foreground">Sets the focal point for computer screens.</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <Label className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Mobile Alignment</Label>
+                      <Select
+                        value={settings.store_banner_pos_mobile || 'object-center'}
+                        onValueChange={(val) => updateSetting('store_banner_pos_mobile', val)}
+                      >
+                        <SelectTrigger className="h-12 bg-background/50 rounded-xl">
+                          <SelectValue placeholder="Select position" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="object-center">Center</SelectItem>
+                          <SelectItem value="object-top">Top</SelectItem>
+                          <SelectItem value="object-bottom">Bottom</SelectItem>
+                          <SelectItem value="object-left">Left</SelectItem>
+                          <SelectItem value="object-right">Right</SelectItem>
+                          <SelectItem value="object-left-top">Left Top</SelectItem>
+                          <SelectItem value="object-right-top">Right Top</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-[10px] text-muted-foreground">Sets the focal point for phone screens.</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <Label className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Dark Overlay Intensity (%)</Label>
+                      <div className="flex items-center gap-4">
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={settings.store_banner_overlay_opacity || '70'}
+                          className="h-12 bg-background/50 rounded-xl"
+                          onChange={(e) => updateSetting('store_banner_overlay_opacity', e.target.value)}
+                        />
+                        <span className="text-xs font-bold text-muted-foreground uppercase">%</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">Higher values make the banner darker for better text legibility.</p>
+                    </div>
+                  </div>
+                </GlassCard>
+              </div>
+            </TabsContent>
+
+
             <TabsContent value="contact" className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
                 <GlassCard className="md:col-span-2 p-6 sm:p-8 lg:p-10 border-primary/10">

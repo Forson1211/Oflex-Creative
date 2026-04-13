@@ -36,6 +36,7 @@ interface FeaturedProject {
   category: string;
   image_url: string;
   description: string | null;
+  project_url: string | null;
   is_featured: boolean;
   display_order: number;
 }
@@ -50,6 +51,7 @@ const FeaturedProjects = () => {
     category: '',
     image_url: '',
     description: '',
+    project_url: '',
     is_featured: true,
     display_order: 0,
   });
@@ -81,6 +83,7 @@ const FeaturedProjects = () => {
             category: data.category,
             image_url: data.image_url,
             description: data.description || null,
+            project_url: data.project_url || null,
             is_featured: data.is_featured,
             display_order: data.display_order,
           })
@@ -92,6 +95,7 @@ const FeaturedProjects = () => {
           category: data.category,
           image_url: data.image_url,
           description: data.description || null,
+          project_url: data.project_url || null,
           is_featured: data.is_featured,
           display_order: data.display_order,
         });
@@ -131,6 +135,7 @@ const FeaturedProjects = () => {
       category: '',
       image_url: '',
       description: '',
+      project_url: '',
       is_featured: true,
       display_order: projects.length,
     });
@@ -144,6 +149,7 @@ const FeaturedProjects = () => {
       category: project.category,
       image_url: project.image_url,
       description: project.description || '',
+      project_url: project.project_url || '',
       is_featured: project.is_featured,
       display_order: project.display_order,
     });
@@ -362,6 +368,15 @@ const FeaturedProjects = () => {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={3}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="project_url">Live Project URL</Label>
+                <Input
+                  id="project_url"
+                  value={formData.project_url}
+                  onChange={(e) => setFormData({ ...formData, project_url: e.target.value })}
+                  placeholder="https://..."
                 />
               </div>
               <div className="flex items-center gap-3">

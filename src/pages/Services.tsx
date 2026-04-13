@@ -11,7 +11,6 @@ import { Layout } from '@/components/layout/Layout';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { GlassCard } from '@/components/ui/GlassCard';
 
-import { useServices } from '@/hooks/useServices';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Sparkles,
@@ -26,15 +25,13 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 const Services = () => {
   const { getSetting } = useSiteSettings();
-  const { data: allServices = [], isLoading } = useServices();
-  const servicesData = allServices.filter(s => s.is_active).slice(0, 3);
-  
   // Hardcoded content as fallback or base
-  const services = servicesData.length >= 3 ? servicesData : [
+  const services = [
     { id: '1', icon: 'Code', title: 'Development', description: 'Full-Stack Engineering for Web & Mobile. We build robust websites, scalable web apps, custom software, and native mobile applications tailored to your business logic.', features: ['Full-Stack Web Dev', 'Mobile App Dev', 'Custom Software', 'Scalable Systems'] },
     { id: '2', icon: 'Palette', title: 'Graphic Design', description: 'Strategic UI/UX & Visual Identity. We design intuitive user interfaces and striking brand visuals that bridge the gap between aesthetic beauty and functional performance.', features: ['UI/UX Design', 'Visual Identity', 'Brand Graphics', 'Creative Direction'] },
     { id: '3', icon: 'Camera', title: 'Photography', description: 'Professional Visual Storytelling. High-quality commercial and product photography designed to elevate your brand’s aesthetic and showcase your work with professional clarity.', features: ['Commercial Photo', 'Product Shoots', 'Brand Imagery', 'Visual clarity'] },
   ];
+  const isLoading = false;
 
   return (
     <Layout>
@@ -80,15 +77,15 @@ const Services = () => {
                       <div className="mb-8">
                         <IconComponent className="w-16 h-16 text-[#FF6B35] transition-transform duration-500 group-hover:scale-110" />
                       </div>
-                      
+
                       <h3 className="text-2xl font-bold text-[#1A1028] dark:text-white mb-4 font-roboto">
                         {service.title}
                       </h3>
-                      
+
                       <p className="text-[15px] leading-relaxed text-muted-foreground mb-8">
                         {service.description}
                       </p>
-                      
+
                       <ul className="space-y-3 mb-10 text-left w-full max-w-[240px] mx-auto">
                         {(service.features || []).map((feature: string, i: number) => (
                           <li key={i} className="flex items-start gap-3 text-sm text-black dark:text-white/80">
@@ -99,7 +96,7 @@ const Services = () => {
                       </ul>
 
                       <div className="mt-auto">
-                        <Button 
+                        <Button
                           className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white px-10 py-6 rounded-none font-bold text-base transition-all duration-300 shadow-sm"
                           asChild
                         >

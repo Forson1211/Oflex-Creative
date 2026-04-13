@@ -18,7 +18,8 @@ export const SEO = ({ title, description, image, article, pathname }: SEOProps) 
 
     // Use the actual domain instead of just localhost if available
     const siteUrl = import.meta.env.VITE_APP_URL || (typeof window !== 'undefined' ? window.location.origin : 'https://oflexcreative.vercel.app');
-    const sitePreviewImage = getSetting('site_preview_image_url', '');
+    // Check both setting keys since the admin panel uses og_image_url on the General config tab
+    const sitePreviewImage = getSetting('og_image_url') || getSetting('site_preview_image_url', '');
 
     // Determine the final image URL - must be absolute for social scrapers
     let finalImage = image || sitePreviewImage;

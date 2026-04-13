@@ -20,12 +20,7 @@ interface TeamMember {
   display_order: number;
 }
 
-const values = [
-  { icon: Target, title: 'Mission', description: 'To empower creators and businesses with premium digital tools and stunning designs that elevate their brand presence.' },
-  { icon: Eye, title: 'Vision', description: 'To become the go-to creative studio for innovative digital products and cutting-edge design solutions.' },
-  { icon: Heart, title: 'Values', description: 'Quality, creativity, and client satisfaction drive everything we do. We believe in building lasting relationships.' },
-  { icon: Lightbulb, title: 'Philosophy', description: 'Every project is an opportunity to push boundaries and create something remarkable that stands out.' },
-];
+
 
 const About = () => {
   const { getSetting } = useSiteSettings();
@@ -55,6 +50,13 @@ const About = () => {
   });
 
   const storyParagraphs = getSetting('about_story', '').split('\n\n').filter(p => p.trim());
+
+  const dynamicValues = [
+    { icon: Target, title: getSetting('about_mission_title', 'Mission'), description: getSetting('about_mission_desc', 'To empower creators and businesses with premium digital tools and stunning designs that elevate their brand presence.') },
+    { icon: Eye, title: getSetting('about_vision_title', 'Vision'), description: getSetting('about_vision_desc', 'To become the go-to creative studio for innovative digital products and cutting-edge design solutions.') },
+    { icon: Heart, title: getSetting('about_core_values_title', 'Values'), description: getSetting('about_core_values_desc', 'Quality, creativity, and client satisfaction drive everything we do. We believe in building lasting relationships.') },
+    { icon: Lightbulb, title: getSetting('about_philosophy_title', 'Philosophy'), description: getSetting('about_philosophy_desc', 'Every project is an opportunity to push boundaries and create something remarkable that stands out.') },
+  ];
 
   return (
     <Layout>
@@ -91,13 +93,13 @@ const About = () => {
               transition={{ duration: 0.6 }}
               className="relative lg:ml-auto"
             >
-              <div className="relative aspect-square rounded-2xl overflow-hidden shadow-2xl">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-muted/20">
                 <OptimizedImage
                   src={getSetting('about_main_image', 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80')}
                   alt="About Oflex"
                   width={800}
-                  className="w-full h-full"
-                  imageClassName="object-cover"
+                  className="w-full h-auto"
+                  imageClassName="object-contain"
                   priority
                 />
               </div>
@@ -174,7 +176,7 @@ const About = () => {
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {values.map((value, index) => (
+            {dynamicValues.map((value, index) => (
               <motion.div
                 key={value.title}
                 initial={{ opacity: 0, y: 20 }}
@@ -210,8 +212,8 @@ const About = () => {
             />
 
             <div className={`grid gap-6 ${teamMembers.length === 1 ? 'max-w-md mx-auto' :
-                teamMembers.length === 2 ? 'grid-cols-1 md:grid-cols-2 max-w-2xl mx-auto' :
-                  'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:max-w-6xl mx-auto'
+              teamMembers.length === 2 ? 'grid-cols-1 md:grid-cols-2 max-w-2xl mx-auto' :
+                'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:max-w-6xl mx-auto'
               }`}>
               {teamMembers.map((member, index) => (
                 <motion.div
@@ -250,9 +252,11 @@ const About = () => {
                       </h3>
 
                       {member.bio && (
-                        <p className="text-muted-foreground leading-relaxed text-sm line-clamp-4 italic border-t border-primary/5 pt-4">
-                          "{member.bio}"
-                        </p>
+                        <div className="w-full mt-1 pt-4 border-t border-border/30">
+                          <p className="text-muted-foreground/90 leading-relaxed text-[13px] md:text-sm line-clamp-4 font-medium">
+                            {member.bio}
+                          </p>
+                        </div>
                       )}
                     </div>
                   </GlassCard>

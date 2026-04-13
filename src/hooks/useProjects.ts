@@ -4,7 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 
-export type Project = Tables<'featured_projects'>;
+export type Project = Tables<'featured_projects'> & {
+    project_url?: string | null;
+};
 
 export const PROJECT_KEYS = {
     all: ['projects'] as const,

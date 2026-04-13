@@ -25,18 +25,15 @@ export const OptimizedImage = ({
     fetchPriority = 'auto',
     ...props
 }: OptimizedImageProps) => {
-    const [isLoaded, setIsLoaded] = useState(false);
+    const [isLoaded, setIsLoaded] = useState(priority); // If priority, assume we want it shown ASAP
     const [error, setError] = useState(false);
-
-    // If priority is true, standard behavior logic (React handles hydration, but for client side we want early load)
-    // We don't need effects for 'priority' necessarily other than the img tag attributes.
 
     const optimizedSrc = width ? getOptimizedImageUrl(src, width) : src;
     const srcSet = generateSrcSet(src);
 
     return (
         <div className={cn("relative overflow-hidden", className)}>
-            {!isLoaded && !error && (
+            {!isLoaded && !error && !priority && (
                 <Skeleton className="absolute inset-0 w-full h-full animate-pulse bg-muted" />
             )}
 
@@ -47,10 +44,11 @@ export const OptimizedImage = ({
                 alt={alt}
                 loading={priority ? "eager" : "lazy"}
                 decoding={priority ? "sync" : "async"}
-                fetchPriority={fetchPriority}
+                // @ts-ignore - fetchPriority is supported in modern browsers
+                fetchPriority={priority ? "high" : fetchPriority}
                 className={cn(
-                    "transition-opacity duration-500",
-                    !isLoaded ? "opacity-0" : "opacity-100",
+                    priority ? "opacity-100" : "transition-opacity duration-500",
+                    !isLoaded && !priority ? "opacity-0" : "opacity-100",
                     imageClassName
                 )}
                 onLoad={() => setIsLoaded(true)}

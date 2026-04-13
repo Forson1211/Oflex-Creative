@@ -139,7 +139,7 @@ export const Footer = () => {
             <div className="md:hidden">
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="about" className="border-white/10">
-                  <AccordionTrigger className="text-white hover:text-primary">
+                  <AccordionTrigger className="text-white hover:text-primary data-[state=open]:text-primary hover:no-underline focus:no-underline outline-none">
                     About
                   </AccordionTrigger>
                   <AccordionContent>
@@ -167,7 +167,7 @@ export const Footer = () => {
                 </AccordionItem>
 
                 <AccordionItem value="discover" className="border-white/10">
-                  <AccordionTrigger className="text-white hover:text-primary">
+                  <AccordionTrigger className="text-white hover:text-primary data-[state=open]:text-primary hover:no-underline focus:no-underline outline-none">
                     Discover
                   </AccordionTrigger>
                   <AccordionContent>
@@ -195,7 +195,7 @@ export const Footer = () => {
                 </AccordionItem>
 
                 <AccordionItem value="services" className="border-white/10">
-                  <AccordionTrigger className="text-white hover:text-primary">
+                  <AccordionTrigger className="text-white hover:text-primary data-[state=open]:text-primary hover:no-underline focus:no-underline outline-none">
                     Services
                   </AccordionTrigger>
                   <AccordionContent>
@@ -204,30 +204,64 @@ export const Footer = () => {
                         to="/services"
                         className="text-[15px] text-white hover:text-primary transition-colors"
                       >
-                        Prompt Engineering
+                        Development
                       </Link>
                       <Link
                         to="/services"
                         className="text-[15px] text-white hover:text-primary transition-colors"
                       >
-                        Digital Design
+                        Graphic Design
                       </Link>
                       <Link
                         to="/services"
                         className="text-[15px] text-white hover:text-primary transition-colors"
                       >
-                        Branding
+                        Photography
+                      </Link>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="account" className="border-white/10">
+                  <AccordionTrigger className="text-white hover:text-primary data-[state=open]:text-primary hover:no-underline focus:no-underline outline-none">
+                    Account
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="flex flex-col gap-3 pl-2">
+                      <Link
+                        to="/auth"
+                        className="text-[15px] text-white hover:text-primary transition-colors"
+                      >
+                        Login / Register
+                      </Link>
+                      <Link
+                        to="/profile"
+                        className="text-[15px] text-white hover:text-primary transition-colors"
+                      >
+                        My Profile
+                      </Link>
+                      <Link
+                        to="/profile"
+                        className="text-[15px] text-white hover:text-primary transition-colors"
+                      >
+                        My Orders
                       </Link>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
 
                 <AccordionItem value="support" className="border-white/10">
-                  <AccordionTrigger className="text-white hover:text-primary">
+                  <AccordionTrigger className="text-white hover:text-primary data-[state=open]:text-primary hover:no-underline focus:no-underline outline-none">
                     Support
                   </AccordionTrigger>
                   <AccordionContent>
                     <div className="flex flex-col gap-3 pl-2">
+                      <Link
+                        to="/contact"
+                        className="text-[15px] text-white hover:text-primary transition-colors"
+                      >
+                        FAQs / Help
+                      </Link>
                       <Link
                         to="#"
                         className="text-[15px] text-white hover:text-primary transition-colors"
@@ -248,9 +282,9 @@ export const Footer = () => {
             </div>
 
             {/* Desktop Navigation Grid */}
-            <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-5 gap-8">
               <div>
-                <h4 className="text-[16px] uppercase font-bold text-white tracking-widest mb-6">About</h4>
+                <h4 className="text-[16px] uppercase font-bold text-primary tracking-widest mb-6">About</h4>
                 <div className="flex flex-col gap-3">
                   <Link to="/about" className="text-[16px] text-white hover:text-primary transition-colors">Our Story</Link>
                   <Link to="/about" className="text-[16px] text-white hover:text-primary transition-colors">Team</Link>
@@ -259,7 +293,7 @@ export const Footer = () => {
               </div>
 
               <div>
-                <h4 className="text-[16px] uppercase font-bold text-white tracking-widest mb-6">Discover</h4>
+                <h4 className="text-[16px] uppercase font-bold text-primary tracking-widest mb-6">Discover</h4>
                 <div className="flex flex-col gap-3">
                   <Link to="/portfolio" className="text-[16px] text-white hover:text-primary transition-colors">Portfolio</Link>
                   <Link to="/store" className="text-[16px] text-white hover:text-primary transition-colors">Store</Link>
@@ -268,17 +302,27 @@ export const Footer = () => {
               </div>
 
               <div>
-                <h4 className="text-[16px] uppercase font-bold text-white tracking-widest mb-6">Services</h4>
+                <h4 className="text-[16px] uppercase font-bold text-primary tracking-widest mb-6">Services</h4>
                 <div className="flex flex-col gap-3">
-                  <Link to="/services" className="text-[16px] text-white hover:text-primary transition-colors">Prompt Engineering</Link>
-                  <Link to="/services" className="text-[16px] text-white hover:text-primary transition-colors">Digital Design</Link>
-                  <Link to="/services" className="text-[16px] text-white hover:text-primary transition-colors">Branding</Link>
+                  <Link to="/services" className="text-[16px] text-white hover:text-primary transition-colors">Development</Link>
+                  <Link to="/services" className="text-[16px] text-white hover:text-primary transition-colors">Graphic Design</Link>
+                  <Link to="/services" className="text-[16px] text-white hover:text-primary transition-colors">Photography</Link>
                 </div>
               </div>
 
               <div>
-                <h4 className="text-[16px] uppercase font-bold text-white tracking-widest mb-6">Support</h4>
+                <h4 className="text-[16px] uppercase font-bold text-primary tracking-widest mb-6">Account</h4>
                 <div className="flex flex-col gap-3">
+                  <Link to="/auth" className="text-[16px] text-white hover:text-primary transition-colors">Login / Register</Link>
+                  <Link to="/profile" className="text-[16px] text-white hover:text-primary transition-colors">My Profile</Link>
+                  <Link to="/profile" className="text-[16px] text-white hover:text-primary transition-colors">My Orders</Link>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-[16px] uppercase font-bold text-primary tracking-widest mb-6">Support</h4>
+                <div className="flex flex-col gap-3">
+                  <Link to="/contact" className="text-[16px] text-white hover:text-primary transition-colors">FAQs / Help</Link>
                   <Link to="#" className="text-[16px] text-white hover:text-primary transition-colors">Privacy Policy</Link>
                   <Link to="#" className="text-[16px] text-white hover:text-primary transition-colors">Terms of Service</Link>
                 </div>
@@ -295,7 +339,7 @@ export const Footer = () => {
               >
                 <div className="flex items-center gap-2 mb-4">
                   <MapPin className="w-5 h-5 text-primary" />
-                  <h4 className="text-[15px] uppercase font-bold text-white tracking-widest">Our Location</h4>
+                  <h4 className="text-[15px] uppercase font-bold text-primary tracking-widest">Our Location</h4>
                 </div>
                 <div className="w-full h-48 rounded-xl overflow-hidden border border-white/10 grayscale hover:grayscale-0 transition-all duration-500">
                   <iframe
@@ -316,7 +360,7 @@ export const Footer = () => {
           <div className="lg:col-span-4 xl:col-span-5 lg:pl-8 lg:border-l lg:border-white/10 space-y-10">
             {/* Newsletter Subscription */}
             <div>
-              <h4 className="text-[16px] uppercase font-bold text-white tracking-widest mb-6">Stay Updated</h4>
+              <h4 className="text-[16px] uppercase font-bold text-primary tracking-widest mb-6">Stay Updated</h4>
               <p className="text-[16px] text-white leading-relaxed max-w-sm mb-4">
                 Subscribe to our newsletter for the latest design trends and updates.
               </p>
@@ -337,7 +381,7 @@ export const Footer = () => {
 
             {/* Visit Store Section */}
             <div>
-              <h4 className="text-[16px] uppercase font-bold text-white tracking-widest mb-6">Visit Store</h4>
+              <h4 className="text-[16px] uppercase font-bold text-primary tracking-widest mb-6">Visit Store</h4>
               <div className="space-y-4">
                 {footerProducts.length > 0 ? (
                   footerProducts.map((product) => (

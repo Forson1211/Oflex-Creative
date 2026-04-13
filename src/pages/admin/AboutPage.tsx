@@ -63,7 +63,7 @@ const AboutPage = () => {
 
   const { uploadImage: uploadAboutImage, isUploading: isUploadingAbout } = useImageUpload({
     bucket: 'site-assets',
-    onSuccess: (url) => updateSetting('about_image_url', url),
+    onSuccess: (url) => updateSetting('about_main_image', url),
   });
 
   const { uploadImage: uploadMemberImage, isUploading: isUploadingMember } = useImageUpload({
@@ -241,103 +241,170 @@ const AboutPage = () => {
 
             {/* Page Content Tab */}
             <TabsContent value="content" className="space-y-6">
-              <div className="bg-card border border-border rounded-xl p-6 space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-foreground">About Page Content</h2>
-                  <Button onClick={() => saveSettingsMutation.mutate()} disabled={saveSettingsMutation.isPending}>
-                    {saveSettingsMutation.isPending ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Save className="w-4 h-4 mr-2" />
-                    )}
-                    Save Changes
-                  </Button>
+              <div className="flex items-center justify-between bg-card border border-border rounded-xl p-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Page Content Settings</h2>
+                  <p className="text-sm text-muted-foreground">Manage the text and descriptions across the About page sections.</p>
                 </div>
+                <Button onClick={() => saveSettingsMutation.mutate()} disabled={saveSettingsMutation.isPending}>
+                  {saveSettingsMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4 mr-2" />
+                  )}
+                  Save All Changes
+                </Button>
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="about_title">Page Title</Label>
-                    <Input
-                      id="about_title"
-                      value={settings.about_title || ''}
-                      onChange={(e) => updateSetting('about_title', e.target.value)}
-                      placeholder="Crafting Digital Excellence"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="about_story_title">Story Section Title</Label>
-                    <Input
-                      id="about_story_title"
-                      value={settings.about_story_title || ''}
-                      onChange={(e) => updateSetting('about_story_title', e.target.value)}
-                      placeholder="The Journey So Far"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="about_description">Page Description</Label>
-                  <Textarea
-                    id="about_description"
-                    value={settings.about_description || ''}
-                    onChange={(e) => updateSetting('about_description', e.target.value)}
-                    rows={3}
-                    placeholder="Describe your company..."
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="about_story">Company Story</Label>
-                  <Textarea
-                    id="about_story"
-                    value={settings.about_story || ''}
-                    onChange={(e) => updateSetting('about_story', e.target.value)}
-                    rows={6}
-                    placeholder="Tell your company's story..."
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="about_years_experience">Years of Experience</Label>
-                    <Input
-                      id="about_years_experience"
-                      value={settings.about_years_experience || ''}
-                      onChange={(e) => updateSetting('about_years_experience', e.target.value)}
-                      placeholder="5+"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="about_projects_completed">Projects Completed</Label>
-                    <Input
-                      id="about_projects_completed"
-                      value={settings.about_projects_completed || ''}
-                      onChange={(e) => updateSetting('about_projects_completed', e.target.value)}
-                      placeholder="200+"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>About Page Image</Label>
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                
+                {/* Hero Section Settings */}
+                <div className="bg-card border border-border rounded-xl p-6 space-y-6">
+                  <h3 className="text-md font-semibold text-primary border-b border-border pb-2">Hero Section</h3>
+                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <ImageUpload
-                      value={settings.about_image_url || ''}
-                      onChange={(url) => updateSetting('about_image_url', url)}
-                      onUpload={uploadAboutImage}
-                      isUploading={isUploadingAbout}
-                      aspectRatio="video"
-                    />
                     <div className="space-y-2">
-                      <Label htmlFor="about_image_url">Or enter image URL</Label>
-                      <Input
-                        id="about_image_url"
-                        value={settings.about_image_url || ''}
-                        onChange={(e) => updateSetting('about_image_url', e.target.value)}
-                        placeholder="https://..."
-                      />
+                      <Label htmlFor="about_badge">Hero Badge</Label>
+                      <Input id="about_badge" value={settings.about_badge || ''} onChange={(e) => updateSetting('about_badge', e.target.value)} placeholder="About Us" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="about_title">Hero Title</Label>
+                      <Input id="about_title" value={settings.about_title || ''} onChange={(e) => updateSetting('about_title', e.target.value)} placeholder="Crafting Digital Excellence" />
                     </div>
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="about_description">Hero Description</Label>
+                    <Textarea id="about_description" value={settings.about_description || ''} onChange={(e) => updateSetting('about_description', e.target.value)} rows={3} placeholder="Describe your company..." />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="about_years_experience">Years of Experience</Label>
+                      <Input id="about_years_experience" value={settings.about_years_experience || ''} onChange={(e) => updateSetting('about_years_experience', e.target.value)} placeholder="5+" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="about_projects_completed">Projects Completed</Label>
+                      <Input id="about_projects_completed" value={settings.about_projects_completed || ''} onChange={(e) => updateSetting('about_projects_completed', e.target.value)} placeholder="200+" />
+                    </div>
+                  </div>
+
+                      <div className="space-y-2">
+                        <Label>Hero Image</Label>
+                        <div className="flex flex-col gap-4">
+                          <ImageUpload value={settings.about_main_image || ''} onChange={(url) => updateSetting('about_main_image', url)} onUpload={uploadAboutImage} isUploading={isUploadingAbout} aspectRatio="video" />
+                          <Input id="about_main_image" value={settings.about_main_image || ''} onChange={(e) => updateSetting('about_main_image', e.target.value)} placeholder="Or enter image URL https://..." />
+                        </div>
+                      </div>
+                </div>
+
+                {/* Other Sections Container */}
+                <div className="space-y-6">
+                  
+                  {/* Story Section Settings */}
+                  <div className="bg-card border border-border rounded-xl p-6 space-y-6">
+                    <h3 className="text-md font-semibold text-primary border-b border-border pb-2">Story Section</h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="about_story_badge">Story Badge</Label>
+                        <Input id="about_story_badge" value={settings.about_story_badge || ''} onChange={(e) => updateSetting('about_story_badge', e.target.value)} placeholder="Our Story" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="about_story_title">Story Title</Label>
+                        <Input id="about_story_title" value={settings.about_story_title || ''} onChange={(e) => updateSetting('about_story_title', e.target.value)} placeholder="The Journey So Far" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="about_story">Company Story</Label>
+                      <Textarea id="about_story" value={settings.about_story || ''} onChange={(e) => updateSetting('about_story', e.target.value)} rows={5} placeholder="Tell your company's story..." />
+                    </div>
+                  </div>
+
+                  {/* Values Section Settings */}
+                  <div className="bg-card border border-border rounded-xl p-6 space-y-6">
+                    <h3 className="text-md font-semibold text-primary border-b border-border pb-2">Values Section</h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="about_values_badge">Values Badge</Label>
+                        <Input id="about_values_badge" value={settings.about_values_badge || ''} onChange={(e) => updateSetting('about_values_badge', e.target.value)} placeholder="What Drives Us" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="about_values_title">Values Title</Label>
+                        <Input id="about_values_title" value={settings.about_values_title || ''} onChange={(e) => updateSetting('about_values_title', e.target.value)} placeholder="Our Core Values" />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="about_values_description">Values Description</Label>
+                      <Input id="about_values_description" value={settings.about_values_description || ''} onChange={(e) => updateSetting('about_values_description', e.target.value)} placeholder="The principles that guide our creative process" />
+                    </div>
+                  </div>
+
+                  {/* Team Section Settings */}
+                  <div className="bg-card border border-border rounded-xl p-6 space-y-6">
+                    <h3 className="text-md font-semibold text-primary border-b border-border pb-2">Team Overview Section</h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="about_team_badge">Team Badge</Label>
+                        <Input id="about_team_badge" value={settings.about_team_badge || ''} onChange={(e) => updateSetting('about_team_badge', e.target.value)} placeholder="Masterminds" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="about_team_title">Team Title</Label>
+                        <Input id="about_team_title" value={settings.about_team_title || ''} onChange={(e) => updateSetting('about_team_title', e.target.value)} placeholder="Meet the Team" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="about_team_description">Team Description</Label>
+                      <Input id="about_team_description" value={settings.about_team_description || ''} onChange={(e) => updateSetting('about_team_description', e.target.value)} placeholder="The creative minds behind our exceptional digital experiences." />
+                    </div>
+                  </div>
+
+                  {/* Core Content Pillars (Mission, Vision, etc) */}
+                  <div className="bg-card border border-border rounded-xl p-6 space-y-6">
+                    <h3 className="text-md font-semibold text-primary border-b border-border pb-2">Core Pillars (Mission, Vision, etc.)</h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="about_mission_title">Mission Title</Label>
+                        <Input id="about_mission_title" value={settings.about_mission_title || ''} onChange={(e) => updateSetting('about_mission_title', e.target.value)} placeholder="Mission" />
+                        <Textarea id="about_mission_desc" value={settings.about_mission_desc || ''} onChange={(e) => updateSetting('about_mission_desc', e.target.value)} rows={2} placeholder="Our mission statement..." />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="about_vision_title">Vision Title</Label>
+                        <Input id="about_vision_title" value={settings.about_vision_title || ''} onChange={(e) => updateSetting('about_vision_title', e.target.value)} placeholder="Vision" />
+                        <Textarea id="about_vision_desc" value={settings.about_vision_desc || ''} onChange={(e) => updateSetting('about_vision_desc', e.target.value)} rows={2} placeholder="Our vision statement..." />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="about_core_values_title">Core Values Title</Label>
+                        <Input id="about_core_values_title" value={settings.about_core_values_title || ''} onChange={(e) => updateSetting('about_core_values_title', e.target.value)} placeholder="Core Values" />
+                        <Textarea id="about_core_values_desc" value={settings.about_core_values_desc || ''} onChange={(e) => updateSetting('about_core_values_desc', e.target.value)} rows={2} placeholder="Our core values..." />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="about_philosophy_title">Philosophy Title</Label>
+                        <Input id="about_philosophy_title" value={settings.about_philosophy_title || ''} onChange={(e) => updateSetting('about_philosophy_title', e.target.value)} placeholder="Philosophy" />
+                        <Textarea id="about_philosophy_desc" value={settings.about_philosophy_desc || ''} onChange={(e) => updateSetting('about_philosophy_desc', e.target.value)} rows={2} placeholder="Our philosophy..." />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* CTA Section Settings */}
+                  <div className="bg-card border border-border rounded-xl p-6 space-y-6">
+                    <h3 className="text-md font-semibold text-primary border-b border-border pb-2">Call to Action Section</h3>
+                    <div className="space-y-2">
+                      <Label htmlFor="about_cta_title">CTA Title</Label>
+                      <Input id="about_cta_title" value={settings.about_cta_title || ''} onChange={(e) => updateSetting('about_cta_title', e.target.value)} placeholder="Ready to Create Something Amazing?" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="about_cta_description">CTA Description</Label>
+                      <Textarea id="about_cta_description" value={settings.about_cta_description || ''} onChange={(e) => updateSetting('about_cta_description', e.target.value)} rows={2} placeholder="CTA description..." />
+                    </div>
+                  </div>
+
                 </div>
               </div>
             </TabsContent>

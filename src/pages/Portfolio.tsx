@@ -18,6 +18,7 @@ interface FeaturedProject {
   category: string;
   image_url: string;
   description: string | null;
+  project_url: string | null;
   is_featured: boolean;
   display_order: number;
 }
@@ -219,11 +220,22 @@ const Portfolio = () => {
                   priority
                 />
               </div>
-              <div className="mt-4 text-center">
-                <span className="inline-block px-3 py-1 rounded-full bg-primary text-primary-foreground text-sm font-medium mb-2">
-                  {selectedItem.category}
-                </span>
-                <h3 className="text-2xl font-semibold text-foreground">{selectedItem.title}</h3>
+              <div className="mt-4 text-center space-y-4">
+                <div>
+                  <span className="inline-block px-3 py-1 rounded-full bg-primary text-primary-foreground text-sm font-medium mb-2">
+                    {selectedItem.category}
+                  </span>
+                  <h3 className="text-2xl font-semibold text-foreground">{selectedItem.title}</h3>
+                </div>
+                
+                {selectedItem.project_url && (
+                  <Button asChild className="bg-primary hover:bg-primary/90">
+                    <a href={selectedItem.project_url} target="_blank" rel="noopener noreferrer">
+                      Visit Live Project
+                      <ArrowRight className="ml-2 w-4 h-4" />
+                    </a>
+                  </Button>
+                )}
               </div>
             </motion.div>
           </motion.div>

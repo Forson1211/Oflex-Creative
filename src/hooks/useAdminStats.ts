@@ -19,21 +19,60 @@ export interface AnalyticsData {
     new_users: number;
 }
 
-export function useAnalytics() {
+export type TimeFrame = 'last7' | 'last30' | 'thisMonth' | 'lastMonth' | 'last3' | 'last6' | 'thisYear' | 'lastYear' | 'allTime';
+
+export function useAnalytics(timeFrame: string = 'last7') {
     const { user, isAuthReady } = useAuth();
 
     return useQuery({
-        queryKey: ADMIN_STATS_KEYS.analytics,
+        queryKey: [...ADMIN_STATS_KEYS.analytics, timeFrame],
         queryFn: async () => {
             if (!user) return [];
-            const { data, error } = await supabase
-                .from('site_analytics')
-                .select('*')
-                .order('date', { ascending: true })
-                .limit(7);
+            let query = supabase.from('site_analytics').select('*').order('date', { ascending: false });
 
+            const today = new Date();
+            let start = new Date();
+            let end = new Date();
+            
+            if (timeFrame === 'last7') {
+                start.setDate(today.getDate() - 7);
+                query = query.gte('date', start.toISOString().split('T')[0]);
+            } else if (timeFrame === 'last30') {
+                start.setDate(today.getDate() - 30);
+                query = query.gte('date', start.toISOString().split('T')[0]);
+            } else if (timeFrame === 'thisMonth') {
+                start = new Date(today.getFullYear(), today.getMonth(), 1);
+                end = new Date(today.getFullYear(), today.getMonth() + 1, 0); // last day of month
+                query = query.gte('date', start.toISOString().split('T')[0]).lte('date', end.toISOString().split('T')[0]);
+            } else if (timeFrame === 'lastMonth') {
+                start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                end = new Date(today.getFullYear(), today.getMonth(), 0);
+                query = query.gte('date', start.toISOString().split('T')[0]).lte('date', end.toISOString().split('T')[0]);
+            } else if (timeFrame === 'last3') {
+                start.setMonth(today.getMonth() - 3);
+                query = query.gte('date', start.toISOString().split('T')[0]);
+            } else if (timeFrame === 'last6') {
+                start.setMonth(today.getMonth() - 6);
+                query = query.gte('date', start.toISOString().split('T')[0]);
+            } else if (timeFrame === 'thisYear') {
+                start = new Date(today.getFullYear(), 0, 1);
+                query = query.gte('date', start.toISOString().split('T')[0]);
+            } else if (timeFrame === 'lastYear') {
+                start = new Date(today.getFullYear() - 1, 0, 1);
+                end = new Date(today.getFullYear() - 1, 11, 31);
+                query = query.gte('date', start.toISOString().split('T')[0]).lte('date', end.toISOString().split('T')[0]);
+            }
+
+            // apply a reasonable safety limit if not bounded completely by small dates
+            if (['last7', 'last30', 'thisMonth', 'lastMonth'].includes(timeFrame)) {
+                query = query.limit(31);
+            } else {
+                query = query.limit(365);
+            }
+
+            const { data, error } = await query;
             if (error) throw error;
-            return data as AnalyticsData[];
+            return (data as AnalyticsData[]).reverse();
         },
         staleTime: 1000 * 60 * 5, // 5 minutes
         gcTime: 1000 * 60 * 60 * 24, // 24 hours

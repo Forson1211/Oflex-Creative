@@ -349,7 +349,6 @@ const Index = () => {
       <section className="py-20 bg-card/50">
         <div className="container mx-auto px-4">
           <SectionHeading
-            badge={getSetting('home_store_badge', 'Digital Store')}
             title={getSetting('home_store_title', 'Featured Products')}
             description={getSetting('home_store_description', 'Premium digital assets for your creative projects')}
           />
@@ -372,7 +371,7 @@ const Index = () => {
                     className="w-full h-full"
                     imageClassName="object-cover transition-transform duration-700 group-hover:scale-110"
                   />
-                  
+
                   {/* Subtle Share Button */}
                   <button
                     onClick={(e) => {
@@ -405,7 +404,7 @@ const Index = () => {
                   </div>
 
                   <div className="mt-auto">
-                    <Button 
+                    <Button
                       onClick={(e) => {
                         e.preventDefault();
                         addToCartMutation.mutate(product.id);
@@ -563,9 +562,15 @@ const Index = () => {
                     className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white px-10 py-6 rounded-sm font-bold text-base transition-all duration-300 shadow-sm"
                     asChild
                   >
-                    <Link to="/portfolio">
-                      Learn more
-                    </Link>
+                    {project.project_url ? (
+                      <a href={project.project_url} target="_blank" rel="noopener noreferrer">
+                        View Project
+                      </a>
+                    ) : (
+                      <Link to="/portfolio">
+                        Learn more
+                      </Link>
+                    )}
                   </Button>
                 </div>
               </motion.div>
@@ -673,8 +678,8 @@ const Index = () => {
                     key={i}
                     onClick={() => testimonialApi?.scrollTo(i)}
                     className={`h-3 rounded-full transition-all duration-300 ${currentTestimonial === i
-                        ? 'bg-[#FF6B35] w-6'
-                        : 'bg-slate-200 w-3 hover:bg-slate-300'
+                      ? 'bg-[#FF6B35] w-6'
+                      : 'bg-slate-200 w-3 hover:bg-slate-300'
                       }`}
                   />
                 ))}

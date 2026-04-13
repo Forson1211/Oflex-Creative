@@ -96,7 +96,11 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
         if (primary?.startsWith('#')) {
             const hsl = hexToHSL(primary);
             document.documentElement.style.setProperty('--primary', hsl);
-            document.documentElement.style.setProperty('--primary-foreground', '0 0% 100%');
+            
+            // Allow admin to also control button text color so bright buttons don't have invisible white text
+            const primaryFg = getSetting('primary_foreground_color', '#FFFFFF');
+            document.documentElement.style.setProperty('--primary-foreground', hexToHSL(primaryFg));
+            
             document.documentElement.style.setProperty('--ring', hsl);
         }
         const accent = getSetting('accent_color');

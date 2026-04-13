@@ -28,6 +28,13 @@ import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { GlassCard } from '@/components/ui/GlassCard';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { motion } from 'framer-motion';
 
 const Dashboard = () => {
@@ -38,6 +45,7 @@ const Dashboard = () => {
   const { currencySymbol, maintenanceMode } = useSiteSettings();
   const { updateSetting } = useSiteSettingsMutations();
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
+  const [timeRange, setTimeRange] = useState("last7");
 
   const handleRefresh = async () => {
     setIsManualRefreshing(true);
@@ -264,11 +272,26 @@ const Dashboard = () => {
 
           {/* Main Charts Section */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <h2 className="text-lg font-bold tracking-tight">Analytics & Trends</h2>
-              <Badge variant="outline" className="text-xs font-normal">Last 7 Days</Badge>
+              <Select value={timeRange} onValueChange={setTimeRange}>
+                <SelectTrigger className="w-[180px] bg-background border-border/50">
+                  <SelectValue placeholder="Select a date range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="last7">Last 7 days</SelectItem>
+                  <SelectItem value="last30">Last 30 days</SelectItem>
+                  <SelectItem value="thisMonth">This month</SelectItem>
+                  <SelectItem value="lastMonth">Last month</SelectItem>
+                  <SelectItem value="last3">Last 3 months</SelectItem>
+                  <SelectItem value="last6">Last 6 months</SelectItem>
+                  <SelectItem value="thisYear">This year</SelectItem>
+                  <SelectItem value="lastYear">Last year</SelectItem>
+                  <SelectItem value="allTime">All time</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <AnalyticsCharts />
+            <AnalyticsCharts daysRange={timeRange as any} />
           </div>
 
           {/* Bottom Grid: Recent Orders & Quick Actions */}

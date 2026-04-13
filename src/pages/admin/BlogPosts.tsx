@@ -32,6 +32,7 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Plus, Edit, Trash2, Eye, EyeOff, Star, FileText, Calendar } from 'lucide-react';
+import RichTextEditor from '@/components/ui/RichTextEditor';
 
 interface BlogPost {
     id: string;
@@ -330,14 +331,10 @@ const BlogPosts = () => {
                                                 />
                                             </div>
                                             <div className="col-span-2">
-                                                <Label htmlFor="content">Content (HTML) *</Label>
-                                                <Textarea
-                                                    id="content"
+                                                <RichTextEditor
+                                                    label="Content"
                                                     value={formData.content}
-                                                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                                                    rows={10}
-                                                    required
-                                                    className="font-mono text-sm"
+                                                    onChange={(content) => setFormData({ ...formData, content })}
                                                 />
                                             </div>
                                             <div className="col-span-2">

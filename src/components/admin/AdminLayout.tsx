@@ -39,6 +39,7 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { useRealtimeOrders } from '@/hooks/useRealtimeOrders';
 import { useAdminStats } from '@/hooks/useAdminStats';
+import { useTheme } from '@/contexts/ThemeContext';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useProfile } from '@/hooks/useUsers';
@@ -78,9 +79,9 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { theme } = useTheme();
 
   const { data: profile } = useProfile(user?.id);
-  const logoUrl = getSetting('logo_url', '');
 
   const shouldEnableRealtime = isAdmin || isModerator;
 
@@ -133,14 +134,18 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-72 bg-card/80 backdrop-blur-xl border-r border-border/10 transform transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        className={`fixed lg:static inset-y-0 left-0 z-50 w-72 glass-ios border-r border-border/10 transform transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
           }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-6 border-b border-border flex items-center justify-between">
             <Link to="/admin" className="flex items-center">
-              <img src={logoUrl || ""} alt="Admin" className="h-12 w-auto" />
+              <img 
+                src={theme === 'dark' ? (getSetting('logo_white_url') || getSetting('logo_dark_url') || "/logo-white.png") : (getSetting('logo_url') || "/logo.png")} 
+                alt="Admin" 
+                className="h-12 w-auto" 
+              />
             </Link>
             <Button
               variant="ghost"
@@ -213,7 +218,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
         {/* Top bar */}
-        <header className="h-16 sticky top-0 z-30 border-b border-border/10 bg-card/70 backdrop-blur-md flex items-center px-4 lg:px-8 gap-2 sm:gap-4 transition-all duration-300">
+        <header className="h-16 sticky top-0 z-30 glass-panel flex items-center px-4 lg:px-8 gap-2 sm:gap-4 transition-all duration-300">
           <Button
             variant="ghost"
             size="icon"

@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
@@ -137,21 +138,39 @@ const Store = () => {
 
   const handleCheckout = () => { setIsCartOpen(false); navigate('/checkout'); };
 
+  const bannerHeightMobile = getSetting('store_banner_height_mobile', '600');
+  const bannerHeightDesktop = getSetting('store_banner_height_desktop', '750');
+  const bannerUrl = getSetting('store_banner_url', '/Banner.jpg');
+  const posMobile = getSetting('store_banner_pos_mobile', 'object-center');
+  const posDesktop = getSetting('store_banner_pos_desktop', 'object-right-top');
+  const overlayOpacity = Number(getSetting('store_banner_overlay_opacity', '70')) / 100;
+
   return (
     <Layout>
       <div className="flex flex-col min-h-screen bg-[#f8f9fa] dark:bg-background">
         {/* Custom Exact-Size Dashboard Banner Header */}
         <div className="sticky top-0 z-[49]">
-          <section className="relative bg-[#1A1028] h-[400px] border-b border-white/10 overflow-hidden shadow-2xl flex items-center">
+          <section 
+            style={{ 
+              ['--mobile-height' as any]: `${bannerHeightMobile}px`,
+              ['--desktop-height' as any]: `${bannerHeightDesktop}px`
+            }}
+            className="relative bg-[#1A1028] h-[var(--mobile-height)] md:h-[var(--desktop-height)] border-b border-white/10 overflow-hidden shadow-2xl flex items-start md:items-center pt-24 md:pt-0"
+          >
             {/* Custom Banner Header Background */}
             <div className="absolute inset-0 z-0">
-              <img
-                src="/Banner.jpg"
-                className="w-full h-full object-cover md:object-center object-right opacity-35 grayscale-0 transition-all duration-1000"
+              <OptimizedImage
+                src={bannerUrl}
+                className="w-full h-full"
+                imageClassName={cn("w-full h-full object-cover grayscale-0 transition-all duration-700", posMobile, `md:${posDesktop}`)}
                 alt="Store Banner"
+                priority
+                width={1920}
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-[#FF6B35]/25 to-transparent" />
-              <div className="absolute inset-0 bg-black/10" />
+              <div 
+                className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent transition-opacity duration-300" 
+                style={{ opacity: overlayOpacity }}
+              />
             </div>
 
             <div className="container mx-auto px-4 relative z-10">

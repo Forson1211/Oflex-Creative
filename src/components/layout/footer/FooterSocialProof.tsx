@@ -92,38 +92,30 @@ export function FooterSocialProof() {
     <div className="border-b border-white/10 bg-black/10">
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto">
-          {testimonialsCount > 0 && (
-            <StatCard
-              icon={Star}
-              value={testimonialsCount}
-              label="Happy Clients"
-              delay={0}
-            />
-          )}
-          {ordersCount > 0 && (
-            <StatCard
-              icon={ShoppingBag}
-              value={ordersCount}
-              label="Orders Completed"
-              delay={0.1}
-            />
-          )}
-          {usersCount > 0 && (
-            <StatCard
-              icon={Users}
-              value={usersCount}
-              label="Total Users"
-              delay={0.2}
-            />
-          )}
-          {productsCount > 0 && (
-            <StatCard
-              icon={TrendingUp}
-              value={productsCount}
-              label="Products Available"
-              delay={0.3}
-            />
-          )}
+          <StatCard
+            icon={Star}
+            value={testimonialsCount}
+            label="Happy Clients"
+            delay={0}
+          />
+          <StatCard
+            icon={ShoppingBag}
+            value={ordersCount}
+            label="Orders Completed"
+            delay={0.1}
+          />
+          <StatCard
+            icon={Users}
+            value={usersCount}
+            label="Total Users"
+            delay={0.2}
+          />
+          <StatCard
+            icon={TrendingUp}
+            value={productsCount}
+            label="Products Available"
+            delay={0.3}
+          />
         </div>
       </div>
     </div>
