@@ -135,23 +135,31 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
 
         const faviconUrl = getSetting('site_favicon_url', '/favicon.png');
         if (faviconUrl) {
-            // Update standard favicon
-            let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
-            if (!link) {
-                link = document.createElement('link');
-                link.rel = 'icon';
-                document.head.appendChild(link);
-            }
-            link.href = faviconUrl;
+            // Update all favicon variants for chrome/safari compatibility
+            const iconSelectors = [
+                "link[rel~='icon']",
+                "link[rel='apple-touch-icon']",
+                "link[rel='shortcut icon']"
+            ];
+            
+            iconSelectors.forEach(selector => {
+                let link: HTMLLinkElement | null = document.querySelector(selector);
+                if (!link) {
+                    link = document.createElement('link');
+                    // Extract relation from selector
+                    const relMatch = selector.match(/rel=['"]([^'"]+)['"]/);
+                    if (relMatch) link.rel = relMatch[1];
+                    document.head.appendChild(link);
+                }
+                link.href = faviconUrl;
+            });
 
-            // Update apple-touch-icon for mobile home screens
-            let appleLink: HTMLLinkElement | null = document.querySelector("link[rel='apple-touch-icon']");
-            if (!appleLink) {
-                appleLink = document.createElement('link');
-                appleLink.rel = 'apple-touch-icon';
-                document.head.appendChild(appleLink);
+            // Update manifest icons if possible (browsers usually need a reload, but this helps)
+            let manifestLink: HTMLLinkElement | null = document.querySelector("link[rel='manifest']");
+            if (manifestLink) {
+                // We can't easily change the manifest content dynamically without a blob URL, 
+                // but the standard links above usually take precedence for shortcuts.
             }
-            appleLink.href = faviconUrl;
         }
     }, [siteSettings, getSetting]);
 

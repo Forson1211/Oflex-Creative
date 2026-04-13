@@ -109,10 +109,10 @@ const Portfolio = () => {
                 Browse through some of our recent projects to learn more about what we've done.
               </p>
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4">
-                <Button className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white px-10 h-14 text-base font-bold rounded-sm border-none shadow-sm transition-colors" asChild>
+                <Button className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white px-10 h-14 text-sm font-bold rounded-none border-none shadow-sm transition-colors uppercase tracking-widest" asChild>
                   <Link to="/contact">Get Started</Link>
                 </Button>
-                <Button className="bg-[#1F0833] hover:bg-[#2c0b47] dark:bg-white dark:hover:bg-white/90 text-white dark:text-black px-10 h-14 text-base font-bold rounded-sm border-none shadow-sm transition-colors" asChild>
+                <Button className="bg-[#1F0833] hover:bg-[#2c0b47] dark:bg-white dark:hover:bg-white/90 text-white dark:text-black px-10 h-14 text-sm font-bold rounded-none border-none shadow-sm transition-colors uppercase tracking-widest" asChild>
                   <Link to="/store">Visit Shop</Link>
                 </Button>
               </div>
@@ -145,10 +145,10 @@ const Portfolio = () => {
             transition={{ delay: 0.1 }}
             className="flex flex-wrap items-center justify-center gap-2 mb-12"
           >
-            {isLoading ? (
+             {isLoading ? (
               // Filter Loading State
               [...Array(4)].map((_, i) => (
-                <div key={i} className="h-9 w-24 bg-muted animate-pulse rounded-full" />
+                <div key={i} className="h-9 w-24 bg-muted animate-pulse rounded-none" />
               ))
             ) : (
               categories.map((category) => (
@@ -157,7 +157,7 @@ const Portfolio = () => {
                   variant={activeCategory === category ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setActiveCategory(category)}
-                  className="rounded-full"
+                  className="rounded-none font-bold uppercase text-[10px] tracking-widest px-6"
                 >
                   {category}
                 </Button>
@@ -169,7 +169,7 @@ const Portfolio = () => {
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="aspect-[4/3] bg-muted animate-pulse rounded-xl" />
+                <div key={i} className="aspect-video bg-muted animate-pulse rounded-none" />
               ))}
             </div>
           ) : (
@@ -179,37 +179,37 @@ const Portfolio = () => {
             >
               <AnimatePresence mode="popLayout">
                 {filteredItems.map((item, index) => (
-                  <motion.div
+                   <motion.div
                     key={item.id}
                     layout
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ delay: index * 0.05 }}
                     className="h-full"
                   >
-                    <div className="bg-white dark:bg-card rounded-xl overflow-hidden shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-border/40 h-full flex flex-col group">
-                      <div className="relative aspect-video overflow-hidden border-b border-border/10 cursor-pointer" onClick={() => setSelectedItem(item)}>
+                    <div className="bg-white dark:bg-card rounded-none overflow-hidden shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-border/40 h-full flex flex-col group">
+                      <div className="relative aspect-video overflow-hidden cursor-pointer" onClick={() => setSelectedItem(item)}>
                         <OptimizedImage
                           src={item.image_url}
                           alt={item.title}
                           width={600}
                           className="w-full h-full"
-                          imageClassName="object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                          imageClassName="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105"
                         />
                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <Button variant="outline" className="text-white border-white hover:bg-white hover:text-black font-bold uppercase tracking-widest text-[10px]">
+                            <Button variant="outline" className="text-white border-white hover:bg-white hover:text-black rounded-none font-bold uppercase tracking-widest text-[10px] px-8 py-6">
                                Expand Project
                             </Button>
                          </div>
                       </div>
                       
-                      <div className="p-6 md:p-8 flex flex-col flex-1 bg-white dark:bg-card">
-                        <h3 className="text-xl font-bold text-foreground mb-4 font-roboto">{item.title}</h3>
+                      <div className="p-8 flex flex-col flex-1 bg-white dark:bg-card">
+                        <h3 className="text-lg font-black text-foreground mb-4 uppercase leading-tight">{item.title}</h3>
                         
-                        <div className="mt-auto pt-2">
+                        <div className="mt-auto">
                           <Button 
-                            className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white px-8 font-bold rounded-sm h-10 w-fit transition-colors shadow-sm"
+                            className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white w-full font-bold rounded-none h-12 transition-all shadow-sm uppercase text-[10px] tracking-widest"
                             onClick={() => setSelectedItem(item)}
                           >
                             View Project
