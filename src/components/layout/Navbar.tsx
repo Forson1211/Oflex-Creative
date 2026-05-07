@@ -29,8 +29,8 @@ const navLinks = [
   { name: 'Home', path: '/' },
   { name: 'About', path: '/about' },
   { name: 'Services', path: '/services' },
-  { name: 'Portfolio', path: '/portfolio' },
-  { name: 'Blog', path: '/blog' },
+  { name: 'Projects', path: '/portfolio' },
+  { name: 'News', path: '/blog' },
   { name: 'Contact', path: '/contact' },
 ];
 
@@ -197,7 +197,10 @@ export const Navbar = () => {
               {/* Store Icon */}
               <Button variant="ghost" size="icon" className="rounded-none" asChild>
                 <Link to="/store">
-                  <ShoppingBag className="w-6 h-6" />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M8 8a4 4 0 0 1 8 0" />
+                    <rect x="3" y="8" width="18" height="13" rx="2" />
+                  </svg>
                 </Link>
               </Button>
 
@@ -302,14 +305,14 @@ export const Navbar = () => {
                 </DropdownMenu>
               ) : (
                 <Button asChild size="sm" className="h-10 px-5 rounded-none font-bold text-sm uppercase tracking-wide shadow-md hover:scale-105 transition-transform">
-                  <Link to="/contact">Get A Quote</Link>
+                  <Link to="/contact">Get In Touch</Link>
                 </Button>
               )}
 
               {/* Get A Quote CTA (always visible when logged in) */}
               {user && (
                 <Button asChild size="sm" className="h-10 px-5 rounded-none font-bold text-sm uppercase tracking-wide shadow-md hover:scale-105 transition-transform">
-                  <Link to="/contact">Get A Quote</Link>
+                  <Link to="/contact">Get In Touch</Link>
                 </Button>
               )}
             </div>
@@ -320,7 +323,10 @@ export const Navbar = () => {
             {/* Mobile Store Icon */}
             <Button variant="ghost" size="icon" className="rounded-none" asChild>
               <Link to="/store">
-                <ShoppingBag className="w-5 h-5" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M8 8a4 4 0 0 1 8 0" />
+                  <rect x="3" y="8" width="18" height="13" rx="2" />
+                </svg>
               </Link>
             </Button>
 

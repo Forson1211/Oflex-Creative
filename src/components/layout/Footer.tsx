@@ -96,9 +96,9 @@ export const Footer = () => {
       {/* Social Proof Stats */}
       <FooterSocialProof />
 
-      <div className="container mx-auto px-4 py-10">
+      <div className="container mx-auto px-4 py-6">
         {/* Logo and Social Icons Row */}
-        <div className="flex items-center justify-between gap-6 mb-8">
+        <div className="flex items-center justify-between gap-6 mb-4">
           {/* Logo */}
           <Link to="/" className="inline-block">
             <img
@@ -134,7 +134,7 @@ export const Footer = () => {
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
           {/* Left Column - Logo & Navigation Accordions */}
-          <div className="lg:col-span-8 xl:col-span-7 space-y-6">
+          <div className="lg:col-span-8 xl:col-span-7 space-y-4">
             {/* Accordion Navigation - Mobile */}
             <div className="md:hidden">
               <Accordion type="single" collapsible className="w-full">
@@ -176,7 +176,7 @@ export const Footer = () => {
                         to="/portfolio"
                         className="text-[15px] text-white hover:text-primary transition-colors"
                       >
-                        Portfolio
+                        Projects
                       </Link>
                       <Link
                         to="/store"
@@ -188,7 +188,7 @@ export const Footer = () => {
                         to="/blog"
                         className="text-[15px] text-white hover:text-primary transition-colors"
                       >
-                        Blog
+                        News
                       </Link>
                     </div>
                   </AccordionContent>
@@ -284,7 +284,7 @@ export const Footer = () => {
             {/* Desktop Navigation Grid */}
             <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-5 gap-8">
               <div>
-                <h4 className="text-[16px] uppercase font-bold text-primary tracking-widest mb-6">About</h4>
+                <h4 className="text-[16px] uppercase font-bold text-primary tracking-widest mb-3">About</h4>
                 <div className="flex flex-col gap-3">
                   <Link to="/about" className="text-[16px] text-white hover:text-primary transition-colors">Our Story</Link>
                   <Link to="/about" className="text-[16px] text-white hover:text-primary transition-colors">Team</Link>
@@ -293,16 +293,16 @@ export const Footer = () => {
               </div>
 
               <div>
-                <h4 className="text-[16px] uppercase font-bold text-primary tracking-widest mb-6">Discover</h4>
+                <h4 className="text-[16px] uppercase font-bold text-primary tracking-widest mb-3">Discover</h4>
                 <div className="flex flex-col gap-3">
-                  <Link to="/portfolio" className="text-[16px] text-white hover:text-primary transition-colors">Portfolio</Link>
+                  <Link to="/portfolio" className="text-[16px] text-white hover:text-primary transition-colors">Projects</Link>
                   <Link to="/store" className="text-[16px] text-white hover:text-primary transition-colors">Store</Link>
-                  <Link to="/blog" className="text-[16px] text-white hover:text-primary transition-colors">Blog</Link>
+                  <Link to="/blog" className="text-[16px] text-white hover:text-primary transition-colors">News</Link>
                 </div>
               </div>
 
               <div>
-                <h4 className="text-[16px] uppercase font-bold text-primary tracking-widest mb-6">Services</h4>
+                <h4 className="text-[16px] uppercase font-bold text-primary tracking-widest mb-3">Services</h4>
                 <div className="flex flex-col gap-3">
                   <Link to="/services" className="text-[16px] text-white hover:text-primary transition-colors">Development</Link>
                   <Link to="/services" className="text-[16px] text-white hover:text-primary transition-colors">Graphic Design</Link>
@@ -311,20 +311,20 @@ export const Footer = () => {
               </div>
 
               <div>
-                <h4 className="text-[16px] uppercase font-bold text-primary tracking-widest mb-6">Account</h4>
+                <h4 className="text-[16px] uppercase font-bold text-primary tracking-widest mb-3">Account</h4>
                 <div className="flex flex-col gap-3">
-                  <Link to="/auth" className="text-[16px] text-white hover:text-primary transition-colors">Login / Register</Link>
-                  <Link to="/profile" className="text-[16px] text-white hover:text-primary transition-colors">My Profile</Link>
-                  <Link to="/profile" className="text-[16px] text-white hover:text-primary transition-colors">My Orders</Link>
+                  <Link to="/auth" className="text-[16px] text-white hover:text-primary transition-colors whitespace-nowrap">Login / Register</Link>
+                  <Link to="/profile" className="text-[16px] text-white hover:text-primary transition-colors whitespace-nowrap">My Profile</Link>
+                  <Link to="/profile" className="text-[16px] text-white hover:text-primary transition-colors whitespace-nowrap">My Orders</Link>
                 </div>
               </div>
 
               <div>
-                <h4 className="text-[16px] uppercase font-bold text-primary tracking-widest mb-6">Support</h4>
+                <h4 className="text-[16px] uppercase font-bold text-primary tracking-widest mb-3">Support</h4>
                 <div className="flex flex-col gap-3">
-                  <Link to="/contact" className="text-[16px] text-white hover:text-primary transition-colors">FAQs / Help</Link>
-                  <Link to="#" className="text-[16px] text-white hover:text-primary transition-colors">Privacy Policy</Link>
-                  <Link to="#" className="text-[16px] text-white hover:text-primary transition-colors">Terms of Service</Link>
+                  <Link to="/contact" className="text-[16px] text-white hover:text-primary transition-colors whitespace-nowrap">FAQs / Help</Link>
+                  <Link to="#" className="text-[16px] text-white hover:text-primary transition-colors whitespace-nowrap">Privacy Policy</Link>
+                  <Link to="#" className="text-[16px] text-white hover:text-primary transition-colors whitespace-nowrap">Terms of Service</Link>
                 </div>
               </div>
             </div>
@@ -335,13 +335,13 @@ export const Footer = () => {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="pt-6"
+                className="pt-4"
               >
                 <div className="flex items-center gap-2 mb-4">
                   <MapPin className="w-5 h-5 text-primary" />
                   <h4 className="text-[15px] uppercase font-bold text-primary tracking-widest">Our Location</h4>
                 </div>
-                <div className="w-full h-48 rounded-xl overflow-hidden border border-white/10 grayscale hover:grayscale-0 transition-all duration-500">
+                <div className="w-full h-48 rounded-xl overflow-hidden border border-white/10">
                   <iframe
                     src={getCleanMapUrl(getSetting('google_maps_embed_url'))}
                     width="100%"
@@ -357,10 +357,10 @@ export const Footer = () => {
           </div>
 
           {/* Right Column - Featured Projects */}
-          <div className="lg:col-span-4 xl:col-span-5 lg:pl-8 lg:border-l lg:border-white/10 space-y-10">
+          <div className="lg:col-span-4 xl:col-span-5 lg:pl-8 lg:border-l lg:border-white/10 space-y-6">
             {/* Newsletter Subscription */}
             <div>
-              <h4 className="text-[16px] uppercase font-bold text-primary tracking-widest mb-6">Stay Updated</h4>
+              <h4 className="text-[16px] uppercase font-bold text-primary tracking-widest mb-3">Stay Updated</h4>
               <p className="text-[16px] text-white leading-relaxed max-w-sm mb-4">
                 Subscribe to our newsletter for the latest design trends and updates.
               </p>
@@ -381,7 +381,7 @@ export const Footer = () => {
 
             {/* Visit Store Section */}
             <div>
-              <h4 className="text-[16px] uppercase font-bold text-primary tracking-widest mb-6">Visit Store</h4>
+              <h4 className="text-[16px] uppercase font-bold text-primary tracking-widest mb-3">Visit Store</h4>
               <div className="space-y-4">
                 {footerProducts.length > 0 ? (
                   footerProducts.map((product) => (
@@ -422,7 +422,7 @@ export const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-10 pt-6 border-t border-white/10 space-y-6">
+        <div className="mt-6 pt-4 border-t border-white/10 space-y-4">
           {/* Trust Badges */}
           <FooterTrustBadges />
 

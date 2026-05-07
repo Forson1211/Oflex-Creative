@@ -90,7 +90,7 @@ export function FooterSocialProof() {
 
   return (
     <div className="border-b border-white/10 bg-black/10">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto">
           <StatCard
             icon={Star}

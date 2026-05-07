@@ -100,7 +100,7 @@ export const HeroBannerSlider = () => {
                     transition={{ duration: 0.8, delay: 0.2 }}
                     className="text-white text-2xl sm:text-4xl md:text-5xl lg:text-[62px] font-black leading-[1.1] md:leading-[1.05] mb-4 md:mb-6 tracking-tighter drop-shadow-2xl"
                   >
-                    Professional Design, <span className="text-[#FF6B35]">Made Simple.</span>
+                    Professional Design, <span className="text-primary">Made Simple.</span>
                   </motion.h2>
 
                   <motion.p
@@ -117,7 +117,7 @@ export const HeroBannerSlider = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.8, delay: 0.6 }}
                   >
-                    <Button className="h-10 sm:h-14 px-6 sm:px-10 bg-[#FF6B35] hover:bg-[#E85D2A] text-white font-black text-sm sm:text-lg rounded-none shadow-[0_15px_40px_rgba(255,107,53,0.3)] transition-all hover:scale-105 active:scale-95 group" asChild>
+                    <Button className="h-10 sm:h-14 px-6 sm:px-10 bg-primary hover:bg-primary/90 text-white font-black text-sm sm:text-lg rounded-none shadow-[0_15px_40px_rgba(255,107,53,0.3)] transition-all hover:scale-105 active:scale-95 group" asChild>
                       <Link to="/store">
                         Shop Collection
                         <ArrowRight className="w-3 h-3 sm:w-5 sm:h-5 ml-2 md:ml-3 group-hover:translate-x-2 transition-transform" />

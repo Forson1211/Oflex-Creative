@@ -26,7 +26,7 @@ export function FooterTrustBadges() {
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 py-8 max-w-6xl mx-auto">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 py-4 max-w-6xl mx-auto">
       {badges.map((badge, index) => (
         <motion.div
           key={badge.label}

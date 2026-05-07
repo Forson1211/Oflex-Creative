@@ -204,7 +204,7 @@ const Store = () => {
             <div className="container mx-auto px-4 relative z-10">
               <div className="flex flex-col gap-6">
                 <div className="flex items-center gap-2 text-white/70 text-xs uppercase tracking-widest font-black [text-shadow:0_2px_10px_rgba(0,0,0,0.5)]">
-                  <Link to="/" className="hover:text-[#FF6B35] transition-colors">Home</Link>
+                  <Link to="/" className="hover:text-primary transition-colors">Home</Link>
                   <span className="opacity-30">/</span>
                   <span className="text-white">Premium Templates</span>
                 </div>
@@ -213,7 +213,7 @@ const Store = () => {
                   <div className="max-w-[280px] sm:max-w-xl md:max-w-4xl mr-auto">
                     <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight [text-shadow:0_4px_25px_rgba(0,0,0,0.4)]">
                       {filteredProducts.length}+ Premium Templates for{' '}
-                      <span className="text-[#FF6B35]">
+                      <span className="text-primary">
                         {searchQuery || 'Creative Projects'}
                       </span>
                     </h1>
@@ -221,22 +221,22 @@ const Store = () => {
 
                   <div className="flex items-center gap-4 w-full lg:w-auto">
                     <div className="relative flex-1 lg:w-96 group">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white" />
                       <Input
                         placeholder="Search for templates, designs..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full h-14 pl-12 pr-4 bg-white/20 backdrop-blur-md border border-white/30 focus-visible:ring-[#FF6B35] focus-visible:border-[#FF6B35] text-white placeholder:text-white/80 text-lg rounded-none transition-all shadow-2xl"
+                        className="w-full h-14 pl-12 pr-4 bg-white/20 backdrop-blur-md border border-white/30 focus-visible:ring-primary focus-visible:border-primary text-white placeholder:text-white/80 text-lg rounded-none transition-all shadow-2xl"
                       />
                     </div>
 
                     <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
                       <SheetTrigger asChild>
-                        <Button className="h-14 bg-white hover:bg-slate-50 text-black border-none px-8 font-bold text-sm flex items-center gap-3 rounded-none transition-transform active:scale-95 shadow-lg group">
-                          <ShoppingCart className="w-5 h-5 text-[#FF6B35]" />
+                        <Button className="h-14 bg-white/20 backdrop-blur-md hover:bg-white/30 text-white border border-white/30 px-8 font-bold text-sm flex items-center gap-3 rounded-none transition-transform active:scale-95 shadow-lg group">
+                          <ShoppingCart className="w-5 h-5 text-white" />
                           <span className="hidden sm:inline">My Cart</span>
                           {cartCount > 0 && (
-                            <span className="bg-[#FF6B35] text-white text-[10px] px-2 py-0.5 rounded-full">
+                            <span className="bg-primary text-white text-[10px] px-2 py-0.5 rounded-full">
                               {cartCount}
                             </span>
                           )}
@@ -245,7 +245,7 @@ const Store = () => {
                       <SheetContent className="w-full sm:max-w-md flex flex-col bg-background border-l border-border">
                         <SheetHeader className="pb-6 border-b">
                           <SheetTitle className="text-2xl font-black flex items-center gap-3">
-                            <ShoppingBag className="w-7 h-7 text-[#FF6B35]" />
+                            <ShoppingBag className="w-7 h-7 text-primary" />
                             Shopping Cart
                           </SheetTitle>
                         </SheetHeader>
@@ -264,7 +264,7 @@ const Store = () => {
                                   </div>
                                   <div className="flex-1 flex flex-col justify-between">
                                     <h4 className="font-bold text-sm truncate">{item.product?.title}</h4>
-                                    <p className="text-xs text-[#FF6B35] font-bold">${item.product?.price}</p>
+                                    <p className="text-xs text-primary font-bold">${item.product?.price}</p>
                                     <div className="flex items-center gap-2 mt-2">
                                       <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateQuantityMutation.mutate({ itemId: item.id, quantity: item.quantity - 1 })}><Minus className="h-3 w-3" /></Button>
                                       <span className="text-xs font-medium">{item.quantity}</span>
@@ -281,7 +281,7 @@ const Store = () => {
                           {cartItems.length > 0 && (
                             <div className="p-6 border-t border-border mt-auto bg-card">
                               <div className="flex justify-between mb-4 font-bold text-lg"><span>Total</span><span>${cartTotal.toFixed(2)}</span></div>
-                              <Button className="w-full h-12 bg-[#FF6B35] hover:bg-[#E85D2A] font-bold text-white shadow-xl" onClick={handleCheckout}>Checkout Now</Button>
+                              <Button className="w-full h-12 bg-primary hover:bg-primary/90 font-bold text-white shadow-xl" onClick={handleCheckout}>Checkout Now</Button>
                             </div>
                           )}
                         </div>
@@ -313,14 +313,14 @@ const Store = () => {
                   </div>
 
                   <div className="relative z-10">
-                    <div className="flex items-center gap-2 mb-8 px-2 text-[#FF6B35] uppercase text-[10px] font-black tracking-[0.2em]">Category List</div>
+                    <div className="flex items-center gap-2 mb-8 px-2 text-primary uppercase text-[10px] font-black tracking-[0.2em]">Category List</div>
                     <nav className="flex flex-col gap-2">
                       {categories.map(cat => (
                         <button
                           key={cat}
                           onClick={() => setActiveCategory(cat)}
                           className={`w-full text-left px-5 py-3.5 text-sm font-bold transition-all rounded-xl flex items-center justify-between group/item ${activeCategory === cat
-                            ? 'bg-[#FF6B35] text-white shadow-[0_8px_20px_rgba(255,107,53,0.3)] scale-[1.02]'
+                            ? 'bg-primary text-white shadow-[0_8px_20px_rgba(255,107,53,0.3)] scale-[1.02]'
                             : 'text-muted-foreground hover:bg-white dark:hover:bg-white/5 hover:text-foreground hover:translate-x-1'
                             }`}
                         >
@@ -340,7 +340,7 @@ const Store = () => {
               {/* Product Right Area */}
               <div className="flex-1">
                 {/* High-Impact Vibrant Promotional Banner */}
-                <div className="relative overflow-hidden rounded-[32px] bg-[#FF6B35] min-h-[280px] p-10 md:p-14 mb-14 flex flex-col md:flex-row items-center justify-between group shadow-[0_20px_50px_rgba(255,107,53,0.2)] border-none">
+                <div className="relative overflow-hidden rounded-[32px] bg-primary min-h-[280px] p-10 md:p-14 mb-14 flex flex-col md:flex-row items-center justify-between group shadow-[0_20px_50px_rgba(255,107,53,0.2)] border-none">
                   {/* Decorative Elements */}
                   <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
                   <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-xl" />
@@ -383,10 +383,10 @@ const Store = () => {
                                   <img src={featuredProd.image_url || ''} className="w-full h-full object-cover" alt={featuredProd.title} />
                                 </div>
                                 <div className="flex-1 flex flex-col justify-center text-white text-left">
-                                  <span className="text-[10px] font-black uppercase tracking-widest text-[#FF6B35] mb-2">{featuredProd.category}</span>
+                                  <span className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">{featuredProd.category}</span>
                                   <h4 className="text-xl md:text-2xl font-black mb-2 line-clamp-1">{featuredProd.title}</h4>
                                   <div className="text-2xl md:text-3xl font-black mb-6 text-white">${featuredProd.price.toFixed(2)}</div>
-                                  <Button size="sm" className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white border-none w-fit font-black rounded-none px-6 h-10 shadow-lg shadow-orange-600/20 transition-all active:scale-95" onClick={() => navigate(`/product/${featuredProd.id}`)}>Take a Look</Button>
+                                  <Button size="sm" className="bg-primary hover:bg-primary/90 text-white border-none w-fit font-black rounded-none px-6 h-10 shadow-lg shadow-orange-600/20 transition-all active:scale-95" onClick={() => navigate(`/product/${featuredProd.id}`)}>Take a Look</Button>
                                 </div>
                               </div>
                             </motion.div>
@@ -429,7 +429,7 @@ const Store = () => {
 
                         <div className="p-3 md:p-8 flex-1 flex flex-col">
                           <div className="mb-2 md:mb-4 text-left">
-                            <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.1em] px-2 md:px-4 py-1 md:py-2 rounded-full bg-orange-50 dark:bg-orange-950/20 text-[#FF6B35] border border-orange-100/50 dark:border-orange-900/30">
+                            <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.1em] px-2 md:px-4 py-1 md:py-2 rounded-full bg-orange-50 dark:bg-orange-950/20 text-primary border border-orange-100/50 dark:border-orange-900/30">
                               {product.category}
                             </span>
                           </div>
@@ -438,7 +438,7 @@ const Store = () => {
                             {product.description || 'Premium design resources for your projects.'}
                           </p>
                           <div className="mt-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-3 w-full">
-                            <Button className="flex-[4] h-9 md:h-14 bg-[#FF6B35] hover:bg-[#E85D2A] text-white font-black rounded-none shadow-lg shadow-orange-600/10 active:scale-95 transition-all text-[10px] md:text-base whitespace-nowrap" onClick={() => addToCartMutation.mutate(product.id)} disabled={addToCartMutation.isPending}>
+                            <Button className="flex-[4] h-9 md:h-14 bg-primary hover:bg-primary/90 text-white font-black rounded-none shadow-lg shadow-orange-600/10 active:scale-95 transition-all text-[10px] md:text-base whitespace-nowrap" onClick={() => addToCartMutation.mutate(product.id)} disabled={addToCartMutation.isPending}>
                               <ShoppingCart className="w-3 h-3 md:w-5 md:h-5 mr-1.5 md:mr-3" /> Add
                             </Button>
                             <Button variant="outline" className="flex-1 h-9 md:h-14 border border-slate-200/60 dark:border-border/60 hover:bg-slate-50 dark:hover:bg-accent bg-white dark:bg-transparent text-foreground rounded-none font-bold transition-all text-[10px] md:text-base" onClick={() => navigate(`/product/${product.id}`)}>
@@ -471,7 +471,7 @@ const Store = () => {
           <div className="container mx-auto px-4 text-center relative z-10">
             <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}>
               <h2 className="text-4xl md:text-7xl font-black mb-8 leading-tight text-white tracking-tighter [text-shadow:0_4px_30px_rgba(0,0,0,0.7)]">
-                Start your next <span className="text-[#FF6B35]">success story.</span>
+                Start your next <span className="text-primary">success story.</span>
               </h2>
               <p className="text-white text-lg md:text-2xl mb-12 max-w-3xl mx-auto font-medium leading-relaxed [text-shadow:0_2px_15px_rgba(0,0,0,0.7)]">
                 Elevate your agency with elite templates, high-performance design assets, and premium creative resources.

@@ -109,7 +109,7 @@ const Portfolio = () => {
                 Browse through some of our recent projects to learn more about what we've done.
               </p>
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4">
-                <Button className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white px-10 h-14 text-sm font-bold rounded-none border-none shadow-sm transition-colors uppercase tracking-widest" asChild>
+                <Button className="bg-primary hover:bg-primary/90 text-white px-10 h-14 text-sm font-bold rounded-none border-none shadow-sm transition-colors uppercase tracking-widest" asChild>
                   <Link to="/contact">Get Started</Link>
                 </Button>
                 <Button className="bg-[#1F0833] hover:bg-[#2c0b47] dark:bg-white dark:hover:bg-white/90 text-white dark:text-black px-10 h-14 text-sm font-bold rounded-none border-none shadow-sm transition-colors uppercase tracking-widest" asChild>
@@ -209,7 +209,7 @@ const Portfolio = () => {
                         
                         <div className="mt-auto">
                           <Button 
-                            className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white w-full font-bold rounded-none h-12 transition-all shadow-sm uppercase text-[10px] tracking-widest"
+                            className="bg-primary hover:bg-primary/90 text-white w-full font-bold rounded-none h-12 transition-all shadow-sm uppercase text-[10px] tracking-widest"
                             onClick={() => setSelectedItem(item)}
                           >
                             View Project
@@ -281,11 +281,11 @@ const Portfolio = () => {
                   {/* Info Panel */}
                   <div className="p-8 space-y-8 bg-card flex flex-col h-full">
                     <div className="space-y-4">
-                      <span className="inline-block px-3 py-1 rounded-none bg-[#FF6B35]/10 text-[#FF6B35] text-[10px] font-black uppercase tracking-widest border border-[#FF6B35]/20">
+                      <span className="inline-block px-3 py-1 rounded-none bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest border border-primary/20">
                         {selectedItem.category}
                       </span>
                       <h3 className="text-3xl font-black text-foreground leading-tight uppercase tracking-tight">{selectedItem.title}</h3>
-                      <div className="h-1 w-12 bg-[#FF6B35]" />
+                      <div className="h-1 w-12 bg-primary" />
                     </div>
 
                     <div className="flex-grow">

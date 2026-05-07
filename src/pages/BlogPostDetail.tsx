@@ -94,7 +94,7 @@ const BlogPostDetail = () => {
                     <h2 className="text-2xl font-bold mb-4">Post not found</h2>
                     <p className="text-muted-foreground mb-6">The article you are looking for does not exist or has been moved.</p>
                     <Button asChild>
-                        <Link to="/blog">Back to Blog</Link>
+                        <Link to="/blog">Back to News</Link>
                     </Button>
                 </div>
             </Layout>
@@ -118,7 +118,7 @@ const BlogPostDetail = () => {
                         animate={{ opacity: 1, x: 0 }}
                         className="flex items-center gap-2 text-sm text-muted-foreground mb-8"
                     >
-                        <Link to="/blog" className="hover:text-primary transition-colors">Blog</Link>
+                        <Link to="/blog" className="hover:text-primary transition-colors">News</Link>
                         <ChevronRight className="w-3 h-3" />
                         <span className="text-foreground font-medium truncate">{post.title}</span>
                     </motion.div>
@@ -126,7 +126,7 @@ const BlogPostDetail = () => {
                     <Button variant="ghost" className="mb-8 group" asChild>
                         <Link to="/blog">
                             <ArrowLeft className="mr-2 w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                            Back to Blog
+                            Back to News
                         </Link>
                     </Button>
 

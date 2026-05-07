@@ -75,7 +75,7 @@ const Services = () => {
                   >
                     <div className="bg-white dark:bg-card rounded-2xl p-10 flex flex-col items-center text-center shadow-[0_4px_25px_-5px_rgba(0,0,0,0.05)] border border-border/40 h-full group hover:shadow-[0_15px_35px_-10px_rgba(0,0,0,0.1)] transition-all duration-300">
                       <div className="mb-8">
-                        <IconComponent className="w-16 h-16 text-[#FF6B35] transition-transform duration-500 group-hover:scale-110" />
+                        <IconComponent className="w-16 h-16 text-primary transition-transform duration-500 group-hover:scale-110" />
                       </div>
 
                       <h3 className="text-2xl font-bold text-[#1A1028] dark:text-white mb-4 font-roboto">
@@ -89,7 +89,7 @@ const Services = () => {
                       <ul className="space-y-3 mb-10 text-left w-full max-w-[240px] mx-auto">
                         {(service.features || []).map((feature: string, i: number) => (
                           <li key={i} className="flex items-start gap-3 text-sm text-black dark:text-white/80">
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#FF6B35] mt-1.5 flex-shrink-0" />
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
                             <span>{feature}</span>
                           </li>
                         ))}
@@ -97,11 +97,11 @@ const Services = () => {
 
                       <div className="mt-auto">
                         <Button
-                          className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white px-10 py-6 rounded-none font-bold text-base transition-all duration-300 shadow-sm"
+                          className="bg-primary hover:bg-primary/90 text-white px-10 py-6 rounded-none font-bold text-base transition-all duration-300 shadow-sm"
                           asChild
                         >
                           <Link to="/contact">
-                            Get A Quote
+                            Get In Touch
                           </Link>
                         </Button>
                       </div>

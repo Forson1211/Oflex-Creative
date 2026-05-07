@@ -272,12 +272,12 @@ const Index = () => {
                 transition={{ duration: 0.6, delay: 0.3 }}
                 className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start items-center lg:items-start"
               >
-                <Button className="w-56 sm:w-auto h-12 sm:h-14 px-10 rounded-none bg-[#FF6B35] hover:bg-[#e85a25] text-white font-bold text-base border-none shadow-sm transition-all" asChild>
+                <Button className="w-56 sm:w-auto h-12 sm:h-14 px-10 rounded-none bg-primary hover:bg-primary/90 text-white font-bold text-base border-none shadow-sm transition-all" asChild>
                   <Link to="/portfolio">
                     {getSetting('hero_button1_text', 'View Portfolio')}
                   </Link>
                 </Button>
-                <Button className="w-56 sm:w-auto h-12 sm:h-14 px-10 rounded-none bg-[#1A1028] hover:bg-[#251838] dark:bg-white dark:hover:bg-white/90 text-white dark:text-black font-bold text-base border-none shadow-sm transition-all" asChild>
+                <Button className="w-56 sm:w-auto h-12 sm:h-14 px-10 rounded-none bg-white hover:bg-white/90 text-[#1A1028] font-bold text-base border-none shadow-sm transition-all" asChild>
                   <Link to="/store">
                     {getSetting('hero_button2_text', 'Visit Store')}
                   </Link>
@@ -304,8 +304,15 @@ const Index = () => {
                     <div className="col-span-2">
                       <GlassCard className="p-6 border-white/20 backdrop-blur-md" style={{ background: 'rgba(255, 255, 255, 0.15)', borderColor: 'rgba(255, 255, 255, 0.2)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-primary-foreground shadow-lg">
-                            <Package className="w-6 h-6" />
+                          <div className="relative">
+                            <motion.div
+                              animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0.6, 0.3] }}
+                              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                              className="absolute inset-0 bg-primary/40 rounded-full blur-xl"
+                            />
+                            <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white shadow-lg">
+                              <Package className="w-6 h-6" />
+                            </div>
                           </div>
                           <div>
                             <h3 className="text-3xl font-bold text-white">{siteStats.productCount}+</h3>
@@ -321,8 +328,15 @@ const Index = () => {
                     {/* Secondary Cards */}
                     <GlassCard className="p-5 border-white/20 backdrop-blur-md transform hover:-translate-y-1 transition-transform" style={{ background: 'rgba(255, 255, 255, 0.1)', borderColor: 'rgba(255, 255, 255, 0.2)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
                       <div className="flex flex-col gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-chart-2/20 text-chart-2 flex items-center justify-center">
-                          <Users className="w-5 h-5" />
+                        <div className="relative">
+                          <motion.div
+                            animate={{ scale: [1, 1.5, 1], opacity: [0.2, 0.5, 0.2] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                            className="absolute inset-0 bg-white/30 rounded-full blur-lg"
+                          />
+                          <div className="relative w-10 h-10 rounded-lg bg-chart-2/20 text-white flex items-center justify-center">
+                            <Users className="w-5 h-5" />
+                          </div>
                         </div>
                         <div>
                           <p className="text-2xl font-bold text-white">{siteStats.userCount}+</p>
@@ -333,8 +347,15 @@ const Index = () => {
 
                     <GlassCard className="p-5 border-white/20 backdrop-blur-md transform hover:-translate-y-1 transition-transform" style={{ background: 'rgba(255, 255, 255, 0.1)', borderColor: 'rgba(255, 255, 255, 0.2)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
                       <div className="flex flex-col gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-chart-3/20 text-chart-3 flex items-center justify-center">
-                          <Briefcase className="w-5 h-5" />
+                        <div className="relative">
+                          <motion.div
+                            animate={{ scale: [1, 1.5, 1], opacity: [0.2, 0.5, 0.2] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                            className="absolute inset-0 bg-white/30 rounded-full blur-lg"
+                          />
+                          <div className="relative w-10 h-10 rounded-lg bg-chart-3/20 text-white flex items-center justify-center">
+                            <Briefcase className="w-5 h-5" />
+                          </div>
                         </div>
                         <div>
                           <p className="text-2xl font-bold text-white">{siteStats.projectCount}+</p>
@@ -415,18 +436,18 @@ const Index = () => {
 
                 <div className="p-5 flex flex-col flex-grow">
                   <div>
-                    <p className="text-[9px] uppercase tracking-[0.2em] text-[#FF6B35] font-roboto font-bold mb-1">
+                    <p className="text-[9px] uppercase tracking-[0.2em] text-primary font-roboto font-bold mb-1">
                       {product.category}
                     </p>
                     <Link to={`/product/${product.id}`}>
-                      <h3 className="font-bold text-[#1A1028] dark:text-white text-[17px] leading-tight hover:text-[#FF6B35] transition-colors line-clamp-1">
+                      <h3 className="font-bold text-[#1A1028] dark:text-white text-[17px] leading-tight hover:text-primary transition-colors line-clamp-1">
                         {product.title}
                       </h3>
                     </Link>
                   </div>
 
                   <div className="flex items-center justify-between mt-2 mb-3">
-                    <span className="text-[#FF6B35] font-extrabold text-lg sm:text-2xl">${product.price}</span>
+                    <span className="text-primary font-extrabold text-lg sm:text-2xl">${product.price}</span>
                     <div className="hidden xs:block px-2 py-0.5 rounded-none bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10">
                       <span className="text-[7px] font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Digital</span>
                     </div>
@@ -438,7 +459,7 @@ const Index = () => {
                         e.preventDefault();
                         addToCartMutation.mutate(product.id);
                       }}
-                      className="w-full bg-[#FF6B35] hover:bg-[#E85D2A] text-white rounded-sm font-bold text-[10px] sm:text-xs py-3 sm:py-5 transition-all duration-300 shadow-sm flex items-center justify-center gap-1.5"
+                      className="w-full bg-primary hover:bg-primary/90 text-white rounded-sm font-bold text-[10px] sm:text-xs py-3 sm:py-5 transition-all duration-300 shadow-sm flex items-center justify-center gap-1.5"
                     >
                       <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       Add to Cart
@@ -512,7 +533,7 @@ const Index = () => {
                 >
                   <div className="bg-white dark:bg-card rounded-2xl p-10 flex flex-col items-center text-center shadow-[0_4px_25px_-5px_rgba(0,0,0,0.05)] border border-border/40 h-full group hover:shadow-[0_15px_35px_-10px_rgba(0,0,0,0.1)] transition-all duration-300">
                     <div className="mb-8">
-                      <IconComponent className="w-16 h-16 text-[#FF6B35] transition-transform duration-500 group-hover:scale-110" />
+                      <IconComponent className="w-16 h-16 text-primary transition-transform duration-500 group-hover:scale-110" />
                     </div>
 
                     <h3 className="text-2xl font-bold text-[#1A1028] dark:text-white mb-4 font-roboto">
@@ -525,7 +546,7 @@ const Index = () => {
 
                     <div className="mt-auto">
                       <Button
-                        className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white px-10 py-6 rounded-sm font-bold text-base transition-all duration-300 shadow-sm"
+                        className="bg-primary hover:bg-primary/90 text-white px-10 py-6 rounded-sm font-bold text-base transition-all duration-300 shadow-sm"
                         asChild
                       >
                         <Link to="/services">
@@ -580,14 +601,14 @@ const Index = () => {
               <div className="p-8 flex flex-col flex-grow">
                 <div className="flex-grow mb-6">
                   <p className="text-[14px] leading-relaxed text-muted-foreground">
-                    <span className="font-black text-[#FF6B35] uppercase mr-1">{project.title}</span>
+                    <span className="font-black text-primary uppercase mr-1">{project.title}</span>
                     {project.description || "is an innovative software solution designed to empower digital operations for modern businesses."}
                   </p>
                 </div>
 
                 <div className="w-full">
                   <Button
-                    className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white w-full py-6 rounded-none font-bold text-xs uppercase transition-all duration-300 shadow-sm"
+                    className="bg-primary hover:bg-primary/90 text-white w-full py-6 rounded-none font-bold text-xs uppercase transition-all duration-300 shadow-sm"
                     asChild
                   >
                     {project.project_url ? (
@@ -707,7 +728,7 @@ const Index = () => {
                     key={i}
                     onClick={() => testimonialApi?.scrollTo(i)}
                     className={`h-3 rounded-full transition-all duration-300 ${currentTestimonial === i
-                      ? 'bg-[#FF6B35] w-6'
+                      ? 'bg-primary w-6'
                       : 'bg-slate-200 w-3 hover:bg-slate-300'
                       }`}
                   />

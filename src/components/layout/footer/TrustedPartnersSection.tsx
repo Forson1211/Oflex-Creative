@@ -36,7 +36,7 @@ export function TrustedPartnersSection() {
       transition={{ delay: 0.35 }}
       className="w-full py-4 text-center"
     >
-      <p className="text-center text-sm font-medium text-white/50 uppercase tracking-widest mb-8">Trusted Platforms</p>
+      <p className="text-center text-sm font-medium text-white/50 uppercase tracking-widest mb-4">Trusted Platforms</p>
       <div className="flex flex-wrap items-center justify-center gap-8">
         {partners.map((partner) => (
           <motion.a
