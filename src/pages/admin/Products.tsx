@@ -350,7 +350,7 @@ const Products = () => {
                     isUploading={isUploading}
                     aspectRatio="video"
                   />
-                  <p className="text-xs text-muted-foreground">Or enter URL manually:</p>
+                  <p className="text-sm text-muted-foreground">Or enter URL manually:</p>
                   <Input
                     type="url"
                     value={formData.image_url}
@@ -463,11 +463,11 @@ const Products = () => {
                        <div className="p-1.5 bg-primary/5 border border-primary/10">
                          <ShoppingBag className="w-4 h-4 text-primary" />
                        </div>
-                       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/80">Inventory</p>
+                       <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/80">Inventory</p>
                     </div>
                     <div>
                       <h3 className="text-4xl font-black tracking-tight leading-none">{products.length}</h3>
-                      <p className="text-[10px] text-muted-foreground mt-2 font-medium uppercase tracking-wider">Total digital assets</p>
+                      <p className="text-xs text-muted-foreground mt-2 font-medium uppercase tracking-wider">Total digital assets</p>
                     </div>
                   </div>
                 </div>
@@ -486,13 +486,13 @@ const Products = () => {
                        <div className="p-1.5 bg-chart-3/5 border border-chart-3/10">
                          <CheckCircle2 className="w-4 h-4 text-chart-3" />
                        </div>
-                       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/80">Live Status</p>
+                       <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/80">Live Status</p>
                     </div>
                     <div>
                       <h3 className="text-4xl font-black tracking-tight leading-none">
                         {products.filter(p => p.is_active).length}
                       </h3>
-                      <p className="text-[10px] text-muted-foreground mt-2 font-medium uppercase tracking-wider">Currently active in store</p>
+                      <p className="text-xs text-muted-foreground mt-2 font-medium uppercase tracking-wider">Currently active in store</p>
                     </div>
                   </div>
                 </div>
@@ -511,11 +511,11 @@ const Products = () => {
                        <div className="p-1.5 bg-accent/5 border border-accent/10">
                          <Layers className="w-4 h-4 text-accent-foreground" />
                        </div>
-                       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/80">Segments</p>
+                       <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/80">Segments</p>
                     </div>
                     <div>
                       <h3 className="text-4xl font-black tracking-tight leading-none">{allCategories.length}</h3>
-                      <p className="text-[10px] text-muted-foreground mt-2 font-medium uppercase tracking-wider">Distinct product categories</p>
+                      <p className="text-xs text-muted-foreground mt-2 font-medium uppercase tracking-wider">Distinct product categories</p>
                     </div>
                   </div>
                 </div>
@@ -555,7 +555,7 @@ const Products = () => {
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="bg-card border border-border rounded-none p-12 text-center">
-              <p className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">No products found</p>
+              <p className="text-muted-foreground font-medium uppercase tracking-widest text-xs">No products found</p>
             </div>
           ) : (
             <>
@@ -580,7 +580,7 @@ const Products = () => {
                       <div className="min-w-0 flex-1">
                         <div className="flex justify-between items-start">
                           <div>
-                            <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-none bg-accent text-accent-foreground mb-1 inline-block">
+                            <span className="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-none bg-accent text-accent-foreground mb-1 inline-block">
                               {product.category}
                             </span>
                             <h3 className="font-bold text-foreground truncate uppercase text-sm">{product.title}</h3>
@@ -604,7 +604,7 @@ const Products = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="flex-1 rounded-none border-border/50 text-[10px] font-bold uppercase tracking-widest" 
+                        className="flex-1 rounded-none border-border/50 text-xs font-bold uppercase tracking-widest" 
                         onClick={() => {
                           setEditingProduct(product);
                           setFormData({
@@ -647,11 +647,11 @@ const Products = () => {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-muted/50 border-b border-border">
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Product</th>
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pricing</th>
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Segment</th>
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Status</th>
-                      <th className="px-6 py-4 text-right text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Actions</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-widest">Product</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-widest">Pricing</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-widest">Segment</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-widest">Status</th>
+                      <th className="px-6 py-4 text-right text-xs font-bold text-muted-foreground uppercase tracking-widest">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -679,7 +679,7 @@ const Products = () => {
                           ${Number(product.price).toFixed(2)}
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-none bg-accent text-accent-foreground border border-border/50">
+                          <span className="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-none bg-accent text-accent-foreground border border-border/50">
                             {product.category}
                           </span>
                         </td>
@@ -785,7 +785,7 @@ const Products = () => {
                 Are you sure you want to remove "{categoryToDelete}"?
                 <br /><br />
                 This will NOT delete products. Products using this category will be moved to "Uncategorized".
-                <div className="mt-2 text-amber-500 text-xs flex items-center gap-1">
+                <div className="mt-2 text-amber-500 text-sm flex items-center gap-1">
                   <AlertCircle className="w-3 h-3" />
                   This action cannot be undone.
                 </div>

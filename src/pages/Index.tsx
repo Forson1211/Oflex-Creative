@@ -199,20 +199,46 @@ const Index = () => {
       <section className="relative min-h-[90vh] flex items-center overflow-hidden pt-20 pb-16">
         {/* Dynamic Background */}
         <div className="absolute inset-0 z-0">
-          <motion.img
-            initial={{ scale: 1.05, opacity: 0 }}
-            animate={{ scale: 1, opacity: 0.9 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            src={getOptimizedImageUrl(getSetting('hero_background_url', ''), 1600)}
-            alt="Hero background"
-            loading="eager"
-            decoding="sync"
-            {...({ fetchpriority: "high" } as any)}
-            className="absolute inset-0 w-full h-full object-cover object-center"
-            style={{ display: getSetting('hero_background_url') ? 'block' : 'none' }}
+          {/* Permanent dark base layer */}
+          <div className="absolute inset-0 bg-[#1a1a2e]" />
+          {getSetting('hero_background_url') && (
+            <motion.div
+              initial={{ scale: 1.05, opacity: 0 }}
+              animate={{ scale: 1, opacity: 0.9 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="absolute inset-0 w-full h-full"
+            >
+              {(getSetting('hero_background_url', '').toLowerCase().match(/\.(mp4|webm|ogg|mov|m4v|mkv)$/) || getSetting('hero_background_url', '').includes('video')) ? (
+                <video
+                  src={getSetting('hero_background_url', '')}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover object-center"
+                />
+              ) : (
+                <img
+                  src={getOptimizedImageUrl(getSetting('hero_background_url', ''), 1600)}
+                  alt="Hero background"
+                  loading="eager"
+                  decoding="sync"
+                  {...({ fetchpriority: "high" } as any)}
+                  className="absolute inset-0 w-full h-full object-cover object-center"
+                />
+              )}
+            </motion.div>
+          )}
+          <div 
+            className="absolute inset-0 z-10" 
+            style={{
+              backgroundImage: `linear-gradient(to right, 
+                rgba(26, 26, 46, 1) 0%, 
+                rgba(26, 26, 46, ${getSetting('hero_gradient_opacity', '0.9')}) ${getSetting('hero_gradient_position', '50')}%, 
+                transparent 100%)`
+            }}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/80 lg:to-background/20" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/30 via-primary/5 to-transparent opacity-100" />
+          <div className="absolute inset-0 z-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/30 via-primary/5 to-transparent opacity-100" />
         </div>
 
         <div className="container mx-auto px-4 relative z-10 h-full">
@@ -224,7 +250,7 @@ const Index = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-normal capitalize text-black dark:text-white leading-[1.2] lg:leading-[1.1] mb-6"
+                className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-normal capitalize text-white leading-[1.2] lg:leading-[1.1] mb-6"
               >
                 Digital Solutions<br />
                 Engineered To Boost<br />
@@ -235,7 +261,7 @@ const Index = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-xl md:text-2xl text-black dark:text-white mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed text-center lg:text-left px-4 sm:px-0"
+                className="text-xl md:text-2xl text-white/90 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed text-center lg:text-left px-4 sm:px-0"
               >
                 Oflex Creative specializes in end-to-end web and mobile development, intuitive UI/UX design, and custom software solutions engineered for growth.
               </motion.p>
@@ -276,14 +302,14 @@ const Index = () => {
                   <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
                     {/* Main Large Card */}
                     <div className="col-span-2">
-                      <GlassCard className="p-6 border-white/20 bg-white/5 backdrop-blur-md">
+                      <GlassCard className="p-6 border-white/20 backdrop-blur-md" style={{ background: 'rgba(255, 255, 255, 0.15)', borderColor: 'rgba(255, 255, 255, 0.2)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-primary-foreground shadow-lg">
                             <Package className="w-6 h-6" />
                           </div>
                           <div>
-                            <h3 className="text-3xl font-bold text-black dark:text-white">{siteStats.productCount}+</h3>
-                            <p className="text-sm text-black dark:text-white/80">{getSetting('hero_stat1_label', 'Digital Products Available')}</p>
+                            <h3 className="text-3xl font-bold text-white">{siteStats.productCount}+</h3>
+                            <p className="text-sm text-white/80">{getSetting('hero_stat1_label', 'Digital Products Available')}</p>
                           </div>
                         </div>
                         <div className="mt-4 h-1 w-full bg-white/10 rounded-full overflow-hidden">
@@ -293,26 +319,26 @@ const Index = () => {
                     </div>
 
                     {/* Secondary Cards */}
-                    <GlassCard className="p-5 border-white/20 bg-white/5 backdrop-blur-md transform hover:-translate-y-1 transition-transform">
+                    <GlassCard className="p-5 border-white/20 backdrop-blur-md transform hover:-translate-y-1 transition-transform" style={{ background: 'rgba(255, 255, 255, 0.1)', borderColor: 'rgba(255, 255, 255, 0.2)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
                       <div className="flex flex-col gap-3">
                         <div className="w-10 h-10 rounded-lg bg-chart-2/20 text-chart-2 flex items-center justify-center">
                           <Users className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-2xl font-bold text-black dark:text-white">{siteStats.userCount}+</p>
-                          <p className="text-xs text-black dark:text-white/80">{getSetting('hero_stat2_label', 'Happy Clients')}</p>
+                          <p className="text-2xl font-bold text-white">{siteStats.userCount}+</p>
+                          <p className="text-xs text-white/80">{getSetting('hero_stat2_label', 'Happy Clients')}</p>
                         </div>
                       </div>
                     </GlassCard>
 
-                    <GlassCard className="p-5 border-white/20 bg-white/5 backdrop-blur-md transform hover:-translate-y-1 transition-transform">
+                    <GlassCard className="p-5 border-white/20 backdrop-blur-md transform hover:-translate-y-1 transition-transform" style={{ background: 'rgba(255, 255, 255, 0.1)', borderColor: 'rgba(255, 255, 255, 0.2)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
                       <div className="flex flex-col gap-3">
                         <div className="w-10 h-10 rounded-lg bg-chart-3/20 text-chart-3 flex items-center justify-center">
                           <Briefcase className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-2xl font-bold text-black dark:text-white">{siteStats.projectCount}+</p>
-                          <p className="text-xs text-black dark:text-white/80">{getSetting('hero_stat3_label', 'Completed Projects')}</p>
+                          <p className="text-2xl font-bold text-white">{siteStats.projectCount}+</p>
+                          <p className="text-xs text-white/80">{getSetting('hero_stat3_label', 'Completed Projects')}</p>
                         </div>
                       </div>
                     </GlassCard>
@@ -325,17 +351,17 @@ const Index = () => {
             <div className="lg:hidden w-full pb-8">
               {siteStats && (
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-card/50 p-3 rounded-xl border text-center">
+                  <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/20 text-center">
                     <p className="text-xl font-bold text-primary">{siteStats.productCount}+</p>
-                    <p className="text-[10px] text-black dark:text-white/80">Products</p>
+                    <p className="text-[10px] text-white/80">Products</p>
                   </div>
-                  <div className="bg-card/50 p-3 rounded-xl border text-center">
-                    <p className="text-xl font-bold text-black dark:text-white">{siteStats.userCount}+</p>
-                    <p className="text-[10px] text-black dark:text-white/80">Clients</p>
+                  <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/20 text-center">
+                    <p className="text-xl font-bold text-white">{siteStats.userCount}+</p>
+                    <p className="text-[10px] text-white/80">Clients</p>
                   </div>
-                  <div className="bg-card/50 p-3 rounded-xl border text-center">
-                    <p className="text-xl font-bold text-black dark:text-white">{siteStats.projectCount}+</p>
-                    <p className="text-[10px] text-black dark:text-white/80">Projects</p>
+                  <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/20 text-center">
+                    <p className="text-xl font-bold text-white">{siteStats.projectCount}+</p>
+                    <p className="text-[10px] text-white/80">Projects</p>
                   </div>
                 </div>
               )}
@@ -344,6 +370,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Clean divider line between hero and next section */}
+      <div className="w-full h-px bg-border" />
 
       {/* Featured Products */}
       <section className="py-20 bg-card/50">

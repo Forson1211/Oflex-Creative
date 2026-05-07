@@ -93,15 +93,26 @@ const About = () => {
               transition={{ duration: 0.6 }}
               className="relative lg:ml-auto"
             >
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-muted/20">
-                <OptimizedImage
-                  src={getSetting('about_main_image', 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80')}
-                  alt="About Oflex"
-                  width={800}
-                  className="w-full h-auto"
-                  imageClassName="object-contain"
-                  priority
-                />
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-muted/20 aspect-video">
+                {(getSetting('about_main_image', '').toLowerCase().match(/\.(mp4|webm|ogg|mov|m4v|mkv)$/) || getSetting('about_main_image', '').includes('video')) ? (
+                  <video
+                    src={getSetting('about_main_image', '')}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <OptimizedImage
+                    src={getSetting('about_main_image', 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80')}
+                    alt="About Oflex"
+                    width={800}
+                    className="w-full h-auto"
+                    imageClassName="object-contain"
+                    priority
+                  />
+                )}
               </div>
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}

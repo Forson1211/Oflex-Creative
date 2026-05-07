@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Loader2, Image as ImageIcon, Film } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -10,6 +10,8 @@ interface ImageUploadProps {
   isUploading?: boolean;
   className?: string;
   aspectRatio?: 'square' | 'video' | 'auto';
+  allowVideo?: boolean;
+  accept?: string;
 }
 
 export const ImageUpload = ({
@@ -19,10 +21,15 @@ export const ImageUpload = ({
   isUploading = false,
   className,
   aspectRatio = 'video',
+  allowVideo = false,
+  accept,
 }: ImageUploadProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
   const [previewError, setPreviewError] = useState(false);
+
+  // Simple check to see if the URL is likely a video
+  const isVideo = value?.toLowerCase().match(/\.(mp4|webm|ogg|mov)$/) || value?.includes('video');
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -71,20 +78,32 @@ export const ImageUpload = ({
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept={accept || (allowVideo ? "image/*,video/*" : "image/*")}
         onChange={handleChange}
         className="hidden"
         disabled={isUploading}
       />
 
       {value && !previewError ? (
-        <div className={cn('relative rounded-lg overflow-hidden border border-border', aspectRatioClass)}>
-          <img
-            src={value}
-            alt="Preview"
-            className="w-full h-full object-cover"
-            onError={() => setPreviewError(true)}
-          />
+        <div className={cn('relative rounded-lg overflow-hidden border border-border bg-black/5', aspectRatioClass)}>
+          {isVideo ? (
+            <video
+              src={value}
+              className="w-full h-full object-cover"
+              controls={false}
+              autoPlay
+              muted
+              loop
+              playsInline
+            />
+          ) : (
+            <img
+              src={value}
+              alt="Preview"
+              className="w-full h-full object-cover"
+              onError={() => setPreviewError(true)}
+            />
+          )}
           <div className="absolute inset-0 bg-background/60 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
             <Button
               type="button"
@@ -131,11 +150,20 @@ export const ImageUpload = ({
             </>
           ) : (
             <>
-              <ImageIcon className="w-10 h-10 text-muted-foreground mb-2" />
+              {allowVideo ? (
+                <div className="flex gap-2 mb-2">
+                  <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                  <Film className="w-8 h-8 text-muted-foreground" />
+                </div>
+              ) : (
+                <ImageIcon className="w-10 h-10 text-muted-foreground mb-2" />
+              )}
               <p className="text-sm text-muted-foreground text-center px-4">
                 <span className="font-medium text-foreground">Click to upload</span> or drag and drop
               </p>
-              <p className="text-xs text-muted-foreground mt-1">PNG, JPG, GIF up to 5MB</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {allowVideo ? 'Images or Videos up to 50MB' : 'PNG, JPG, GIF up to 5MB'}
+              </p>
             </>
           )}
         </div>

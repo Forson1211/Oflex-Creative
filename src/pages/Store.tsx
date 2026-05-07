@@ -161,23 +161,40 @@ const Store = () => {
             }}
             className="relative bg-[#1A1028] h-[var(--mobile-height)] md:h-[var(--desktop-height)] border-b border-white/10 overflow-hidden shadow-2xl flex items-start md:items-center pt-24 md:pt-0"
           >
-            {/* Custom Banner Header Background */}
             <div className="absolute inset-0 z-0">
-              <OptimizedImage
-                src={bannerUrl}
-                className="w-full h-full"
-                style={{ 
-                  ['--desktop-pos' as any]: `${posXDesktop}% ${posYDesktop}%`,
-                  ['--mobile-pos' as any]: `${posXMobile}% ${posYMobile}%`,
-                } as any}
-                imageClassName={cn(
-                  "w-full h-full object-cover grayscale-0 transition-all duration-700",
-                  "object-[var(--mobile-pos)] md:object-[var(--desktop-pos)]"
-                )}
-                alt="Store Banner"
-                priority
-                width={1920}
-              />
+              {(bannerUrl.toLowerCase().match(/\.(mp4|webm|ogg|mov|m4v|mkv)$/) || bannerUrl.includes('video')) ? (
+                <video
+                  src={bannerUrl}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  style={{ 
+                    ['--desktop-pos' as any]: `${posXDesktop}% ${posYDesktop}%`,
+                    ['--mobile-pos' as any]: `${posXMobile}% ${posYMobile}%`,
+                  } as any}
+                  className={cn(
+                    "w-full h-full object-cover grayscale-0 transition-all duration-700",
+                    "object-[var(--mobile-pos)] md:object-[var(--desktop-pos)]"
+                  )}
+                />
+              ) : (
+                <OptimizedImage
+                  src={bannerUrl}
+                  className="w-full h-full"
+                  style={{ 
+                    ['--desktop-pos' as any]: `${posXDesktop}% ${posYDesktop}%`,
+                    ['--mobile-pos' as any]: `${posXMobile}% ${posYMobile}%`,
+                  } as any}
+                  imageClassName={cn(
+                    "w-full h-full object-cover grayscale-0 transition-all duration-700",
+                    "object-[var(--mobile-pos)] md:object-[var(--desktop-pos)]"
+                  )}
+                  alt="Store Banner"
+                  priority
+                  width={1920}
+                />
+              )}
               <div 
                 className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent transition-opacity duration-300" 
                 style={{ opacity: overlayOpacity }}

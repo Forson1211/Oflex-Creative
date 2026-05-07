@@ -86,11 +86,13 @@ const SiteCustomization = () => {
   const { uploadImage: uploadHeroBg, isUploading: isUploadingHeroBg } = useImageUpload({
     bucket: 'site-assets',
     onSuccess: (url) => updateSetting('hero_background_url', url),
+    allowVideo: true,
   });
 
   const { uploadImage: uploadAboutImg, isUploading: isUploadingAboutImg } = useImageUpload({
     bucket: 'site-assets',
     onSuccess: (url) => updateSetting('about_image_url', url),
+    allowVideo: true,
   });
 
   const { uploadImage: uploadOgImg, isUploading: isUploadingOgImg } = useImageUpload({
@@ -101,6 +103,7 @@ const SiteCustomization = () => {
   const { uploadImage: uploadStoreBanner, isUploading: isUploadingStoreBanner } = useImageUpload({
     bucket: 'site-assets',
     onSuccess: (url) => updateSetting('store_banner_url', url),
+    allowVideo: true,
   });
 
   // Refine the useQuery call to remove 'prefetch' and ensure proper typing
@@ -191,7 +194,7 @@ const SiteCustomization = () => {
                 <div className="flex items-center gap-2 mb-2">
                   <div className="px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20 flex items-center gap-1.5">
                     <Palette className="w-3.5 h-3.5 text-primary" />
-                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Customizer</span>
+                    <span className="text-xs font-bold text-primary uppercase tracking-widest">Customizer</span>
                   </div>
                   <div className="h-px w-8 bg-border/40" />
                 </div>
@@ -207,7 +210,7 @@ const SiteCustomization = () => {
                 <Button
                   type="submit"
                   disabled={saveMutation.isPending}
-                  className="h-10 px-6 rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-300 font-bold text-xs uppercase tracking-wider group"
+                  className="h-10 px-6 rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-300 font-bold text-sm uppercase tracking-wider group"
                 >
                   {saveMutation.isPending ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -237,7 +240,7 @@ const SiteCustomization = () => {
                     key={tab.id}
                     value={tab.id}
                     className="
-                      flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all duration-300
+                      flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all duration-300
                       data-[state=active]:bg-primary/10 data-[state=active]:text-primary
                       data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground
                       whitespace-nowrap relative
@@ -262,7 +265,7 @@ const SiteCustomization = () => {
                         <Layout className="w-6 h-6 text-primary" />
                       </div>
                       <div>
-                        <h2 className="text-xl font-bold text-foreground">Core Identity</h2>
+                        <h2 className="text-xl font-bold text-foreground font-poppins">Core Identity</h2>
                         <p className="text-sm text-muted-foreground font-medium">Define your brand's basic information</p>
                       </div>
                     </div>
@@ -305,7 +308,7 @@ const SiteCustomization = () => {
                         <FileText className="w-6 h-6 text-accent-foreground" />
                       </div>
                       <div>
-                        <h2 className="text-xl font-bold text-foreground">Brand Logo</h2>
+                        <h2 className="text-xl font-bold text-foreground font-poppins">Brand Logo</h2>
                         <p className="text-sm text-muted-foreground font-medium">Visual representation of your brand</p>
                       </div>
                     </div>
@@ -366,7 +369,7 @@ const SiteCustomization = () => {
                         <Palette className="w-6 h-6 text-primary" />
                       </div>
                       <div>
-                        <h2 className="text-xl font-bold text-foreground">Visual Style</h2>
+                        <h2 className="text-xl font-bold text-foreground font-poppins">Visual Style</h2>
                         <p className="text-sm text-muted-foreground font-medium">Colors and themes</p>
                       </div>
                     </div>
@@ -424,7 +427,7 @@ const SiteCustomization = () => {
                               />
                             </div>
                           </div>
-                          <p className="text-xs text-muted-foreground font-medium">Controls the text color inside solid primary buttons to ensure readability.</p>
+                          <p className="text-sm text-muted-foreground font-medium">Controls the text color inside solid primary buttons to ensure readability.</p>
                           <div className="flex gap-2 flex-wrap mb-4">
                             {['#FFFFFF', '#000000', '#1A1A1A'].map(color => (
                               <button
@@ -458,7 +461,7 @@ const SiteCustomization = () => {
                               />
                             </div>
                           </div>
-                          <p className="text-xs text-muted-foreground font-medium">Used for interactive hovers and secondary elements.</p>
+                          <p className="text-sm text-muted-foreground font-medium">Used for interactive hovers and secondary elements.</p>
                         </div>
                       </div>
                     </div>
@@ -476,7 +479,7 @@ const SiteCustomization = () => {
                       <Type className="w-5 h-5 sm:w-6 sm:h-6 text-accent-foreground" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-foreground">Content Strategy</h2>
+                      <h2 className="text-xl font-bold text-foreground font-poppins">Content Strategy</h2>
                       <p className="text-sm text-muted-foreground font-medium">Headline and messaging control</p>
                     </div>
                   </div>
@@ -520,7 +523,7 @@ const SiteCustomization = () => {
                       <Label className="block text-sm font-bold text-foreground mb-6 uppercase tracking-widest text-center underline decoration-primary/30 underline-offset-8">Action Buttons</Label>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-3">
-                          <Label htmlFor="hero_button1_text" className="text-xs font-bold text-muted-foreground uppercase tracking-tighter">Primary Text</Label>
+                          <Label htmlFor="hero_button1_text" className="text-sm font-bold text-muted-foreground uppercase tracking-tighter">Primary Text</Label>
                           <Input
                             id="hero_button1_text"
                             value={settings.hero_button1_text || ''}
@@ -530,7 +533,7 @@ const SiteCustomization = () => {
                           />
                         </div>
                         <div className="space-y-3">
-                          <Label htmlFor="hero_button2_text" className="text-xs font-bold text-muted-foreground uppercase tracking-tighter">Secondary Text</Label>
+                          <Label htmlFor="hero_button2_text" className="text-sm font-bold text-muted-foreground uppercase tracking-tighter">Secondary Text</Label>
                           <Input
                             id="hero_button2_text"
                             value={settings.hero_button2_text || ''}
@@ -551,7 +554,7 @@ const SiteCustomization = () => {
                         <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
                       </div>
                       <div>
-                        <h2 className="text-xl font-bold text-foreground">Social Proof</h2>
+                        <h2 className="text-xl font-bold text-foreground font-poppins">Social Proof</h2>
                         <p className="text-sm text-muted-foreground font-medium">Engagement statistics</p>
                       </div>
                     </div>
@@ -559,7 +562,7 @@ const SiteCustomization = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       {[1, 2, 3].map(num => (
                         <div key={num} className="space-y-3">
-                          <Label htmlFor={`hero_stat${num}_label`} className="text-xs font-bold text-foreground/70 uppercase tracking-tighter">Stat {num} Label</Label>
+                          <Label htmlFor={`hero_stat${num}_label`} className="text-sm font-bold text-foreground/70 uppercase tracking-tighter">Stat {num} Label</Label>
                           <Input
                             id={`hero_stat${num}_label`}
                             value={settings[`hero_stat${num}_label`] || ''}
@@ -578,7 +581,7 @@ const SiteCustomization = () => {
                         <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6" />
                       </div>
                       <div>
-                        <h2 className="text-xl font-bold text-foreground">Imagery</h2>
+                        <h2 className="text-xl font-bold text-foreground font-poppins">Imagery</h2>
                         <p className="text-sm text-muted-foreground font-medium">Background visuals</p>
                       </div>
                     </div>
@@ -586,13 +589,14 @@ const SiteCustomization = () => {
                     <div className="space-y-8">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-4">
-                          <Label className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Background Image</Label>
+                          <Label className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Background Media (Image/Video)</Label>
                           <ImageUpload
                             value={settings.hero_background_url || ''}
                             onChange={(url) => updateSetting('hero_background_url', url)}
                             onUpload={uploadHeroBg}
                             isUploading={isUploadingHeroBg}
                             aspectRatio="video"
+                            allowVideo={true}
                             className="rounded-2xl border-dashed border-2 hover:border-primary/50 transition-colors"
                           />
                         </div>
@@ -609,17 +613,59 @@ const SiteCustomization = () => {
                           </div>
                           {settings.hero_background_url && (
                             <div className="relative group rounded-2xl overflow-hidden border border-border/50 shadow-2xl">
-                              <img
-                                src={settings.hero_background_url}
-                                alt="Hero preview"
-                                className="w-full h-40 object-cover group-hover:scale-110 transition-transform duration-700"
-                                onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
-                              />
-                              <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent text-[10px] text-white/70 font-mono truncate">
+                              {(settings.hero_background_url?.toLowerCase().match(/\.(mp4|webm|ogg|mov|m4v|mkv)$/) || settings.hero_background_url?.includes('video')) ? (
+                                <video
+                                  src={settings.hero_background_url}
+                                  className="w-full h-40 object-cover group-hover:scale-110 transition-transform duration-700"
+                                  autoPlay
+                                  muted
+                                  loop
+                                  playsInline
+                                />
+                              ) : (
+                                <img
+                                  src={settings.hero_background_url}
+                                  alt="Hero preview"
+                                  className="w-full h-40 object-cover group-hover:scale-110 transition-transform duration-700"
+                                  onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
+                                />
+                              )}
+                              <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent text-xs text-white/70 font-mono truncate">
                                 {settings.hero_background_url}
                               </div>
                             </div>
                           )}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-border/10 mt-6 font-sans">
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <Label className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Overlay Intensity</Label>
+                            <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded-md">{Math.round((parseFloat(settings.hero_gradient_opacity || '0.9')) * 100)}%</span>
+                          </div>
+                          <Slider 
+                            min={0} 
+                            max={1} 
+                            step={0.05}
+                            value={[parseFloat(settings.hero_gradient_opacity || '0.9')]}
+                            onValueChange={(vals) => updateSetting('hero_gradient_opacity', vals[0].toString())}
+                          />
+                          <p className="text-sm text-muted-foreground font-medium leading-relaxed">Adjust how much the primary background color covers your hero image/video.</p>
+                        </div>
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <Label className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Gradient Coverage</Label>
+                            <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded-md">{settings.hero_gradient_position || '50'}%</span>
+                          </div>
+                          <Slider 
+                            min={10} 
+                            max={100} 
+                            step={1}
+                            value={[parseFloat(settings.hero_gradient_position || '50')]}
+                            onValueChange={(vals) => updateSetting('hero_gradient_position', vals[0].toString())}
+                          />
+                          <p className="text-sm text-muted-foreground font-medium leading-relaxed">Control the horizontal point where the background images starts becoming visible.</p>
                         </div>
                       </div>
                     </div>
@@ -647,15 +693,15 @@ const SiteCustomization = () => {
                         <section.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                       </div>
                       <div>
-                        <h2 className="text-lg sm:text-xl font-bold text-foreground">{section.label} Section</h2>
-                        <p className="text-[10px] sm:text-sm text-muted-foreground font-medium uppercase tracking-wider">Headlines & Tags</p>
+                        <h2 className="text-lg sm:text-xl font-bold text-foreground font-poppins">{section.label} Section</h2>
+                        <p className="text-xs sm:text-sm text-muted-foreground font-medium uppercase tracking-wider">Headlines & Tags</p>
                       </div>
                     </div>
 
                     <div className="space-y-6">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div className="space-y-3">
-                          <Label htmlFor={`home_${section.id}_badge`} className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Badge Text</Label>
+                          <Label htmlFor={`home_${section.id}_badge`} className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Badge Text</Label>
                           <Input
                             id={`home_${section.id}_badge`}
                             value={settings[`home_${section.id}_badge`] || ''}
@@ -665,7 +711,7 @@ const SiteCustomization = () => {
                           />
                         </div>
                         <div className="space-y-3">
-                          <Label htmlFor={`home_${section.id}_title`} className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Section Title</Label>
+                          <Label htmlFor={`home_${section.id}_title`} className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Section Title</Label>
                           <Input
                             id={`home_${section.id}_title`}
                             value={settings[`home_${section.id}_title`] || ''}
@@ -676,7 +722,7 @@ const SiteCustomization = () => {
                         </div>
                       </div>
                       <div className="space-y-3">
-                        <Label htmlFor={`home_${section.id}_description`} className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Section Description</Label>
+                        <Label htmlFor={`home_${section.id}_description`} className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Section Description</Label>
                         <Textarea
                           id={`home_${section.id}_description`}
                           value={settings[`home_${section.id}_description`] || ''}
@@ -701,7 +747,7 @@ const SiteCustomization = () => {
                       <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-foreground">Services Page</h2>
+                      <h2 className="text-xl font-bold text-foreground font-poppins">Services Page</h2>
                       <p className="text-sm text-muted-foreground font-medium">Hero and process sections</p>
                     </div>
                   </div>
@@ -709,7 +755,7 @@ const SiteCustomization = () => {
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-3">
-                        <Label htmlFor="services_badge" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Hero Badge</Label>
+                        <Label htmlFor="services_badge" className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Hero Badge</Label>
                         <Input
                           id="services_badge"
                           value={settings.services_badge || ''}
@@ -719,7 +765,7 @@ const SiteCustomization = () => {
                         />
                       </div>
                       <div className="space-y-3">
-                        <Label htmlFor="services_title" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Hero Title</Label>
+                        <Label htmlFor="services_title" className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Hero Title</Label>
                         <Input
                           id="services_title"
                           value={settings.services_title || ''}
@@ -730,7 +776,7 @@ const SiteCustomization = () => {
                       </div>
                     </div>
                     <div className="space-y-3">
-                      <Label htmlFor="services_description" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Hero Description</Label>
+                      <Label htmlFor="services_description" className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Hero Description</Label>
                       <Textarea
                         id="services_description"
                         value={settings.services_description || ''}
@@ -741,13 +787,13 @@ const SiteCustomization = () => {
                     </div>
 
                     <div className="pt-6 border-t border-border/50 space-y-4">
-                      <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-4 text-center">Work Process Section</h4>
+                      <h4 className="text-xs font-black text-primary uppercase tracking-[0.3em] mb-4 text-center">Work Process Section</h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Input
                             id="services_process_badge"
                             value={settings.services_process_badge || ''}
-                            className="bg-background/50 rounded-xl text-xs"
+                            className="bg-background/50 rounded-xl text-sm"
                             onChange={(e) => updateSetting('services_process_badge', e.target.value)}
                             placeholder="Process Badge"
                           />
@@ -756,7 +802,7 @@ const SiteCustomization = () => {
                           <Input
                             id="services_process_title"
                             value={settings.services_process_title || ''}
-                            className="bg-background/50 rounded-xl font-bold text-xs"
+                            className="bg-background/50 rounded-xl font-bold text-sm"
                             onChange={(e) => updateSetting('services_process_title', e.target.value)}
                             placeholder="Process Title"
                           />
@@ -765,7 +811,7 @@ const SiteCustomization = () => {
                           <Textarea
                             id="services_process_description"
                             value={settings.services_process_description || ''}
-                            className="bg-background/50 rounded-xl text-xs"
+                            className="bg-background/50 rounded-xl text-sm"
                             onChange={(e) => updateSetting('services_process_description', e.target.value)}
                             placeholder="Describe your process..."
                             rows={2}
@@ -783,7 +829,7 @@ const SiteCustomization = () => {
                       <Info className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-foreground">About Page</h2>
+                      <h2 className="text-xl font-bold text-foreground font-poppins">About Page</h2>
                       <p className="text-sm text-muted-foreground font-medium">Your story and achievements</p>
                     </div>
                   </div>
@@ -791,7 +837,7 @@ const SiteCustomization = () => {
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-3">
-                        <Label htmlFor="about_badge" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Hero Badge</Label>
+                        <Label htmlFor="about_badge" className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Hero Badge</Label>
                         <Input
                           id="about_badge"
                           value={settings.about_badge || ''}
@@ -801,7 +847,7 @@ const SiteCustomization = () => {
                         />
                       </div>
                       <div className="space-y-3">
-                        <Label htmlFor="about_title_page" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Hero Title</Label>
+                        <Label htmlFor="about_title_page" className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Hero Title</Label>
                         <Input
                           id="about_title_page"
                           value={settings.about_title || ''}
@@ -815,7 +861,7 @@ const SiteCustomization = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-border/50">
                       <div className="space-y-4">
                         <div className="space-y-2">
-                          <Label htmlFor="about_story_title" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Story Title</Label>
+                          <Label htmlFor="about_story_title" className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Story Title</Label>
                           <Input
                             id="about_story_title"
                             value={settings.about_story_title || ''}
@@ -824,11 +870,11 @@ const SiteCustomization = () => {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="about_story" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Our Narrative</Label>
+                          <Label htmlFor="about_story" className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Our Narrative</Label>
                           <Textarea
                             id="about_story"
                             value={settings.about_story || ''}
-                            className="bg-background/50 rounded-xl text-xs leading-relaxed"
+                            className="bg-background/50 rounded-xl text-sm leading-relaxed"
                             onChange={(e) => updateSetting('about_story', e.target.value)}
                             rows={8}
                           />
@@ -838,7 +884,7 @@ const SiteCustomization = () => {
                       <div className="space-y-6">
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-bold text-center block">Years Exp.</Label>
+                            <Label className="text-xs font-bold text-center block">Years Exp.</Label>
                             <Input
                               value={settings.about_years_experience || ''}
                               className="bg-background/50 rounded-xl text-center font-black"
@@ -847,7 +893,7 @@ const SiteCustomization = () => {
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-bold text-center block">Projects</Label>
+                            <Label className="text-xs font-bold text-center block">Projects</Label>
                             <Input
                               value={settings.about_projects_completed || ''}
                               className="bg-background/50 rounded-xl text-center font-black"
@@ -857,13 +903,14 @@ const SiteCustomization = () => {
                           </div>
                         </div>
                         <div className="space-y-3">
-                          <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Page Image</Label>
+                          <Label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Page Media (Image/Video)</Label>
                           <ImageUpload
                             value={settings.about_image_url || ''}
                             onChange={(url) => updateSetting('about_image_url', url)}
                             onUpload={uploadAboutImg}
                             isUploading={isUploadingAboutImg}
                             aspectRatio="video"
+                            allowVideo={true}
                             className="rounded-xl border-dashed border-2"
                           />
                         </div>
@@ -893,7 +940,7 @@ const SiteCustomization = () => {
                         {p.id !== 'contact_page' && (
                           <Input
                             value={settings[`${p.id}_badge`] || ''}
-                            className="bg-background/50 rounded-xl text-xs"
+                            className="bg-background/50 rounded-xl text-sm"
                             onChange={(e) => updateSetting(`${p.id}_badge`, e.target.value)}
                             placeholder="Badge text"
                           />
@@ -906,7 +953,7 @@ const SiteCustomization = () => {
                         />
                         <Textarea
                           value={settings[`${p.id}_description`] || ''}
-                          className="bg-background/50 rounded-xl text-xs"
+                          className="bg-background/50 rounded-xl text-sm"
                           onChange={(e) => updateSetting(`${p.id}_description`, e.target.value)}
                           placeholder="Description text..."
                           rows={4}
@@ -927,27 +974,28 @@ const SiteCustomization = () => {
                       <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-foreground">Store Banner Imagery</h2>
+                      <h2 className="text-xl font-bold text-foreground font-poppins">Store Banner Imagery</h2>
                       <p className="text-sm text-muted-foreground font-medium">Manage the main visual for your storefront</p>
                     </div>
                   </div>
 
                   <div className="space-y-6">
                     <div className="space-y-4">
-                      <Label className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Banner Background Image</Label>
+                      <Label className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Banner Background (Image/Video)</Label>
                       <ImageUpload
                         value={settings.store_banner_url || ''}
                         onChange={(url) => updateSetting('store_banner_url', url)}
                         onUpload={uploadStoreBanner}
                         isUploading={isUploadingStoreBanner}
                         aspectRatio="video"
+                        allowVideo={true}
                         className="rounded-2xl border-dashed border-2 p-4 hover:border-primary/50 transition-colors bg-background/50"
                       />
-                      <p className="text-[10px] text-muted-foreground text-center">Recommended size: 2400x750px</p>
+                      <p className="text-xs text-muted-foreground text-center">Recommended size: 2400x750px</p>
                     </div>
                     
                     <div className="pt-4 border-t border-border/50">
-                      <Label htmlFor="store_banner_url_direct" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 block">Direct Image URL</Label>
+                      <Label htmlFor="store_banner_url_direct" className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">Direct Image URL</Label>
                       <Input
                         id="store_banner_url_direct"
                         value={settings.store_banner_url || ''}
@@ -965,7 +1013,7 @@ const SiteCustomization = () => {
                       <Layout className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-foreground">Banner Adaptation</h2>
+                      <h2 className="text-xl font-bold text-foreground font-poppins">Banner Adaptation</h2>
                       <p className="text-sm text-muted-foreground font-medium">Adjust heights for perfect framing</p>
                     </div>
                   </div>
@@ -982,9 +1030,9 @@ const SiteCustomization = () => {
                             className="h-12 bg-background/50 rounded-xl"
                             onChange={(e) => updateSetting('store_banner_height_desktop', e.target.value)}
                           />
-                          <span className="text-xs font-bold text-muted-foreground uppercase">px</span>
+                          <span className="text-sm font-bold text-muted-foreground uppercase">px</span>
                         </div>
-                        <p className="text-[10px] text-muted-foreground">Original image height is 750px</p>
+                        <p className="text-xs text-muted-foreground">Original image height is 750px</p>
                       </div>
                       <div className="space-y-3">
                         <Label htmlFor="store_banner_height_mobile" className="text-sm font-semibold text-foreground/80 uppercase tracking-tighter">Mobile Height (px)</Label>
@@ -996,14 +1044,14 @@ const SiteCustomization = () => {
                             className="h-12 bg-background/50 rounded-xl"
                             onChange={(e) => updateSetting('store_banner_height_mobile', e.target.value)}
                           />
-                          <span className="text-xs font-bold text-muted-foreground uppercase">px</span>
+                          <span className="text-sm font-bold text-muted-foreground uppercase">px</span>
                         </div>
-                        <p className="text-[10px] text-muted-foreground">Recommended tall crop: 600px</p>
+                        <p className="text-xs text-muted-foreground">Recommended tall crop: 600px</p>
                       </div>
                     </div>
 
                     <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
-                      <p className="text-xs text-muted-foreground leading-relaxed flex items-start gap-3">
+                      <p className="text-sm text-muted-foreground leading-relaxed flex items-start gap-3">
                         <Sparkles className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                         <span>Adjusting these values will instantly resize the Store banner space. Use these to frame your design perfectly for both desktop and mobile users.</span>
                       </p>
@@ -1017,7 +1065,7 @@ const SiteCustomization = () => {
                       <Zap className="w-6 h-6 text-primary" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-foreground">Advanced Banner Fine-Tuning</h2>
+                      <h2 className="text-xl font-bold text-foreground font-poppins">Advanced Banner Fine-Tuning</h2>
                       <p className="text-sm text-muted-foreground font-medium">Positioning and visual effects</p>
                     </div>
                   </div>
@@ -1030,7 +1078,7 @@ const SiteCustomization = () => {
                       </div>
                       
                       <div className="space-y-4">
-                        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter flex justify-between">
+                        <Label className="text-xs font-bold text-muted-foreground uppercase tracking-tighter flex justify-between">
                           Horizontal Position
                           <span className="text-primary">{settings.store_banner_x_desktop || '50'}%</span>
                         </Label>
@@ -1045,7 +1093,7 @@ const SiteCustomization = () => {
                       </div>
 
                       <div className="space-y-4">
-                        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter flex justify-between">
+                        <Label className="text-xs font-bold text-muted-foreground uppercase tracking-tighter flex justify-between">
                           Vertical Position
                           <span className="text-primary">{settings.store_banner_y_desktop || '50'}%</span>
                         </Label>
@@ -1067,7 +1115,7 @@ const SiteCustomization = () => {
                       </div>
 
                       <div className="space-y-4">
-                        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter flex justify-between">
+                        <Label className="text-xs font-bold text-muted-foreground uppercase tracking-tighter flex justify-between">
                           Horizontal Position
                           <span className="text-primary">{settings.store_banner_x_mobile || '50'}%</span>
                         </Label>
@@ -1082,7 +1130,7 @@ const SiteCustomization = () => {
                       </div>
 
                       <div className="space-y-4">
-                        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter flex justify-between">
+                        <Label className="text-xs font-bold text-muted-foreground uppercase tracking-tighter flex justify-between">
                           Vertical Position
                           <span className="text-primary">{settings.store_banner_y_mobile || '50'}%</span>
                         </Label>
@@ -1101,7 +1149,7 @@ const SiteCustomization = () => {
                       <div className="flex items-center justify-between gap-4">
                         <div className="space-y-1">
                           <Label className="text-sm font-bold text-foreground">Dark Overlay Intensity</Label>
-                          <p className="text-[10px] text-muted-foreground">Adjust for maximum text contrast.</p>
+                          <p className="text-xs text-muted-foreground">Adjust for maximum text contrast.</p>
                         </div>
                         <div className="flex items-center gap-3 bg-background/50 rounded-lg p-2 border border-border/40">
                            <Input
@@ -1112,7 +1160,7 @@ const SiteCustomization = () => {
                             className="w-16 h-8 bg-transparent border-none text-center font-bold"
                             onChange={(e) => updateSetting('store_banner_overlay_opacity', e.target.value)}
                           />
-                          <span className="text-[10px] font-bold text-muted-foreground">%</span>
+                          <span className="text-xs font-bold text-muted-foreground">%</span>
                         </div>
                       </div>
                       <Slider
@@ -1138,14 +1186,14 @@ const SiteCustomization = () => {
                       <MapPin className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-foreground">Business Presence</h2>
+                      <h2 className="text-xl font-bold text-foreground font-poppins">Business Presence</h2>
                       <p className="text-sm text-muted-foreground font-medium">Where your clients can find you</p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                     <div className="space-y-3">
-                      <Label htmlFor="contact_email" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                      <Label htmlFor="contact_email" className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
                         <Mail className="w-3 h-3" />
                         Official Email
                       </Label>
@@ -1159,7 +1207,7 @@ const SiteCustomization = () => {
                       />
                     </div>
                     <div className="space-y-3">
-                      <Label htmlFor="phone_number" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                      <Label htmlFor="phone_number" className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
                         <Phone className="w-3 h-3" />
                         Business Phone
                       </Label>
@@ -1172,7 +1220,7 @@ const SiteCustomization = () => {
                       />
                     </div>
                     <div className="space-y-3 sm:col-span-2">
-                      <Label htmlFor="address" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                      <Label htmlFor="address" className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
                         <MapPin className="w-3 h-3" />
                         Physical Address
                       </Label>
@@ -1193,7 +1241,7 @@ const SiteCustomization = () => {
                       <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
                     </div>
                     <h3 className="text-lg font-bold mb-2">Real-time Sync</h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
                       All changes here reflect instantly on your live storefront and landing pages.
                     </p>
                   </GlassCard>
@@ -1210,7 +1258,7 @@ const SiteCustomization = () => {
                       <Share2 className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-foreground">Social Connectivity</h2>
+                      <h2 className="text-xl font-bold text-foreground font-poppins">Social Connectivity</h2>
                       <p className="text-sm text-muted-foreground font-medium">Engage with your audience on social platforms</p>
                     </div>
                   </div>
@@ -1223,7 +1271,7 @@ const SiteCustomization = () => {
                       { id: 'linkedin', icon: Linkedin, placeholder: 'https://linkedin.com/...' }
                     ].map(social => (
                       <div key={social.id} className="space-y-3">
-                        <Label htmlFor={`social_${social.id}`} className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                        <Label htmlFor={`social_${social.id}`} className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
                           <social.icon className="w-4 h-4" />
                           {social.id}
                         </Label>
@@ -1244,7 +1292,7 @@ const SiteCustomization = () => {
                         <ImageIcon className="w-5 h-5" />
                       </div>
                       <div>
-                        <h2 className="text-xl font-bold text-foreground">Social Preview</h2>
+                        <h2 className="text-xl font-bold text-foreground font-poppins">Social Preview</h2>
                         <p className="text-sm text-muted-foreground font-medium">This image appears when you share your site URL</p>
                       </div>
                     </div>
@@ -1260,7 +1308,7 @@ const SiteCustomization = () => {
                           aspectRatio="video"
                           className="rounded-2xl border-dashed border-2 p-2 hover:border-primary/50 transition-colors"
                         />
-                        <p className="text-[10px] text-muted-foreground">Recommended size: 1200x630 pixels</p>
+                        <p className="text-xs text-muted-foreground">Recommended size: 1200x630 pixels</p>
                       </div>
                       <div className="space-y-6 flex flex-col justify-center">
                         <div className="space-y-3">
@@ -1293,12 +1341,12 @@ const SiteCustomization = () => {
                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-primary/10 flex items-center justify-center shadow-inner text-primary">
                       <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
-                    <h2 className="text-lg sm:text-xl font-bold text-foreground">Footer</h2>
+                    <h2 className="text-lg sm:text-xl font-bold text-foreground font-poppins">Footer</h2>
                   </div>
 
                   <div className="space-y-8">
                     <div className="space-y-3">
-                      <Label htmlFor="footer_text" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Copyright Text</Label>
+                      <Label htmlFor="footer_text" className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Copyright Text</Label>
                       <Input
                         id="footer_text"
                         value={settings.footer_text || ''}
@@ -1308,7 +1356,7 @@ const SiteCustomization = () => {
                       />
                     </div>
                     <div className="space-y-3">
-                      <Label htmlFor="footer_color" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Footer Background</Label>
+                      <Label htmlFor="footer_color" className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Footer Background</Label>
                       <div className="flex flex-col gap-3">
                         <div className="flex items-center gap-3 p-3 bg-background/50 rounded-xl border border-border/50">
                           <Input

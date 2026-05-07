@@ -123,7 +123,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex font-sans">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
@@ -182,7 +182,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
                   <item.icon className="w-5 h-5" />
                   <span className="flex-1">{item.label}</span>
                   {item.path === '/admin/orders' && pendingOrderCount > 0 && (
-                    <Badge variant="default" className="ml-auto text-[10px] px-1.5 h-5 bg-primary-foreground text-primary">
+                    <Badge variant="default" className="ml-auto text-xs px-1.5 h-5 bg-primary-foreground text-primary">
                       {pendingOrderCount}
                     </Badge>
                   )}
@@ -239,13 +239,13 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
               >
                 <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                 {pendingOrderCount > 0 && (
-                  <span className="absolute top-1 right-1 min-w-4 h-4 sm:min-w-5 sm:h-5 px-1 rounded-full bg-primary text-primary-foreground text-[9px] sm:text-[11px] flex items-center justify-center font-bold">
+                  <span className="absolute top-1 right-1 min-w-4 h-4 sm:min-w-5 sm:h-5 px-1 rounded-full bg-primary text-primary-foreground text-xs sm:text-[11px] flex items-center justify-center font-bold">
                     {pendingOrderCount > 99 ? '99+' : pendingOrderCount}
                   </span>
                 )}
               </Button>
             )}
-            <Badge variant="outline" className="flex items-center gap-1 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 font-bold">
+            <Badge variant="outline" className="flex items-center gap-1 text-xs sm:text-sm px-1.5 sm:px-2 py-0.5 sm:py-1 font-bold">
               {getRoleIcon()}
               <span>{getRoleBadge()}</span>
             </Badge>
@@ -256,7 +256,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
               <div className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0">
                 <Avatar className="w-full h-full border-2 border-primary bg-background shadow-lg shadow-primary/20">
                   <AvatarImage src={getOptimizedImageUrl(profile?.avatar_url || '', 100)} className="object-cover" />
-                  <AvatarFallback className="bg-primary flex items-center justify-center text-primary-foreground font-black text-xs sm:text-sm">
+                  <AvatarFallback className="bg-primary flex items-center justify-center text-primary-foreground font-black text-sm sm:text-sm">
                     {user?.email?.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>

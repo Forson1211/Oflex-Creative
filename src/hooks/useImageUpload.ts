@@ -5,9 +5,10 @@ import { useToast } from '@/hooks/use-toast';
 interface UseImageUploadOptions {
   bucket: 'product-images' | 'site-assets' | 'avatars';
   onSuccess?: (url: string) => void;
+  allowVideo?: boolean;
 }
 
-export const useImageUpload = ({ bucket, onSuccess }: UseImageUploadOptions) => {
+export const useImageUpload = ({ bucket, onSuccess, allowVideo = false }: UseImageUploadOptions) => {
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const { toast } = useToast();
@@ -15,15 +16,27 @@ export const useImageUpload = ({ bucket, onSuccess }: UseImageUploadOptions) => 
   const uploadImage = async (file: File, pathPrefix?: string): Promise<string | null> => {
     if (!file) return null;
 
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+
     // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast({ title: 'Invalid file', description: 'Please upload an image file', variant: 'destructive' });
+    if (!isImage && (!allowVideo || !isVideo)) {
+      toast({ 
+        title: 'Invalid file', 
+        description: allowVideo ? 'Please upload an image or video file' : 'Please upload an image file', 
+        variant: 'destructive' 
+      });
       return null;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: 'File too large', description: 'Maximum file size is 5MB', variant: 'destructive' });
+    // Validate file size
+    const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024; // 50MB for video, 5MB for image
+    if (file.size > maxSize) {
+      toast({ 
+        title: 'File too large', 
+        description: `Maximum file size is ${isVideo ? '50MB' : '5MB'}`, 
+        variant: 'destructive' 
+      });
       return null;
     }
 
@@ -56,7 +69,7 @@ export const useImageUpload = ({ bucket, onSuccess }: UseImageUploadOptions) => 
 
       const publicUrl = urlData.publicUrl;
       onSuccess?.(publicUrl);
-      toast({ title: 'Image uploaded successfully' });
+      toast({ title: 'File uploaded successfully' });
 
       return publicUrl;
     } catch (error: unknown) {

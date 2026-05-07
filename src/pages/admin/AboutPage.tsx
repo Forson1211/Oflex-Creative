@@ -64,6 +64,7 @@ const AboutPage = () => {
   const { uploadImage: uploadAboutImage, isUploading: isUploadingAbout } = useImageUpload({
     bucket: 'site-assets',
     onSuccess: (url) => updateSetting('about_main_image', url),
+    allowVideo: true,
   });
 
   const { uploadImage: uploadMemberImage, isUploading: isUploadingMember } = useImageUpload({
@@ -243,7 +244,7 @@ const AboutPage = () => {
             <TabsContent value="content" className="space-y-6">
               <div className="flex items-center justify-between bg-card border border-border rounded-xl p-4">
                 <div>
-                  <h2 className="text-lg font-semibold text-foreground">Page Content Settings</h2>
+                  <h2 className="text-lg font-semibold text-foreground font-poppins">Page Content Settings</h2>
                   <p className="text-sm text-muted-foreground">Manage the text and descriptions across the About page sections.</p>
                 </div>
                 <Button onClick={() => saveSettingsMutation.mutate()} disabled={saveSettingsMutation.isPending}>
@@ -260,7 +261,7 @@ const AboutPage = () => {
                 
                 {/* Hero Section Settings */}
                 <div className="bg-card border border-border rounded-xl p-6 space-y-6">
-                  <h3 className="text-md font-semibold text-primary border-b border-border pb-2">Hero Section</h3>
+                  <h3 className="text-md font-semibold text-primary border-b border-border pb-2 font-roboto">Hero Section</h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -290,9 +291,16 @@ const AboutPage = () => {
                   </div>
 
                       <div className="space-y-2">
-                        <Label>Hero Image</Label>
+                        <Label>Hero Media (Image/Video)</Label>
                         <div className="flex flex-col gap-4">
-                          <ImageUpload value={settings.about_main_image || ''} onChange={(url) => updateSetting('about_main_image', url)} onUpload={uploadAboutImage} isUploading={isUploadingAbout} aspectRatio="video" />
+                          <ImageUpload 
+                            value={settings.about_main_image || ''} 
+                            onChange={(url) => updateSetting('about_main_image', url)} 
+                            onUpload={uploadAboutImage} 
+                            isUploading={isUploadingAbout} 
+                            aspectRatio="video" 
+                            allowVideo={true}
+                          />
                           <Input id="about_main_image" value={settings.about_main_image || ''} onChange={(e) => updateSetting('about_main_image', e.target.value)} placeholder="Or enter image URL https://..." />
                         </div>
                       </div>
@@ -531,7 +539,7 @@ const AboutPage = () => {
                           <TableCell className="font-medium">{member.name}</TableCell>
                           <TableCell className="text-muted-foreground">{member.role}</TableCell>
                           <TableCell>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${member.is_active ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                            <span className={`px-2 py-1 rounded-full text-sm font-medium ${member.is_active ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
                               }`}>
                               {member.is_active ? 'Active' : 'Inactive'}
                             </span>
