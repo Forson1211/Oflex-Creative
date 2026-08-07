@@ -50,6 +50,16 @@ export function useProducts(filters: { isActive?: boolean; category?: string; se
                 );
             }
 
+            // Immediately preload product images into browser memory cache for instant rendering
+            if (typeof window !== 'undefined' && result.length > 0) {
+                result.forEach(p => {
+                    if (p.image_url) {
+                        const img = new Image();
+                        img.src = p.image_url;
+                    }
+                });
+            }
+
             return result;
         },
         staleTime: 1000 * 60 * 5, // 5 minutes cache stale time

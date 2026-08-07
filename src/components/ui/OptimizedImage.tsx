@@ -25,7 +25,7 @@ export const OptimizedImage = ({
     height,
     priority = true,
     imageClassName,
-    fetchPriority = 'auto',
+    fetchPriority = 'high',
     sizes,
     ...props
 }: OptimizedImageProps) => {
@@ -33,29 +33,18 @@ export const OptimizedImage = ({
     const srcSet = generateSrcSet(src);
     const imgRef = useRef<HTMLImageElement>(null);
 
-    // Initialize isLoaded to true for static assets, priority images, or cached URLs to prevent flashing
-    const [isLoaded, setIsLoaded] = useState(() => {
-        if (!src) return true;
-        if (priority || LOADED_IMAGE_CACHE.has(optimizedSrc) || LOADED_IMAGE_CACHE.has(src)) return true;
-        if (typeof src === 'string' && (src.startsWith('/') || src.startsWith('data:'))) return true;
-        return false;
-    });
+    // Initialize isLoaded to true by default so images render immediately without waiting for opacity transitions
+    const [isLoaded, setIsLoaded] = useState(true);
 
     useLayoutEffect(() => {
         if (imgRef.current?.complete && imgRef.current?.naturalWidth !== 0) {
             LOADED_IMAGE_CACHE.add(optimizedSrc);
             LOADED_IMAGE_CACHE.add(src);
-            setIsLoaded(true);
         }
     }, [optimizedSrc, src]);
 
     return (
-        <div className={cn("relative overflow-hidden bg-slate-100/30 dark:bg-muted/20", className)}>
-            {/* Subtle non-flash background placeholder */}
-            {!isLoaded && (
-                <div className="absolute inset-0 bg-slate-200/20 dark:bg-muted/30 pointer-events-none z-0" />
-            )}
-
+        <div className={cn("relative overflow-hidden bg-[#f1f5f9]/50 dark:bg-muted/20", className)}>
             <img
                 ref={imgRef}
                 src={optimizedSrc}
@@ -65,10 +54,9 @@ export const OptimizedImage = ({
                 loading={priority ? "eager" : "lazy"}
                 decoding="async"
                 // @ts-ignore
-                fetchPriority={priority ? "high" : fetchPriority}
+                fetchPriority={fetchPriority}
                 className={cn(
-                    "relative z-10 w-full h-full object-cover transition-opacity duration-150 ease-out",
-                    isLoaded ? "opacity-100" : "opacity-95",
+                    "w-full h-full object-cover block",
                     imageClassName
                 )}
                 onLoad={() => {

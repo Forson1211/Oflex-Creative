@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, Palette, Code, Zap, Layers, Wand2, Star, ShoppingBag, ShoppingCart, Users, Package, Briefcase, Share2, ChevronRight, Camera, Smartphone, Quote, Heart, Check } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -60,6 +60,7 @@ const getInitials = (name: string) => {
 };
 
 const Index = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -441,9 +442,10 @@ const Index = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.3, delay: index * 0.04 }}
-                  className="bg-white dark:bg-card border border-slate-200 dark:border-border/80 rounded-none p-3 sm:p-4 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group h-full flex flex-col"
+                  className="bg-white dark:bg-card border border-slate-200 dark:border-border/80 rounded-none p-3 sm:p-4 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group h-full flex flex-col cursor-pointer"
+                  onClick={() => navigate(`/product/${product.id}`)}
                 >
-                  {/* Image Container */}
+                  {/* Image Container - Clickable */}
                   <div className="aspect-square relative overflow-hidden rounded-none bg-slate-50 dark:bg-muted mb-3 sm:mb-4">
                     <OptimizedImage
                       src={product.image_url || ''}
@@ -454,73 +456,74 @@ const Index = () => {
                       imageClassName="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
 
-                  {/* Share button */}
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleShare(product);
-                    }}
-                    className="absolute top-3 right-3 p-2 rounded-none bg-white/90 dark:bg-card/90 text-slate-700 dark:text-slate-200 shadow-md hover:scale-110 transition-all opacity-0 group-hover:opacity-100"
-                    title="Share product"
-                  >
-                    <Share2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                    {/* Share button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        handleShare(product);
+                      }}
+                      className="absolute top-3 right-3 p-2 rounded-none bg-white/90 dark:bg-card/90 text-slate-700 dark:text-slate-200 shadow-md hover:scale-110 transition-all opacity-0 group-hover:opacity-100"
+                      title="Share product"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
 
-                {/* Product Info */}
-                <div className="flex flex-col flex-grow">
-                  <Link to={`/product/${product.id}`}>
-                    <h3 className="font-bold text-slate-900 dark:text-white text-base sm:text-lg font-lato leading-tight hover:text-primary transition-colors line-clamp-1">
+                  {/* Product Info */}
+                  <div className="flex flex-col flex-grow">
+                    <h3 className="font-bold text-slate-900 dark:text-white text-base sm:text-lg font-lato leading-tight group-hover:text-primary transition-colors line-clamp-1">
                       {product.title}
                     </h3>
-                  </Link>
 
-                  <div className="flex items-center justify-between mt-1 text-xs text-slate-500 dark:text-muted-foreground font-medium">
-                    <span className="truncate">{product.category || 'Templates'}</span>
-                    <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px] sm:text-xs shrink-0">
-                      <Check className="w-3.5 h-3.5 stroke-[2.5]" /> In stock
-                    </span>
-                  </div>
+                    <div className="flex items-center justify-between mt-1 text-xs text-slate-500 dark:text-muted-foreground font-medium">
+                      <span className="truncate">{product.category || 'Templates'}</span>
+                      <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px] sm:text-xs shrink-0">
+                        <Check className="w-3.5 h-3.5 stroke-[2.5]" /> In stock
+                      </span>
+                    </div>
 
-                  {/* Divider line */}
-                  <div className="border-t border-slate-100 dark:border-border/60 my-3" />
+                    {/* Divider line */}
+                    <div className="border-t border-slate-100 dark:border-border/60 my-3" />
 
-                  {/* Bottom Action Row: Price on left, Heart + Orange Cart button on right */}
-                  <div className="flex items-center justify-between mt-auto pt-1">
-                    <span className="font-extrabold text-lg sm:text-xl text-[#FF5500] dark:text-primary font-lato">
-                      ${product.price.toFixed(2)}
-                    </span>
+                    {/* Bottom Action Row: Price on left, Heart + Orange Cart button on right */}
+                    <div className="flex items-center justify-between mt-auto pt-1" onClick={(e) => e.stopPropagation()}>
+                      <span className="font-extrabold text-lg sm:text-xl text-[#FF5500] dark:text-primary font-lato">
+                        ${product.price.toFixed(2)}
+                      </span>
 
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          toggleWishlist(product.id);
-                        }}
-                        className={`w-9 h-9 sm:w-10 sm:h-10 rounded-none border flex items-center justify-center transition-all shadow-2xs active:scale-95 ${
-                          wishlist.includes(product.id)
-                            ? 'border-red-500 text-red-500 bg-red-50 dark:bg-red-950/20'
-                            : 'border-slate-200 dark:border-border/80 text-slate-600 dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 hover:border-red-200 bg-white dark:bg-transparent'
-                        }`}
-                        title="Add to Wishlist"
-                      >
-                        <Heart className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${wishlist.includes(product.id) ? 'fill-red-500' : ''}`} />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            toggleWishlist(product.id);
+                          }}
+                          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-none border flex items-center justify-center transition-all shadow-2xs active:scale-95 ${
+                            wishlist.includes(product.id)
+                              ? 'border-red-500 text-red-500 bg-red-50 dark:bg-red-950/20'
+                              : 'border-slate-200 dark:border-border/80 text-slate-600 dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 hover:border-red-200 bg-white dark:bg-transparent'
+                          }`}
+                          title="Add to Wishlist"
+                        >
+                          <Heart className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${wishlist.includes(product.id) ? 'fill-red-500' : ''}`} />
+                        </button>
 
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          addToCartMutation.mutate(product.id);
-                        }}
-                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-none bg-[#FF5500] hover:bg-[#E04B00] text-white flex items-center justify-center shadow-md hover:shadow-lg transition-all active:scale-95"
-                        title="Add to Cart"
-                      >
-                        <ShoppingCart className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-                      </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            addToCartMutation.mutate(product.id);
+                          }}
+                          className="w-9 h-9 sm:w-10 sm:h-10 rounded-none bg-[#FF5500] hover:bg-[#E04B00] text-white flex items-center justify-center shadow-md hover:shadow-lg transition-all active:scale-95"
+                          title="Add to Cart"
+                        >
+                          <ShoppingCart className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
+                </motion.div>
             ))
             )}
           </div>

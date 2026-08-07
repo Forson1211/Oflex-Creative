@@ -8,6 +8,18 @@
 All colors MUST be HSL.
 */
 
+/* Prevent Radix Dialog / Sheet body scrollbar removal layout shift */
+html {
+  scrollbar-gutter: stable;
+}
+
+body[data-scroll-locked],
+body[style*="padding-right"],
+body[style*="overflow: hidden"] {
+  padding-right: 0px !important;
+  margin-right: 0px !important;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

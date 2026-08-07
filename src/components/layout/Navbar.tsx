@@ -216,7 +216,7 @@ export const Navbar = () => {
                     )}
                   </Button>
                 </SheetTrigger>
-                <SheetContent className="w-full sm:max-w-lg flex flex-col">
+                <SheetContent className="w-[85%] sm:w-[380px] max-w-[380px] sm:max-w-lg flex flex-col">
                   <SheetHeader>
                     <SheetTitle>Shopping Cart ({cartCount} items)</SheetTitle>
                   </SheetHeader>
