@@ -12,6 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useProfile, useUserMutations } from '@/hooks/useUsers';
 import { useOrders, useOrderMutations } from '@/hooks/useOrders';
 import { usePurchases } from '@/hooks/usePurchases';
+import { useProducts } from '@/hooks/useProducts';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { Layout } from '@/components/layout/Layout';
@@ -48,6 +50,8 @@ const Profile = () => {
   const { data: profile, isLoading: profileLoading } = useProfile(user?.id);
   const { data: orders = [], isLoading: ordersLoading } = useOrders({ userId: user?.id });
   const { data: purchases = [], isLoading: purchasesLoading } = usePurchases();
+  const { data: allProducts = [] } = useProducts({ isActive: true });
+  const { currencySymbol } = useSiteSettings();
   const { updateProfile } = useUserMutations();
 
   const { toast } = useToast();
@@ -58,6 +62,31 @@ const Profile = () => {
   const [fullName, setFullName] = useState('');
   const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
   const { cancelOrder } = useOrderMutations();
+
+  // Wishlist State (synced with localStorage)
+  const [wishlistIds, setWishlistIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('oflex_wishlist');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  const removeFromWishlist = (id: string) => {
+    setWishlistIds(prev => {
+      const updated = prev.filter(itemId => itemId !== id);
+      try {
+        localStorage.setItem('oflex_wishlist', JSON.stringify(updated));
+      } catch (e) {}
+      toast({ title: 'Removed from wishlist' });
+      return updated;
+    });
+  };
+
+  const wishlistProducts = useMemo(() => {
+    return allProducts.filter(p => wishlistIds.includes(p.id));
+  }, [allProducts, wishlistIds]);
 
   // Password Update State
   const [newPassword, setNewPassword] = useState('');
@@ -98,8 +127,8 @@ const Profile = () => {
       { userId: user.id, data: { full_name: fullName } },
       {
         onSuccess: () => {
+          toast({ title: 'Profile updated successfully' });
           setIsEditingProfile(false);
-          toast({ title: 'Profile updated' });
         },
       }
     );
@@ -107,10 +136,15 @@ const Profile = () => {
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (newPassword.length < 6) {
+      toast({ title: 'Error', description: 'Password must be at least 6 characters', variant: 'destructive' });
+      return;
+    }
     if (newPassword !== confirmPassword) {
       toast({ title: 'Error', description: 'Passwords do not match', variant: 'destructive' });
       return;
     }
+
     setIsUpdatingPassword(true);
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setIsUpdatingPassword(false);
@@ -161,6 +195,7 @@ const Profile = () => {
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'purchases', label: 'My Library', icon: Package },
     { id: 'orders', label: 'Order History', icon: ShoppingBag },
+    { id: 'wishlist', label: 'My Wishlist', icon: Heart, count: wishlistProducts.length },
     { id: 'settings', label: 'Account Settings', icon: Settings },
     { id: 'security', label: 'Security', icon: Shield },
   ];
@@ -176,8 +211,6 @@ const Profile = () => {
 
         <div className="container mx-auto px-4 relative">
           <div className="max-w-7xl mx-auto">
-
-
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               {/* Sidebar Navigation */}
@@ -251,12 +284,17 @@ const Profile = () => {
                       >
                         <item.icon className="w-4 h-4 shrink-0" />
                         {item.label}
+                        {item.count !== undefined && item.count > 0 && (
+                          <span className="ml-auto bg-[#FF5500] text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full">
+                            {item.count}
+                          </span>
+                        )}
                         {activeTab === item.id ? (
-                          <motion.div layoutId="active-tab" className="ml-auto">
+                          <motion.div layoutId="active-tab" className={item.count ? "ml-1" : "ml-auto"}>
                             <ChevronRight className="w-4 h-4" />
                           </motion.div>
                         ) : (
-                          <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <ChevronRight className={cn("w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity", item.count ? "ml-1" : "ml-auto")} />
                         )}
                       </button>
                     ))}
@@ -330,8 +368,8 @@ const Profile = () => {
                             </div>
                             <div className="space-y-4">
                               {purchases.slice(0, 3).map((item) => (
-                                <div key={item.id} className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                                <div key={item.id} className="flex items-center gap-4 p-3 rounded-none hover:bg-muted/50 transition-colors">
+                                  <div className="w-12 h-12 bg-primary/10 rounded-none flex items-center justify-center">
                                     <Download className="w-5 h-5 text-primary" />
                                   </div>
                                   <div className="flex-1 min-w-0">
@@ -348,22 +386,20 @@ const Profile = () => {
                             <div className="flex items-center justify-between mb-6">
                               <h3 className="text-lg font-bold flex items-center gap-2">
                                 <ShoppingBag className="w-5 h-5 text-primary" />
-                                Recent Orders
+                                Order History Summary
                               </h3>
                               <Button variant="ghost" size="sm" onClick={() => setActiveTab('orders')}>View All</Button>
                             </div>
                             <div className="space-y-4">
                               {orders.slice(0, 3).map((order) => (
-                                <div key={order.id} className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                                  <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center">
-                                    <Badge variant="outline" className="text-[10px] p-1 font-mono">#{order.id.slice(0, 4)}</Badge>
+                                <div key={order.id} className="flex items-center justify-between p-3 rounded-none border border-border/30">
+                                  <div>
+                                    <p className="text-xs font-mono text-muted-foreground">#{order.id.slice(0, 8)}</p>
+                                    <p className="text-sm font-bold text-primary">{currencySymbol}{Number(order.total_amount).toFixed(2)}</p>
                                   </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-semibold">${Number(order.total_amount).toFixed(2)}</p>
-                                    <Badge className="text-[10px] h-4 mt-1" variant={order.status === 'completed' ? 'default' : 'secondary'}>
-                                      {order.status}
-                                    </Badge>
-                                  </div>
+                                  <Badge variant={order.status === 'completed' ? 'default' : 'outline'} className="capitalize">
+                                    {order.status}
+                                  </Badge>
                                 </div>
                               ))}
                               {orders.length === 0 && <p className="text-center py-6 text-muted-foreground italic">No orders yet.</p>}
@@ -374,113 +410,160 @@ const Profile = () => {
                     )}
 
                     {activeTab === 'purchases' && (
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h2 className="text-2xl font-bold tracking-tight">My Assets Library</h2>
-                          <p className="text-sm text-muted-foreground">{purchases.length} Items Owned</p>
-                        </div>
-                        {purchasesLoading ? (
-                          <div className="grid gap-4">
-                            {[1, 2, 3].map(i => <div key={i} className="h-24 rounded-2xl bg-muted animate-pulse" />)}
+                      <GlassCard className="p-6 border border-border/50 shadow-none space-y-6">
+                        <div className="flex items-center justify-between border-b pb-4">
+                          <div>
+                            <h3 className="text-xl font-bold flex items-center gap-2">
+                              <Package className="w-5 h-5 text-primary" />
+                              My Digital Library ({purchases.length})
+                            </h3>
+                            <p className="text-xs text-muted-foreground mt-1">Access and download your purchased templates & assets anytime</p>
                           </div>
-                        ) : purchases.length === 0 ? (
-                          <GlassCard className="p-12 text-center border-dashed border-2">
-                            <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
-                            <h3 className="text-xl font-semibold">Your library is empty</h3>
-                            <p className="text-muted-foreground mt-2 max-w-sm mx-auto">Explore our store and get high-quality assets for your creative projects.</p>
-                            <Button className="mt-6 rounded-none px-8" onClick={() => navigate('/store')}>Visit Shop</Button>
-                          </GlassCard>
-                        ) : (
+                        </div>
+
+                        {purchases.length > 0 ? (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {purchases.map(purchase => (
-                              <GlassCard key={purchase.id} className="p-5 border border-border/50 shadow-none group hover:bg-muted/5 transition-colors">
-                                <div className="flex items-start justify-between gap-4">
-                                  <div className="flex-1">
-                                    <Badge variant="outline" className="mb-2 text-primary border-primary/20 bg-primary/5">Digital Asset</Badge>
-                                    <h3 className="font-bold text-lg mb-1 leading-tight group-hover:text-primary transition-colors">{purchase.product_title}</h3>
-                                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                      <Calendar className="w-3 h-3" /> {new Date(purchase.purchased_at).toLocaleDateString()}
-                                    </p>
+                            {purchases.map((item) => (
+                              <div key={item.id} className="p-4 rounded-none border border-border/60 bg-card/40 flex flex-col justify-between space-y-4">
+                                <div className="flex items-start gap-4">
+                                  <div className="w-16 h-16 bg-primary/10 rounded-none flex items-center justify-center shrink-0">
+                                    <Download className="w-8 h-8 text-primary" />
                                   </div>
-                                  <div className="flex flex-col gap-2">
-                                    {purchase.file_url ? (
-                                      <Button size="sm" className="rounded-none shadow-none" asChild>
-                                        <a href={purchase.file_url} download><Download className="w-4 h-4 mr-2" /> Download</a>
-                                      </Button>
-                                    ) : purchase.template_link && (
-                                      <Button size="sm" variant="secondary" className="rounded-none" asChild>
-                                        <a href={purchase.template_link} target="_blank" rel="noopener noreferrer"><ExternalLink className="w-4 h-4 mr-2" /> Access</a>
-                                      </Button>
-                                    )}
+                                  <div className="min-w-0">
+                                    <h4 className="font-bold text-base text-foreground truncate">{item.product_title}</h4>
+                                    <p className="text-xs text-muted-foreground mt-1">Purchased on {new Date(item.purchased_at).toLocaleDateString()}</p>
                                   </div>
                                 </div>
-                              </GlassCard>
+                                <Button className="w-full rounded-none font-bold text-xs gap-2" asChild>
+                                  <a href={item.product_image_url || '#'} download target="_blank" rel="noreferrer">
+                                    <Download className="w-4 h-4" /> Download Digital File
+                                  </a>
+                                </Button>
+                              </div>
                             ))}
                           </div>
+                        ) : (
+                          <div className="py-12 text-center text-muted-foreground space-y-3">
+                            <Package className="w-12 h-12 mx-auto text-muted-foreground/30" />
+                            <p className="font-bold text-base">Your digital library is empty</p>
+                            <p className="text-xs">Purchased templates and products will appear here with instant download links.</p>
+                            <Button className="mt-2 bg-primary text-white font-bold rounded-none" onClick={() => navigate('/store')}>
+                              Browse Store
+                            </Button>
+                          </div>
                         )}
-                      </div>
+                      </GlassCard>
                     )}
 
                     {activeTab === 'orders' && (
-                      <div className="space-y-4">
-                        <h2 className="text-2xl font-bold tracking-tight mb-6">Order History</h2>
-                        {ordersLoading ? (
+                      <GlassCard className="p-6 border border-border/50 shadow-none space-y-6">
+                        <div className="border-b pb-4">
+                          <h3 className="text-xl font-bold flex items-center gap-2">
+                            <ShoppingBag className="w-5 h-5 text-primary" />
+                            Order History ({orders.length})
+                          </h3>
+                          <p className="text-xs text-muted-foreground mt-1">Track and manage your past purchases</p>
+                        </div>
+
+                        {orders.length > 0 ? (
                           <div className="space-y-4">
-                            {[1, 2].map(i => <div key={i} className="h-32 rounded-2xl bg-muted animate-pulse" />)}
-                          </div>
-                        ) : orders.length === 0 ? (
-                          <GlassCard className="p-12 text-center">
-                            <ShoppingBag className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
-                            <p className="text-muted-foreground">No orders found.</p>
-                          </GlassCard>
-                        ) : (
-                          <div className="space-y-4">
-                            {orders.map(order => (
-                              <GlassCard key={order.id} className="p-6 border border-border/50 shadow-none">
-                                <div className="flex flex-col md:flex-row justify-between gap-6">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-2">
-                                      <Badge variant="secondary" className="font-mono">Order #{order.id.slice(0, 8)}</Badge>
-                                      <Badge
-                                        className="capitalize"
-                                        variant={order.status === 'completed' ? 'default' : order.status === 'pending' ? 'secondary' : 'destructive'}
-                                      >
-                                        {order.status}
-                                      </Badge>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground">Placed on {new Date(order.created_at).toLocaleString()}</p>
-
-                                    <div className="mt-4 pt-4 border-t border-border/50">
-                                      <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Items</p>
-                                      <ul className="space-y-2">
-                                        {order.order_items?.map(item => (
-                                          <li key={item.id} className="text-sm flex justify-between">
-                                            <span>{item.product_title} <span className="text-muted-foreground">× {item.quantity}</span></span>
-                                            <span className="font-medium">${Number(item.product_price * item.quantity).toFixed(2)}</span>
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </div>
+                            {orders.map((order) => (
+                              <div key={order.id} className="p-5 rounded-none border border-border/60 bg-card/40 space-y-4">
+                                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/40 pb-3">
+                                  <div>
+                                    <span className="text-xs text-muted-foreground font-mono uppercase">Order ID</span>
+                                    <p className="font-mono text-sm font-bold text-foreground">#{order.id}</p>
                                   </div>
-
-                                  <div className="md:text-right flex flex-col justify-between items-end">
-                                    <div>
-                                      <p className="text-xs text-muted-foreground uppercase mb-1">Total Amount</p>
-                                      <p className="text-2xl font-bold text-primary">${Number(order.total_amount).toFixed(2)}</p>
-                                    </div>
-
-                                    {order.status === 'pending' && (
-                                      <Button variant="outline" size="sm" className="mt-4 text-destructive border-destructive/20 hover:bg-destructive/5" onClick={() => setOrderToCancel(order.id)}>
-                                        Cancel Order
-                                      </Button>
-                                    )}
+                                  <div>
+                                    <span className="text-xs text-muted-foreground uppercase">Date</span>
+                                    <p className="text-sm font-medium text-foreground">{new Date(order.created_at).toLocaleDateString()}</p>
                                   </div>
+                                  <div>
+                                    <span className="text-xs text-muted-foreground uppercase">Total</span>
+                                    <p className="text-sm font-bold text-primary">{currencySymbol}{Number(order.total_amount).toFixed(2)}</p>
+                                  </div>
+                                  <Badge className="capitalize px-3 py-1">
+                                    {order.status}
+                                  </Badge>
                                 </div>
-                              </GlassCard>
+                                <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
+                                  <span>Payment Method: <strong className="text-foreground capitalize">{order.payment_method || 'Online'}</strong></span>
+                                  {order.status === 'pending' && (
+                                    <Button
+                                      variant="destructive"
+                                      size="sm"
+                                      className="rounded-none text-xs h-8"
+                                      onClick={() => setOrderToCancel(order.id)}
+                                    >
+                                      Cancel Order
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
                             ))}
                           </div>
+                        ) : (
+                          <div className="py-12 text-center text-muted-foreground space-y-3">
+                            <ShoppingBag className="w-12 h-12 mx-auto text-muted-foreground/30" />
+                            <p className="font-bold text-base">No orders found</p>
+                            <p className="text-xs">Your completed store purchases will be listed here.</p>
+                          </div>
                         )}
-                      </div>
+                      </GlassCard>
+                    )}
+
+                    {/* NEW WISHLIST TAB */}
+                    {activeTab === 'wishlist' && (
+                      <GlassCard className="p-6 border border-border/50 shadow-none space-y-6">
+                        <div className="flex items-center justify-between border-b pb-4">
+                          <div>
+                            <h3 className="text-xl font-bold flex items-center gap-2 text-foreground">
+                              <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+                              My Wishlist ({wishlistProducts.length})
+                            </h3>
+                            <p className="text-xs text-muted-foreground mt-1">Saved design templates and creative products</p>
+                          </div>
+                          <Button variant="outline" size="sm" className="rounded-none font-bold" onClick={() => navigate('/store')}>
+                            Browse Store
+                          </Button>
+                        </div>
+
+                        {wishlistProducts.length > 0 ? (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                            {wishlistProducts.map((product) => (
+                              <div key={product.id} className="bg-card border border-border rounded-none p-4 flex flex-col group hover:shadow-xl transition-all">
+                                <div className="aspect-square relative overflow-hidden bg-muted mb-3 rounded-none">
+                                  <img src={product.image_url || ''} className="w-full h-full object-cover transition-transform group-hover:scale-105" alt={product.title} />
+                                  <button
+                                    onClick={() => removeFromWishlist(product.id)}
+                                    className="absolute top-2 right-2 p-2 bg-background/90 hover:bg-red-500 hover:text-white rounded-none text-muted-foreground transition-colors shadow-md"
+                                    title="Remove from Wishlist"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                                <h4 className="font-bold text-base text-foreground truncate">{product.title}</h4>
+                                <p className="text-xs text-muted-foreground mb-3">{product.category || 'Templates'}</p>
+                                <div className="flex items-center justify-between mt-auto pt-3 border-t border-border">
+                                  <span className="font-black text-lg text-primary">{currencySymbol}{product.price.toFixed(2)}</span>
+                                  <Button size="sm" className="h-9 rounded-none text-xs font-bold bg-primary text-white hover:bg-primary/90" onClick={() => navigate(`/product/${product.id}`)}>
+                                    View Product
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="py-16 text-center text-muted-foreground space-y-3">
+                            <Heart className="w-14 h-14 mx-auto text-muted-foreground/30" />
+                            <p className="font-bold text-lg text-foreground">Your Wishlist is empty</p>
+                            <p className="text-xs max-w-sm mx-auto">Explore the store and click the heart icon on any product to save it here for quick access!</p>
+                            <Button className="mt-2 bg-primary text-white font-bold rounded-none px-8" onClick={() => navigate('/store')}>
+                              Go to Store
+                            </Button>
+                          </div>
+                        )}
+                      </GlassCard>
                     )}
 
                     {activeTab === 'settings' && (
@@ -490,8 +573,8 @@ const Profile = () => {
                             <User className="w-6 h-6" />
                           </div>
                           <div>
-                            <h2 className="text-2xl font-bold">Display Profile</h2>
-                            <p className="text-sm text-muted-foreground">Update your public information</p>
+                            <h2 className="text-2xl font-bold">Account Settings</h2>
+                            <p className="text-sm text-muted-foreground">Manage your personal information</p>
                           </div>
                         </div>
 
@@ -504,7 +587,7 @@ const Profile = () => {
                                 id="fullName"
                                 value={fullName}
                                 onChange={(e) => setFullName(e.target.value)}
-                                className="pl-10"
+                                className="pl-10 rounded-none"
                                 placeholder="How should we call you?"
                               />
                             </div>
@@ -514,7 +597,7 @@ const Profile = () => {
                             <Label>Email Address</Label>
                             <div className="relative">
                               <Mail className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                              <Input value={user?.email} disabled className="pl-10 opacity-60" />
+                              <Input value={user?.email} disabled className="pl-10 opacity-60 rounded-none" />
                             </div>
                             <p className="text-[10px] text-muted-foreground px-1">Email cannot be changed for security.</p>
                           </div>
@@ -554,7 +637,7 @@ const Profile = () => {
                                 type="password"
                                 value={newPassword}
                                 onChange={(e) => setNewPassword(e.target.value)}
-                                className="pl-10"
+                                className="pl-10 rounded-none"
                                 placeholder="Min 6 characters"
                               />
                             </div>
@@ -569,7 +652,7 @@ const Profile = () => {
                                 type="password"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="pl-10"
+                                className="pl-10 rounded-none"
                               />
                             </div>
                           </div>
@@ -598,66 +681,51 @@ const Profile = () => {
                 </AnimatePresence>
               </div>
             </div>
+
           </div>
         </div>
+
+        {/* Avatar Image Cropper Modal */}
+        {imageToCrop && (
+          <ImageCropper
+            imageSrc={imageToCrop}
+            onCropComplete={handleCropComplete}
+            onCancel={() => setImageToCrop(null)}
+            aspectRatio={1}
+          />
+        )}
+
+        {/* Order Cancel Confirmation Modal */}
+        <AlertDialog open={!!orderToCancel} onOpenChange={() => setOrderToCancel(null)}>
+          <AlertDialogContent className="rounded-none">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure you want to cancel this order?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. The order status will be set to cancelled.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="rounded-none">Keep Order</AlertDialogCancel>
+              <AlertDialogAction
+                className="rounded-none bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => {
+                  if (orderToCancel) {
+                    cancelOrder.mutate(orderToCancel, {
+                      onSuccess: () => {
+                        toast({ title: 'Order cancelled' });
+                        setOrderToCancel(null);
+                      }
+                    });
+                  }
+                }}
+              >
+                Yes, Cancel Order
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
       </div>
-
-      {imageToCrop && (
-        <ImageCropper
-          image={imageToCrop}
-          onCropComplete={handleCropComplete}
-          onCancel={() => setImageToCrop(null)}
-          aspect={1}
-        />
-      )}
-
-      {/* Edit Profile Dialog (Fallback) */}
-      <Dialog open={isEditingProfile} onOpenChange={setIsEditingProfile}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Public Profile</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="modalName">Full Name</Label>
-              <Input
-                id="modalName"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Full Name"
-              />
-            </div>
-            <Button onClick={handleUpdateProfile} disabled={updateProfile.isPending} className="w-full rounded-none">
-              {updateProfile.isPending ? 'Saving...' : 'Update Changes'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <AlertDialog open={!!orderToCancel} onOpenChange={(open) => !open && setOrderToCancel(null)}>
-        <AlertDialogContent className="rounded-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Stop Order Processing?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to cancel this order? This action cannot be undone once confirmed.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-full">Keep My Order</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-full"
-              onClick={() => {
-                if (orderToCancel) {
-                  cancelOrder.mutate(orderToCancel);
-                  setOrderToCancel(null);
-                }
-              }}
-            >
-              Confirm Cancellation
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Layout>
   );
 };

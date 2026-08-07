@@ -4,7 +4,9 @@ import { useAdminStats, useAdminActions, ADMIN_STATS_KEYS } from '@/hooks/useAdm
 import {
   Package, ShoppingCart, DollarSign, Users,
   Clock, CheckCircle2, XCircle, AlertCircle,
-  RefreshCw, Bell, Trash2, Hammer, ArrowRight, Activity
+  RefreshCw, Trash2, Hammer, ArrowRight, Activity,
+  BarChart2, TrendingUp, TrendingDown, Plus,
+  Download, Search as SearchIcon,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -24,10 +26,10 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useSiteSettings, useSiteSettingsMutations } from '@/hooks/useSiteSettings';
-import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { GlassCard } from '@/components/ui/GlassCard';
+import { motion } from 'framer-motion';
+import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useUsers';
 import {
   Select,
   SelectContent,
@@ -35,7 +37,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { motion } from 'framer-motion';
 
 const Dashboard = () => {
   const { data: adminStats, isLoading, isFetching } = useAdminStats();
@@ -46,6 +47,18 @@ const Dashboard = () => {
   const { updateSetting } = useSiteSettingsMutations();
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
   const [timeRange, setTimeRange] = useState("last7");
+  const [orderSearch, setOrderSearch] = useState('');
+  const { user } = useAuth();
+  const { data: profile } = useProfile(user?.id);
+
+  const greeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  };
+
+  const firstName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Admin';
 
   const handleRefresh = async () => {
     setIsManualRefreshing(true);
@@ -71,322 +84,327 @@ const Dashboard = () => {
     pendingOrders: adminStats?.pending_orders || 0,
   };
 
-  // Filter recent orders to exclude archived ones
   const recentOrders = (adminStats?.recent_orders || []).filter((o: any) => o.status !== 'archived');
+  const filteredOrders = recentOrders.filter((o: any) =>
+    !orderSearch || o.id.toLowerCase().includes(orderSearch.toLowerCase())
+  );
 
   const statCards = [
     {
-      label: 'Products',
+      label: 'Total Products',
       value: stats.totalProducts,
       icon: Package,
-      gradient: 'from-blue-500/20 to-blue-600/20',
-      iconColor: 'text-blue-500',
-      border: 'border-blue-500/20'
+      iconBg: 'bg-[#FF5500]',
+      sub1: `${stats.totalProducts} active items`,
+      sub2: null,
+      trend: null,
+      link: '/admin/products',
     },
     {
       label: 'Total Orders',
       value: stats.totalOrders,
       icon: ShoppingCart,
-      gradient: 'from-violet-500/20 to-violet-600/20',
-      iconColor: 'text-violet-500',
-      border: 'border-violet-500/20'
+      iconBg: 'bg-violet-500',
+      sub1: `${stats.completedOrders} completed`,
+      sub2: `${stats.pendingOrders} pending`,
+      trend: null,
+      link: '/admin/orders',
     },
     {
       label: 'Total Revenue',
       value: `${currencySymbol}${stats.totalRevenue.toFixed(2)}`,
       icon: DollarSign,
-      gradient: 'from-emerald-500/20 to-emerald-600/20',
-      iconColor: 'text-emerald-500',
-      border: 'border-emerald-500/20'
+      iconBg: 'bg-emerald-500',
+      sub1: 'All time earnings',
+      sub2: null,
+      trend: null,
+      link: '/admin/orders',
     },
     {
       label: 'Total Users',
       value: stats.totalUsers,
       icon: Users,
-      gradient: 'from-amber-500/20 to-amber-600/20',
-      iconColor: 'text-amber-500',
-      border: 'border-amber-500/20'
+      iconBg: 'bg-blue-500',
+      sub1: 'Registered accounts',
+      sub2: null,
+      trend: null,
+      link: '/admin/users',
     },
   ];
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed': return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
-      case 'pending': return <Clock className="w-4 h-4 text-amber-500" />;
-      case 'cancelled': return <XCircle className="w-4 h-4 text-red-500" />;
-      default: return <AlertCircle className="w-4 h-4 text-muted-foreground" />;
+      case 'completed': return <CheckCircle2 className="w-3.5 h-3.5" />;
+      case 'pending': return <Clock className="w-3.5 h-3.5" />;
+      case 'cancelled': return <XCircle className="w-3.5 h-3.5" />;
+      default: return <AlertCircle className="w-3.5 h-3.5" />;
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusClass = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-emerald-500/10 text-emerald-500';
-      case 'pending': return 'bg-amber-500/10 text-amber-500';
-      case 'cancelled': return 'bg-red-500/10 text-red-500';
-      default: return 'bg-muted text-muted-foreground';
+      case 'completed': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400';
+      case 'pending': return 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400';
+      case 'cancelled': return 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400';
+      default: return 'bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-white/40';
     }
   };
 
   return (
     <ProtectedRoute requireModerator>
       <AdminLayout>
-        <div className="space-y-8 animate-in fade-in duration-500">
-          <AdminPageHeader
-            title="Dashboard Overview"
-            description="Welcome back to your command center"
-            actions={
-              <div className="flex items-center gap-3">
-                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/50 text-xs font-medium text-muted-foreground border border-border/50">
-                  <Activity className="w-3.5 h-3.5 text-green-500 animate-pulse" />
-                  <span>Real-time</span>
-                </div>
+        <div className="space-y-7">
 
-                <div className="flex items-center gap-2">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-muted-foreground hover:text-destructive transition-colors"
-                        disabled={resetAnalytics.isPending || loading}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Reset Dashboard Statistics?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will clear all chart history, daily analytics data, AND delete ALL orders.
-                          User accounts will NOT be deleted.
-                          This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => resetAnalytics.mutate()}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          {resetAnalytics.isPending ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : null}
-                          Reset Analytics
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+          {/* Header Row */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-lato">
+                {greeting()}, {firstName}! 👋
+              </h1>
+              <p className="text-sm text-slate-400 dark:text-white/40 mt-1">
+                Here's what's happening with your creative studio today.
+              </p>
+            </div>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleRefresh}
-                    disabled={loading}
-                    className="h-9"
-                  >
-                    <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                    Refresh
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-slate-400 hover:text-red-500 h-9 w-9" disabled={resetAnalytics.isPending || loading}>
+                    <Trash2 className="w-4 h-4" />
                   </Button>
-                </div>
-              </div>
-            }
-          />
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Reset Dashboard Statistics?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will clear all chart history, daily analytics data, AND delete ALL orders. User accounts will NOT be deleted. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => resetAnalytics.mutate()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      {resetAnalytics.isPending ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : null}
+                      Reset Analytics
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
 
-          {/* Key Metrics Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading} className="h-9 border-slate-200 dark:border-white/10 gap-2">
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">Refresh</span>
+              </Button>
+
+              <Link to="/admin/products">
+                <Button size="sm" className="h-9 bg-[#FF5500] hover:bg-[#E04B00] text-white gap-2 shadow-md shadow-[#FF5500]/20">
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">New Product</span>
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          {/* Stat Cards */}
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
             {loading ? (
               [...Array(4)].map((_, i) => (
-                <div key={i} className="bg-card/50 h-32 rounded-2xl animate-pulse border border-border/50" />
+                <div key={i} className="h-36 rounded-2xl bg-slate-100 dark:bg-white/5 animate-pulse" />
               ))
             ) : (
-              statCards.map((stat, i) => (
-                <GlassCard
-                  key={stat.label}
-                  hover={false}
-                  className={`relative overflow-hidden border-t-4 ${stat.border}`}
+              statCards.map((card, i) => (
+                <motion.div
+                  key={card.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.06, duration: 0.35 }}
                 >
-                  <div className="flex items-center gap-4 relative z-10">
-                    <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.gradient}`}>
-                      <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
+                  <Link to={card.link} className="block group">
+                    <div className="bg-white dark:bg-[#1A1028] border border-slate-200 dark:border-white/8 rounded-2xl p-5 hover:shadow-lg hover:border-[#FF5500]/30 dark:hover:border-[#FF5500]/20 transition-all duration-300 shadow-sm h-full">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">{card.label}</p>
+                        <div className={`w-9 h-9 rounded-xl ${card.iconBg} flex items-center justify-center shadow-md`}>
+                          <card.icon className="w-4.5 h-4.5 text-white" />
+                        </div>
+                      </div>
+                      <h3 className="text-2xl sm:text-3xl font-black font-lato text-slate-900 dark:text-white leading-none mb-2">{card.value}</h3>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {card.sub1 && <span className="text-xs text-slate-400 dark:text-white/30">{card.sub1}</span>}
+                        {card.sub2 && (
+                          <>
+                            <span className="text-slate-200 dark:text-white/10">·</span>
+                            <span className="text-xs text-amber-500 font-medium">{card.sub2}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
-                      <h3 className="text-2xl font-bold tracking-tight">{stat.value}</h3>
-                    </div>
-                  </div>
-                </GlassCard>
+                  </Link>
+                </motion.div>
               ))
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Quick Status */}
-            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <GlassCard hover={false} className="flex items-center justify-between bg-gradient-to-br from-emerald-500/5 to-transparent border-emerald-500/10">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-emerald-500/10 rounded-full">
-                    <CheckCircle2 className="w-6 h-6 text-emerald-500" />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-foreground">{stats.completedOrders}</h4>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Completed Orders</p>
-                  </div>
-                </div>
-              </GlassCard>
-
-              <GlassCard hover={false} className="flex items-center justify-between bg-gradient-to-br from-amber-500/5 to-transparent border-amber-500/10">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-amber-500/10 rounded-full">
-                    <Clock className="w-6 h-6 text-amber-500" />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-foreground">{stats.pendingOrders}</h4>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Pending Orders</p>
-                  </div>
-                </div>
-                {stats.pendingOrders > 0 && (
-                  <Button size="sm" variant="ghost" className="text-amber-500 hover:text-amber-600 hover:bg-amber-500/10" asChild>
-                    <Link to="/admin/orders">View</Link>
-                  </Button>
-                )}
-              </GlassCard>
+          {/* Status Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-white dark:bg-[#1A1028] border border-slate-200 dark:border-white/8 rounded-2xl p-5 flex items-center gap-4 shadow-sm">
+              <div className="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+              </div>
+              <div>
+                <h4 className="text-2xl font-black font-lato text-slate-900 dark:text-white">{stats.completedOrders}</h4>
+                <p className="text-xs font-semibold text-slate-400 dark:text-white/40 uppercase tracking-wider">Completed Orders</p>
+              </div>
             </div>
 
-            {/* Maintenance Toggle */}
-            <GlassCard hover={false} className={`flex flex-col justify-center ${maintenanceMode ? 'border-amber-500/30 bg-amber-500/5' : ''}`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg transition-colors ${maintenanceMode ? 'bg-amber-500 text-white' : 'bg-muted text-muted-foreground'}`}>
-                    <Hammer className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <span className="font-semibold block">Maintenance</span>
-                    <span className="text-xs text-muted-foreground">{maintenanceMode ? 'Site Offline' : 'Site Online'}</span>
-                  </div>
+            <div className="bg-white dark:bg-[#1A1028] border border-slate-200 dark:border-white/8 rounded-2xl p-5 flex items-center justify-between shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                  <Clock className="w-6 h-6 text-amber-500" />
                 </div>
-                <Switch
-                  checked={maintenanceMode}
-                  onCheckedChange={(checked) => updateSetting.mutate({ key: 'maintenance_mode', value: checked.toString() })}
-                />
+                <div>
+                  <h4 className="text-2xl font-black font-lato text-slate-900 dark:text-white">{stats.pendingOrders}</h4>
+                  <p className="text-xs font-semibold text-slate-400 dark:text-white/40 uppercase tracking-wider">Pending Orders</p>
+                </div>
               </div>
-            </GlassCard>
+              {stats.pendingOrders > 0 && (
+                <Link to="/admin/orders" className="text-xs font-bold text-amber-500 hover:text-amber-600 transition-colors">View →</Link>
+              )}
+            </div>
+
+            <div className={`bg-white dark:bg-[#1A1028] border rounded-2xl p-5 shadow-sm flex items-center justify-between transition-colors ${maintenanceMode ? 'border-amber-400/50 bg-amber-50 dark:bg-amber-500/5' : 'border-slate-200 dark:border-white/8'}`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${maintenanceMode ? 'bg-amber-500 text-white' : 'bg-slate-100 dark:bg-white/8 text-slate-500 dark:text-white/50'}`}>
+                  <Hammer className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-800 dark:text-white">Maintenance</p>
+                  <p className="text-xs text-slate-400 dark:text-white/40">{maintenanceMode ? 'Site Offline' : 'Site Online'}</p>
+                </div>
+              </div>
+              <Switch checked={maintenanceMode} onCheckedChange={(checked) => updateSetting.mutate({ key: 'maintenance_mode', value: checked.toString() })} />
+            </div>
           </div>
 
-          {/* Main Charts Section */}
+          {/* Analytics Grid Section */}
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <h2 className="text-lg font-bold tracking-tight">Analytics & Trends</h2>
-              <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="w-[180px] bg-background border-border/50">
-                  <SelectValue placeholder="Select a date range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="last7">Last 7 days</SelectItem>
-                  <SelectItem value="last30">Last 30 days</SelectItem>
-                  <SelectItem value="thisMonth">This month</SelectItem>
-                  <SelectItem value="lastMonth">Last month</SelectItem>
-                  <SelectItem value="last3">Last 3 months</SelectItem>
-                  <SelectItem value="last6">Last 6 months</SelectItem>
-                  <SelectItem value="thisYear">This year</SelectItem>
-                  <SelectItem value="lastYear">Last year</SelectItem>
-                  <SelectItem value="allTime">All time</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
             <AnalyticsCharts daysRange={timeRange as any} />
           </div>
 
-          {/* Bottom Grid: Recent Orders & Quick Actions */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Bottom: Recent Orders + Quick Actions */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
-            {/* Recent Orders - Takes 2 columns */}
-            <div className="lg:col-span-2">
-              <GlassCard hover={false} className="h-full">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h3 className="font-bold text-lg">Recent Orders</h3>
-                    <p className="text-sm text-muted-foreground">Latest transaction activity</p>
+            {/* Recent Orders Table */}
+            <div className="lg:col-span-2 bg-white dark:bg-[#1A1028] border border-slate-200 dark:border-white/8 rounded-2xl shadow-sm overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 border-b border-slate-100 dark:border-white/8">
+                <div>
+                  <h3 className="font-bold text-slate-900 dark:text-white">Recent Orders</h3>
+                  <p className="text-xs text-slate-400 dark:text-white/40">Latest transaction activity</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Search orders..."
+                      value={orderSearch}
+                      onChange={e => setOrderSearch(e.target.value)}
+                      className="pl-8 pr-3 h-8 text-xs rounded-lg bg-slate-100 dark:bg-white/8 border border-transparent focus:border-[#FF5500]/40 focus:outline-none text-slate-700 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 w-36"
+                    />
                   </div>
-                  <Button variant="ghost" size="sm" className="gap-2" asChild>
-                    <Link to="/admin/orders">
-                      View All <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  </Button>
+                  <Link to="/admin/orders" className="flex items-center gap-1 text-xs font-bold text-[#FF5500] hover:text-[#E04B00] whitespace-nowrap">
+                    View All <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
                 </div>
+              </div>
 
-                <div className="space-y-4">
-                  {recentOrders.length === 0 ? (
-                    <div className="text-center py-12 bg-muted/20 rounded-xl border border-dashed">
-                      <ShoppingCart className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-                      <p className="text-muted-foreground">No orders yet.</p>
-                    </div>
-                  ) : (
-                    recentOrders.map((order) => (
-                      <div key={order.id} className="group flex items-center justify-between p-4 rounded-xl bg-card hover:bg-accent/50 border border-border/50 transition-all duration-200">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getStatusColor(order.status)}`}>
-                            {getStatusIcon(order.status)}
-                          </div>
-                          <div>
-                            <p className="font-semibold text-sm">#{order.id.slice(0, 8)}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(order.created_at).toLocaleDateString()} • via {order.payment_provider || 'Direct'}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold">{currencySymbol}{Number(order.total_amount).toFixed(2)}</p>
-                          <Badge variant="secondary" className={`mt-1 text-[10px] capitalize ${getStatusColor(order.status)} border-0`}>
-                            {order.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </GlassCard>
-            </div>
-
-            {/* Quick Actions - Takes 1 column */}
-            <div className="lg:col-span-1 space-y-4">
-              <h3 className="font-bold text-lg px-1">Quick Actions</h3>
-              <div className="grid gap-3">
-                <Link to="/admin/products" className="group">
-                  <GlassCard className="flex items-center gap-4 p-4 hover:border-primary/50 transition-colors">
-                    <div className="p-3 rounded-lg bg-blue-500/10 text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                      <Package className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <span className="font-semibold block">Manage Products</span>
-                      <span className="text-xs text-muted-foreground">Add or edit inventory</span>
-                    </div>
-                  </GlassCard>
-                </Link>
-
-                <Link to="/admin/users" className="group">
-                  <GlassCard className="flex items-center gap-4 p-4 hover:border-primary/50 transition-colors">
-                    <div className="p-3 rounded-lg bg-purple-500/10 text-purple-500 group-hover:bg-purple-500 group-hover:text-white transition-colors">
-                      <Users className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <span className="font-semibold block">User Management</span>
-                      <span className="text-xs text-muted-foreground">View and manage users</span>
-                    </div>
-                  </GlassCard>
-                </Link>
-
-                <Link to="/admin/customization" className="group">
-                  <GlassCard className="flex items-center gap-4 p-4 hover:border-primary/50 transition-colors">
-                    <div className="p-3 rounded-lg bg-pink-500/10 text-pink-500 group-hover:bg-pink-500 group-hover:text-white transition-colors">
-                      <Activity className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <span className="font-semibold block">Site Customization</span>
-                      <span className="text-xs text-muted-foreground">Edit site appearance</span>
-                    </div>
-                  </GlassCard>
-                </Link>
+              {/* Table */}
+              <div className="overflow-x-auto">
+                {recentOrders.length === 0 ? (
+                  <div className="text-center py-12">
+                    <ShoppingCart className="w-10 h-10 text-slate-200 dark:text-white/10 mx-auto mb-2" />
+                    <p className="text-sm text-slate-400 dark:text-white/30">No orders yet.</p>
+                  </div>
+                ) : (
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-100 dark:border-white/5">
+                        <th className="text-left text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/30 px-5 py-3">Order</th>
+                        <th className="text-left text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/30 px-4 py-3">Date</th>
+                        <th className="text-left text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/30 px-4 py-3">Provider</th>
+                        <th className="text-right text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/30 px-4 py-3">Amount</th>
+                        <th className="text-left text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/30 px-4 py-3">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50 dark:divide-white/4">
+                      {filteredOrders.map((order: any) => (
+                        <tr key={order.id} className="hover:bg-slate-50 dark:hover:bg-white/3 transition-colors group">
+                          <td className="px-5 py-3.5">
+                            <span className="font-bold text-slate-800 dark:text-white text-xs">#{order.id.slice(0, 8).toUpperCase()}</span>
+                          </td>
+                          <td className="px-4 py-3.5 text-xs text-slate-400 dark:text-white/40 whitespace-nowrap">
+                            {new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </td>
+                          <td className="px-4 py-3.5 text-xs text-slate-500 dark:text-white/40 capitalize">
+                            {order.payment_provider || 'Direct'}
+                          </td>
+                          <td className="px-4 py-3.5 text-right">
+                            <span className="font-black text-slate-900 dark:text-white text-sm">{currencySymbol}{Number(order.total_amount).toFixed(2)}</span>
+                          </td>
+                          <td className="px-4 py-3.5">
+                            <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full capitalize ${getStatusClass(order.status)}`}>
+                              {getStatusIcon(order.status)}
+                              {order.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </div>
 
+            {/* Quick Actions */}
+            <div className="space-y-3">
+              <h3 className="font-bold text-slate-900 dark:text-white px-0.5">Quick Actions</h3>
+              {[
+                { to: '/admin/products', label: 'Manage Products', sub: 'Add or edit inventory', icon: Package, iconBg: 'bg-[#FF5500]' },
+                { to: '/admin/orders', label: 'View Orders', sub: 'Track all transactions', icon: ShoppingCart, iconBg: 'bg-violet-500' },
+                { to: '/admin/users', label: 'User Management', sub: 'View and manage users', icon: Users, iconBg: 'bg-blue-500' },
+                { to: '/admin/customization', label: 'Site Customization', sub: 'Edit appearance & content', icon: TrendingUp, iconBg: 'bg-emerald-500' },
+              ].map((action) => (
+                <Link to={action.to} key={action.to} className="group block">
+                  <div className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-[#1A1028] border border-slate-200 dark:border-white/8 hover:border-[#FF5500]/40 dark:hover:border-[#FF5500]/30 hover:shadow-md transition-all duration-200 shadow-sm">
+                    <div className={`w-10 h-10 rounded-xl ${action.iconBg} flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-110 transition-transform`}>
+                      <action.icon className="w-4.5 h-4.5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-slate-800 dark:text-white">{action.label}</p>
+                      <p className="text-xs text-slate-400 dark:text-white/40 truncate">{action.sub}</p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-slate-300 dark:text-white/20 group-hover:text-[#FF5500] group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                  </div>
+                </Link>
+              ))}
+
+              {/* Maintenance Card */}
+              <div className={`p-4 rounded-2xl border transition-colors shadow-sm ${maintenanceMode ? 'border-amber-400/50 bg-amber-50 dark:bg-amber-500/5' : 'bg-white dark:bg-[#1A1028] border-slate-200 dark:border-white/8'}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${maintenanceMode ? 'bg-amber-500 text-white' : 'bg-slate-100 dark:bg-white/8 text-slate-400 dark:text-white/40'}`}>
+                      <Hammer className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-800 dark:text-white">Maintenance</p>
+                      <p className="text-xs text-slate-400 dark:text-white/40">{maintenanceMode ? '⚠️ Site Offline' : '✅ Site Online'}</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={maintenanceMode}
+                    onCheckedChange={(checked) => updateSetting.mutate({ key: 'maintenance_mode', value: checked.toString() })}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </AdminLayout>

@@ -33,7 +33,7 @@ export const SectionHeading = ({
           {badge}
         </motion.span>
       )}
-      <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+      <h2 className="font-lato text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
         {title}
       </h2>
       {description && (

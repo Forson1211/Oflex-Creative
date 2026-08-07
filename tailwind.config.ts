@@ -97,6 +97,7 @@ export default {
 			},
 			fontFamily: {
 				sans: [
+					'Lato',
 					'Roboto',
 					'Inter',
 					'ui-sans-serif',
@@ -106,6 +107,15 @@ export default {
 					'Segoe UI',
 					'Helvetica Neue',
 					'Arial',
+					'sans-serif'
+				],
+				lato: [
+					'Lato',
+					'sans-serif'
+				],
+				heading: [
+					'Lato',
+					'Roboto',
 					'sans-serif'
 				],
 				serif: [

@@ -1,4 +1,5 @@
 import { useState, useEffect, Suspense, lazy } from "react";
+import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -64,7 +65,6 @@ const AuthStatusHandler = () => {
     const params = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
 
-    // Check for standard Supabase auth parameters
     const hasAuthParams = params.has('code') ||
       hashParams.has('access_token') ||
       hashParams.has('refresh_token');
@@ -85,7 +85,6 @@ const AuthStatusHandler = () => {
         variant: "destructive",
       });
 
-      // If it's an expired link, help them out by taking them to the auth page
       if (isExpired) {
         setTimeout(() => navigate('/auth'), 2000);
       }
@@ -96,13 +95,11 @@ const AuthStatusHandler = () => {
       });
     }
 
-    // Only clear the URL if we AREN'T currently trying to log in or reset password
     const isResettingPassword = params.has('update_password') ||
       params.get('type') === 'recovery' ||
       hashParams.get('type') === 'recovery';
 
     if (!hasAuthParams && !isResettingPassword && (error || signupSuccess)) {
-      // Clear the URL parameters to prevent repeated toasts on refresh
       const url = new URL(window.location.href);
       url.search = '';
       url.hash = '';
@@ -113,103 +110,117 @@ const AuthStatusHandler = () => {
   return null;
 };
 
-
-
-// Component to handle initial load vs navigation
 const AppContent = () => {
+  const [isInitialLoading, setIsInitialLoading] = useState(() => {
+    try {
+      return !sessionStorage.getItem('oflex_has_loaded');
+    } catch (e) {
+      return true;
+    }
+  });
+
   useEffect(() => {
-    // Prefetch common routes in idle time to make navigation feel instant
+    if (isInitialLoading) {
+      const timer = setTimeout(() => {
+        try {
+          sessionStorage.setItem('oflex_has_loaded', 'true');
+        } catch (e) {}
+        setIsInitialLoading(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isInitialLoading]);
+
+  useEffect(() => {
+    // Eagerly prefetch essential route code and database queries in background
     const prefetch = () => {
-      // Check if user has "Save Data" enabled or slow connection
       const nav = navigator as any;
       if (nav.connection && (nav.connection.saveData || /(2g|3g)/.test(nav.connection.effectiveType))) {
         return;
       }
 
-      const highPriority = [
+      const routes = [
+        () => import("./pages/Index"),
         () => import("./pages/Store"),
         () => import("./pages/Portfolio"),
         () => import("./pages/Services"),
-      ];
-
-      const mediumPriority = [
         () => import("./pages/Blog"),
         () => import("./pages/About"),
         () => import("./pages/Contact"),
       ];
 
-      // Sequential prefetch with priority delay
-      highPriority.forEach((route, i) => {
-        setTimeout(() => void route(), i * 200);
-      });
-
-      mediumPriority.forEach((route, i) => {
-        setTimeout(() => void route(), (highPriority.length * 200) + (i * 400));
+      routes.forEach((route, i) => {
+        setTimeout(() => void route(), i * 150);
       });
     };
 
-    const w = globalThis as any;
-    let idleId: any;
-
-    if (w.requestIdleCallback) {
-      idleId = w.requestIdleCallback(() => prefetch(), { timeout: 2000 });
-    } else {
-      idleId = setTimeout(prefetch, 2000);
-    }
-
-    return () => {
-      if (w.cancelIdleCallback) w.cancelIdleCallback(idleId);
-      else clearTimeout(idleId);
-    };
+    prefetch();
   }, []);
 
   return (
-    <Suspense fallback={<LoadingScreen />}>
-      <SmoothScroll />
-      <ScrollToTop />
-      <SEO />
-      <ChatBot />
-      <AuthStatusHandler />
-      <MaintenanceGuard>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/portfolio" element={<Portfolio />} />
-          <Route path="/store" element={<Store />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/order/:id" element={<OrderDetail />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/blog/:id" element={<BlogPostDetail />} />
-          <Route path="/admin" element={<Dashboard />} />
-          <Route path="/admin/hero-slides" element={<HeroSlides />} />
+    <>
+      {/* Loading Overlay rendered on top of App content so App mounts and pre-renders completely behind the scenes */}
+      <AnimatePresence>
+        {isInitialLoading && (
+          <motion.div
+            key="loading-overlay"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+            className="fixed inset-0 z-[99999]"
+          >
+            <LoadingScreen />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-          <Route path="/admin/featured-projects" element={<FeaturedProjects />} />
-          <Route path="/admin/portfolio" element={<AdminPortfolio />} />
-          <Route path="/admin/services" element={<AdminServices />} />
-          <Route path="/admin/products" element={<Products />} />
-          <Route path="/admin/testimonials" element={<Testimonials />} />
-          <Route path="/admin/faqs" element={<FAQs />} />
-          <Route path="/admin/about" element={<AboutPage />} />
-          <Route path="/admin/trusted-partners" element={<TrustedPartners />} />
-          <Route path="/admin/customization" element={<SiteCustomization />} />
-          <Route path="/admin/orders" element={<Orders />} />
-          <Route path="/admin/users" element={<Users />} />
-          <Route path="/admin/settings" element={<Settings />} />
-          <Route path="/admin/profile" element={<AdminProfile />} />
-          <Route path="/admin/messages" element={<ContactMessages />} />
-          <Route path="/admin/blog-posts" element={<BlogPosts />} />
-          <Route path="/admin/newsletter" element={<NewsletterSubscribers />} />
-          <Route path="/access-denied" element={<AccessDenied />} />
-          <Route path="/maintenance" element={<Maintenance />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </MaintenanceGuard>
-    </Suspense>
+      <Suspense fallback={<LoadingScreen />}>
+        <SmoothScroll />
+        <ScrollToTop />
+        <SEO />
+        <ChatBot />
+        <AuthStatusHandler />
+        <MaintenanceGuard>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/portfolio" element={<Portfolio />} />
+            <Route path="/store" element={<Store />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/order/:id" element={<OrderDetail />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:id" element={<BlogPostDetail />} />
+            <Route path="/admin" element={<Dashboard />} />
+            <Route path="/admin/hero-slides" element={<HeroSlides />} />
+
+            <Route path="/admin/featured-projects" element={<FeaturedProjects />} />
+            <Route path="/admin/portfolio" element={<AdminPortfolio />} />
+            <Route path="/admin/services" element={<AdminServices />} />
+            <Route path="/admin/products" element={<Products />} />
+            <Route path="/admin/testimonials" element={<Testimonials />} />
+            <Route path="/admin/faqs" element={<FAQs />} />
+            <Route path="/admin/about" element={<AboutPage />} />
+            <Route path="/admin/trusted-partners" element={<TrustedPartners />} />
+            <Route path="/admin/customization" element={<SiteCustomization />} />
+            <Route path="/admin/orders" element={<Orders />} />
+            <Route path="/admin/users" element={<Users />} />
+            <Route path="/admin/settings" element={<Settings />} />
+            <Route path="/admin/profile" element={<AdminProfile />} />
+            <Route path="/admin/messages" element={<ContactMessages />} />
+            <Route path="/admin/blog-posts" element={<BlogPosts />} />
+            <Route path="/admin/newsletter" element={<NewsletterSubscribers />} />
+            <Route path="/access-denied" element={<AccessDenied />} />
+            <Route path="/maintenance" element={<Maintenance />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </MaintenanceGuard>
+      </Suspense>
+    </>
   );
 };
 

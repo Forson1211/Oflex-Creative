@@ -34,17 +34,20 @@
   <link rel="dns-prefetch" href="https://images.unsplash.com" />
 
   <link rel="preload" as="style"
-    href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;900&family=Montserrat:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" />
+    href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&family=Roboto:wght@400;500;600;700;900&family=Montserrat:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" />
   <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;900&family=Montserrat:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&family=Roboto:wght@400;500;600;700;900&family=Montserrat:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap"
     media="print" onload="this.media='all'" />
 
   <script>
     // Critical Path: Hydrate theme from localStorage instantly to prevent flash
     (function () {
       try {
-        const theme = localStorage.getItem('theme') || 'light';
-        if (theme === 'dark') document.documentElement.classList.add('dark');
+        const stored = localStorage.getItem('oflex-theme') || localStorage.getItem('theme');
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const isDark = stored ? stored === 'dark' : systemDark;
+        if (isDark) document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
       } catch (e) { }
     })();
   </script>

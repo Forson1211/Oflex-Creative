@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -11,14 +11,15 @@ import {
   Trash2,
   Search,
   SlidersHorizontal,
-  Grid3X3,
-  LayoutList,
   Tag,
   Package,
-  Palette,
-  Share2,
-  Sparkles,
-  ShoppingBag
+  ShoppingBag,
+  Heart,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  MapPin,
+  Filter,
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -37,7 +38,6 @@ import {
 } from '@/components/ui/sheet';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
-import { Badge } from '@/components/ui/badge';
 
 interface Product {
   id: string;
@@ -56,17 +56,63 @@ interface CartItem {
   product?: Product;
 }
 
-const Store = () => {
-  const [activeCategory, setActiveCategory] = useState('All');
+const templateFormats = [
+  'All Formats',
+  'Photoshop (.PSD)',
+  'Illustrator (.AI)',
+  'Canva Templates',
+  'Figma Assets',
+  'Print Ready PDF',
+];
+
+export const Store = () => {
+  const [activeCategory, setActiveCategory] = useState('All Products');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { user, isAuthReady } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { getSetting } = useSiteSettings();
+  const { getSetting, currencySymbol } = useSiteSettings();
 
-  // Fetch site stats/products
+  // Collapsible Accordion Card States
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(true);
+  const [isPriceFilterOpen, setIsPriceFilterOpen] = useState(true);
+  const [isFormatOpen, setIsFormatOpen] = useState(true);
+
+  // Price Filter States
+  const [pricePreset, setPricePreset] = useState<string>('all');
+  const [minPriceInput, setMinPriceInput] = useState('');
+  const [maxPriceInput, setMaxPriceInput] = useState('');
+  const [appliedMinPrice, setAppliedMinPrice] = useState<number | null>(null);
+  const [appliedMaxPrice, setAppliedMaxPrice] = useState<number | null>(null);
+
+  // Template Format Filter State
+  const [activeFormat, setActiveFormat] = useState('All Formats');
+
+  // Persisted Wishlist State (Shared with Profile page)
+  const [wishlist, setWishlist] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('oflex_wishlist');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  const toggleWishlist = (id: string) => {
+    setWishlist(prev => {
+      const exists = prev.includes(id);
+      const updated = exists ? prev.filter(item => item !== id) : [...prev, id];
+      try {
+        localStorage.setItem('oflex_wishlist', JSON.stringify(updated));
+      } catch (e) {}
+      toast({ title: exists ? 'Removed from wishlist' : 'Added to wishlist!' });
+      return updated;
+    });
+  };
+
+  // Fetch active products
   const { data: products = [], isLoading: productsLoading } = useProducts({
     isActive: true
   });
@@ -86,22 +132,60 @@ const Store = () => {
     enabled: isAuthReady && !!user,
   });
 
-  // Dynamic Categories
-  const [categories, setCategories] = useState<string[]>(['All']);
-  useEffect(() => {
-    if (products.length > 0) {
-      const unique = [...new Set(products.map(p => p.category))].filter(Boolean);
-      setCategories(['All', ...unique.sort()]);
-    }
+  // Dynamic Categories populated from DB
+  const categories = useMemo(() => {
+    if (products.length === 0) return ['All Products'];
+    const unique = [...new Set(products.map(p => p.category))].filter(Boolean);
+    return ['All Products', ...unique.sort()];
   }, [products]);
 
   // Filter Logic
-  const filteredProducts = products.filter(p => {
-    const matchesCategory = activeCategory === 'All' || p.category === activeCategory;
-    const searchLower = searchQuery.toLowerCase().trim();
-    const matchesSearch = !searchLower || p.title.toLowerCase().includes(searchLower) || (p.description?.toLowerCase().includes(searchLower));
-    return matchesCategory && matchesSearch;
-  });
+  const filteredProducts = useMemo(() => {
+    return products.filter(p => {
+      const matchesCategory = activeCategory === 'All Products' || p.category === activeCategory;
+      const searchLower = searchQuery.toLowerCase().trim();
+      const matchesSearch = !searchLower || p.title.toLowerCase().includes(searchLower) || (p.description?.toLowerCase().includes(searchLower));
+      
+      let matchesPrice = true;
+      if (appliedMinPrice !== null) {
+        matchesPrice = matchesPrice && p.price >= appliedMinPrice;
+      }
+      if (appliedMaxPrice !== null) {
+        matchesPrice = matchesPrice && p.price <= appliedMaxPrice;
+      }
+
+      return matchesCategory && matchesSearch && matchesPrice;
+    });
+  }, [products, activeCategory, searchQuery, appliedMinPrice, appliedMaxPrice]);
+
+  // Price Filter Apply Handler
+  const handleApplyPriceFilter = () => {
+    if (pricePreset === 'all') {
+      setAppliedMinPrice(null);
+      setAppliedMaxPrice(null);
+    } else if (pricePreset === 'below200') {
+      setAppliedMinPrice(0);
+      setAppliedMaxPrice(200);
+    } else if (pricePreset === '200-500') {
+      setAppliedMinPrice(200);
+      setAppliedMaxPrice(500);
+    } else if (pricePreset === '500-800') {
+      setAppliedMinPrice(500);
+      setAppliedMaxPrice(800);
+    } else if (pricePreset === '800-1000') {
+      setAppliedMinPrice(800);
+      setAppliedMaxPrice(1000);
+    } else if (pricePreset === '1000plus') {
+      setAppliedMinPrice(1000);
+      setAppliedMaxPrice(null);
+    } else if (pricePreset === 'custom') {
+      const min = minPriceInput ? parseFloat(minPriceInput) : null;
+      const max = maxPriceInput ? parseFloat(maxPriceInput) : null;
+      setAppliedMinPrice(min);
+      setAppliedMaxPrice(max);
+    }
+    toast({ title: 'Price filter applied' });
+  };
 
   // Cart Mutations
   const addToCartMutation = useMutation({
@@ -146,13 +230,12 @@ const Store = () => {
   const posYDesktop = getSetting('store_banner_y_desktop', '50');
   const posXMobile = getSetting('store_banner_x_mobile', '50');
   const posYMobile = getSetting('store_banner_y_mobile', '50');
-  
   const overlayOpacity = Number(getSetting('store_banner_overlay_opacity', '70')) / 100;
 
   return (
     <Layout>
-      <div className="flex flex-col min-h-screen bg-[#f8f9fa] dark:bg-background">
-        {/* Custom Exact-Size Dashboard Banner Header */}
+      <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-background">
+        {/* Exact-Size Dashboard Banner Header */}
         <div className="sticky top-0 z-[49]">
           <section 
             style={{ 
@@ -206,15 +289,15 @@ const Store = () => {
                 <div className="flex items-center gap-2 text-white/70 text-xs uppercase tracking-widest font-black [text-shadow:0_2px_10px_rgba(0,0,0,0.5)]">
                   <Link to="/" className="hover:text-primary transition-colors">Home</Link>
                   <span className="opacity-30">/</span>
-                  <span className="text-white">Premium Templates</span>
+                  <span className="text-white">Store Catalog</span>
                 </div>
 
                 <div className="flex flex-col lg:flex-row gap-8 items-center justify-between">
                   <div className="max-w-[280px] sm:max-w-xl md:max-w-4xl mr-auto">
                     <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight [text-shadow:0_4px_25px_rgba(0,0,0,0.4)]">
-                      {filteredProducts.length}+ Premium Templates for{' '}
+                      {filteredProducts.length}+ Creative Products for{' '}
                       <span className="text-primary">
-                        {searchQuery || 'Creative Projects'}
+                        {searchQuery || 'Your Brand'}
                       </span>
                     </h1>
                   </div>
@@ -223,7 +306,7 @@ const Store = () => {
                     <div className="relative flex-1 lg:w-96 group">
                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white" />
                       <Input
-                        placeholder="Search for templates, designs..."
+                        placeholder="Search products, designs..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full h-14 pl-12 pr-4 bg-white/20 backdrop-blur-md border border-white/30 focus-visible:ring-primary focus-visible:border-primary text-white placeholder:text-white/80 text-lg rounded-none transition-all shadow-2xl"
@@ -258,18 +341,18 @@ const Store = () => {
                           ) : (
                             <div className="flex-1 overflow-auto space-y-4 pr-2">
                               {cartItems.map((item) => (
-                                <div key={item.id} className="flex gap-4 p-3 bg-accent/5 rounded-lg border border-border/50">
-                                  <div className="w-16 h-16 rounded bg-muted overflow-hidden flex-shrink-0">
+                                <div key={item.id} className="flex gap-4 p-3 bg-accent/5 rounded-none border border-border/50">
+                                  <div className="w-16 h-16 rounded-none bg-muted overflow-hidden flex-shrink-0">
                                     {item.product?.image_url && <img src={item.product.image_url} className="w-full h-full object-cover" />}
                                   </div>
                                   <div className="flex-1 flex flex-col justify-between">
                                     <h4 className="font-bold text-sm truncate">{item.product?.title}</h4>
-                                    <p className="text-xs text-primary font-bold">${item.product?.price}</p>
+                                    <p className="text-xs text-primary font-bold">{currencySymbol}{item.product?.price}</p>
                                     <div className="flex items-center gap-2 mt-2">
-                                      <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateQuantityMutation.mutate({ itemId: item.id, quantity: item.quantity - 1 })}><Minus className="h-3 w-3" /></Button>
+                                      <Button size="icon" variant="outline" className="h-6 w-6 rounded-none" onClick={() => updateQuantityMutation.mutate({ itemId: item.id, quantity: item.quantity - 1 })}><Minus className="h-3 w-3" /></Button>
                                       <span className="text-xs font-medium">{item.quantity}</span>
-                                      <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateQuantityMutation.mutate({ itemId: item.id, quantity: item.quantity + 1 })}><Plus className="h-3 w-3" /></Button>
-                                      <Button size="icon" variant="ghost" className="h-6 w-6 ml-auto text-muted-foreground hover:text-red-500" onClick={() => removeFromCartMutation.mutate(item.id)}>
+                                      <Button size="icon" variant="outline" className="h-6 w-6 rounded-none" onClick={() => updateQuantityMutation.mutate({ itemId: item.id, quantity: item.quantity + 1 })}><Plus className="h-3 w-3" /></Button>
+                                      <Button size="icon" variant="ghost" className="h-6 w-6 ml-auto text-muted-foreground hover:text-red-500 rounded-none" onClick={() => removeFromCartMutation.mutate(item.id)}>
                                         <Trash2 className="h-3 w-3" />
                                       </Button>
                                     </div>
@@ -280,8 +363,8 @@ const Store = () => {
                           )}
                           {cartItems.length > 0 && (
                             <div className="p-6 border-t border-border mt-auto bg-card">
-                              <div className="flex justify-between mb-4 font-bold text-lg"><span>Total</span><span>${cartTotal.toFixed(2)}</span></div>
-                              <Button className="w-full h-12 bg-primary hover:bg-primary/90 font-bold text-white shadow-xl" onClick={handleCheckout}>Checkout Now</Button>
+                              <div className="flex justify-between mb-4 font-bold text-lg"><span>Total</span><span>{currencySymbol}{cartTotal.toFixed(2)}</span></div>
+                              <Button className="w-full h-12 bg-primary hover:bg-primary/90 font-bold text-white shadow-xl rounded-none" onClick={handleCheckout}>Checkout Now</Button>
                             </div>
                           )}
                         </div>
@@ -294,170 +377,404 @@ const Store = () => {
           </section>
         </div>
 
-        {/* Main Content Area */}
+        {/* Main Store Area - Sharp Square Filter Cards & Square Product Cards */}
         <section className="flex-1">
-          <div className="container mx-auto px-4 py-12">
-            <div className="flex flex-col lg:flex-row gap-12">
-              {/* Sidebar Upgraded with Nice Background */}
-              <aside className="w-full lg:w-64 flex-shrink-0">
-                <div className="sticky top-[150px] p-6 rounded-[24px] overflow-hidden relative group">
-                  {/* Sidebar Visual Background */}
-                  <div className="absolute inset-0 z-0">
-                    <img
-                      src="https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&q=80&w=1000"
-                      className="w-full h-full object-cover opacity-10 group-hover:opacity-15 transition-opacity"
-                      alt="Sidebar Background"
-                    />
-                    <div className="absolute inset-0 bg-[#f8f9fa] dark:bg-[#1A1028] opacity-70 backdrop-blur-xl" />
-                    <div className="absolute inset-0 border border-black/5 dark:border-white/5" />
-                  </div>
+          <div className="container mx-auto px-4 py-8 md:py-12">
+            <div className="flex flex-col lg:flex-row gap-8 xl:gap-10">
+              
+              {/* LEFT SIDEBAR FILTER CARDS */}
+              <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0 space-y-6">
+                
+                {/* FILTER CARD 1: Categories Panel */}
+                <div className="bg-white dark:bg-[#1A1028] border border-slate-200/80 dark:border-white/10 rounded-none shadow-xs overflow-hidden">
+                  <button
+                    onClick={() => setIsCategoriesOpen(prev => !prev)}
+                    className="w-full p-4 flex items-center justify-between font-bold text-slate-900 dark:text-white text-sm border-b border-slate-100 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+                  >
+                    <span>Categories</span>
+                    {isCategoriesOpen ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                  </button>
 
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-2 mb-8 px-2 text-primary uppercase text-[10px] font-black tracking-[0.2em]">Category List</div>
-                    <nav className="flex flex-col gap-2">
-                      {categories.map(cat => (
-                        <button
-                          key={cat}
-                          onClick={() => setActiveCategory(cat)}
-                          className={`w-full text-left px-5 py-3.5 text-sm font-bold transition-all rounded-xl flex items-center justify-between group/item ${activeCategory === cat
-                            ? 'bg-primary text-white shadow-[0_8px_20px_rgba(255,107,53,0.3)] scale-[1.02]'
-                            : 'text-muted-foreground hover:bg-white dark:hover:bg-white/5 hover:text-foreground hover:translate-x-1'
-                            }`}
-                        >
-                          <span className="truncate">{cat}</span>
-                          {activeCategory === cat ? (
-                            <ArrowRight className="w-4 h-4 animate-in slide-in-from-left-2 duration-300" />
-                          ) : (
-                            <Tag className="w-3.5 h-3.5 opacity-30 group-hover/item:opacity-100 transition-opacity" />
-                          )}
-                        </button>
-                      ))}
-                    </nav>
-                  </div>
+                  {isCategoriesOpen && (
+                    <div className="p-3 space-y-1">
+                      {categories.map((cat) => {
+                        const isSelected = activeCategory === cat;
+                        return (
+                          <button
+                            key={cat}
+                            onClick={() => setActiveCategory(cat)}
+                            className={cn(
+                              "w-full text-left px-4 py-2.5 rounded-none text-xs font-semibold transition-all flex items-center justify-between gap-2",
+                              isSelected
+                                ? "bg-[#FF5500] text-white shadow-md shadow-[#FF5500]/25 font-bold"
+                                : "text-slate-600 dark:text-white/70 hover:bg-slate-100 dark:hover:bg-white/8 hover:text-slate-900 dark:hover:text-white"
+                            )}
+                          >
+                            <span className="truncate">{cat}</span>
+                            {isSelected && <Check className="w-3.5 h-3.5 flex-shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
+
+                {/* FILTER CARD 2: Product Price Panel */}
+                <div className="bg-white dark:bg-[#1A1028] border border-slate-200/80 dark:border-white/10 rounded-none shadow-xs overflow-hidden">
+                  <button
+                    onClick={() => setIsPriceFilterOpen(prev => !prev)}
+                    className="w-full p-4 flex items-center justify-between font-bold text-slate-900 dark:text-white text-sm border-b border-slate-100 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+                  >
+                    <span>Product Price</span>
+                    {isPriceFilterOpen ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                  </button>
+
+                  {isPriceFilterOpen && (
+                    <div className="p-4 space-y-4 text-xs">
+                      {/* Presets Radio Options */}
+                      <div className="space-y-2.5">
+                        <label className="flex items-center gap-3 cursor-pointer text-slate-700 dark:text-white/80 font-medium">
+                          <input
+                            type="radio"
+                            name="pricePreset"
+                            checked={pricePreset === 'all'}
+                            onChange={() => setPricePreset('all')}
+                            className="w-4 h-4 accent-[#FF5500]"
+                          />
+                          <span>All Price</span>
+                        </label>
+
+                        <label className="flex items-center gap-3 cursor-pointer text-slate-700 dark:text-white/80 font-medium">
+                          <input
+                            type="radio"
+                            name="pricePreset"
+                            checked={pricePreset === 'below200'}
+                            onChange={() => setPricePreset('below200')}
+                            className="w-4 h-4 accent-[#FF5500]"
+                          />
+                          <span>Below {currencySymbol}200</span>
+                        </label>
+
+                        <label className="flex items-center gap-3 cursor-pointer text-slate-700 dark:text-white/80 font-medium">
+                          <input
+                            type="radio"
+                            name="pricePreset"
+                            checked={pricePreset === '200-500'}
+                            onChange={() => setPricePreset('200-500')}
+                            className="w-4 h-4 accent-[#FF5500]"
+                          />
+                          <span>{currencySymbol}200 - {currencySymbol}500</span>
+                        </label>
+
+                        <label className="flex items-center gap-3 cursor-pointer text-slate-700 dark:text-white/80 font-medium">
+                          <input
+                            type="radio"
+                            name="pricePreset"
+                            checked={pricePreset === '500-800'}
+                            onChange={() => setPricePreset('500-800')}
+                            className="w-4 h-4 accent-[#FF5500]"
+                          />
+                          <span>{currencySymbol}500 - {currencySymbol}800</span>
+                        </label>
+
+                        <label className="flex items-center gap-3 cursor-pointer text-slate-700 dark:text-white/80 font-medium">
+                          <input
+                            type="radio"
+                            name="pricePreset"
+                            checked={pricePreset === '800-1000'}
+                            onChange={() => setPricePreset('800-1000')}
+                            className="w-4 h-4 accent-[#FF5500]"
+                          />
+                          <span>{currencySymbol}800 - {currencySymbol}1,000</span>
+                        </label>
+
+                        <label className="flex items-center gap-3 cursor-pointer text-slate-700 dark:text-white/80 font-medium">
+                          <input
+                            type="radio"
+                            name="pricePreset"
+                            checked={pricePreset === '1000plus'}
+                            onChange={() => setPricePreset('1000plus')}
+                            className="w-4 h-4 accent-[#FF5500]"
+                          />
+                          <span>{currencySymbol}1,000+</span>
+                        </label>
+                      </div>
+
+                      {/* Custom Price Range Inputs */}
+                      <div className="pt-2 border-t border-slate-100 dark:border-white/10 space-y-2">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Custom Price Range:</span>
+                        <div className="flex items-center gap-2">
+                          <div className="relative flex-1">
+                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold">{currencySymbol}</span>
+                            <input
+                              type="number"
+                              placeholder="Min"
+                              value={minPriceInput}
+                              onChange={(e) => {
+                                setMinPriceInput(e.target.value);
+                                setPricePreset('custom');
+                              }}
+                              className="w-full h-9 pl-7 pr-2 text-xs bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-none text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-[#FF5500]"
+                            />
+                          </div>
+                          <span className="text-slate-400 font-bold">–</span>
+                          <div className="relative flex-1">
+                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold">{currencySymbol}</span>
+                            <input
+                              type="number"
+                              placeholder="Max"
+                              value={maxPriceInput}
+                              onChange={(e) => {
+                                setMaxPriceInput(e.target.value);
+                                setPricePreset('custom');
+                              }}
+                              className="w-full h-9 pl-7 pr-2 text-xs bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-none text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-[#FF5500]"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Apply Filter Button */}
+                      <button
+                        onClick={handleApplyPriceFilter}
+                        className="w-full h-10 bg-[#FF5500] hover:bg-[#E04B00] text-white font-bold rounded-none text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 mt-3"
+                      >
+                        <Filter className="w-3.5 h-3.5" />
+                        Apply Filter
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* FILTER CARD 3: Template Format Panel */}
+                <div className="bg-white dark:bg-[#1A1028] border border-slate-200/80 dark:border-white/10 rounded-none shadow-xs overflow-hidden">
+                  <button
+                    onClick={() => setIsFormatOpen(prev => !prev)}
+                    className="w-full p-4 flex items-center justify-between font-bold text-slate-900 dark:text-white text-sm border-b border-slate-100 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+                  >
+                    <span>Template Format</span>
+                    {isFormatOpen ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                  </button>
+
+                  {isFormatOpen && (
+                    <div className="p-3 space-y-1 text-xs">
+                      {templateFormats.map((fmt) => {
+                        const isSelected = activeFormat === fmt;
+                        return (
+                          <button
+                            key={fmt}
+                            onClick={() => setActiveFormat(fmt)}
+                            className={cn(
+                              "w-full text-left px-3 py-2 rounded-none transition-all flex items-center justify-between gap-2 font-medium",
+                              isSelected
+                                ? "bg-[#FF5500]/10 text-[#FF5500] font-bold"
+                                : "text-slate-600 dark:text-white/70 hover:bg-slate-100 dark:hover:bg-white/5"
+                            )}
+                          >
+                            <span>{fmt}</span>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-[#FF5500]" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
               </aside>
 
-              {/* Product Right Area */}
-              <div className="flex-1">
-                {/* High-Impact Vibrant Promotional Banner */}
-                <div className="relative overflow-hidden rounded-[32px] bg-primary min-h-[280px] p-10 md:p-14 mb-14 flex flex-col md:flex-row items-center justify-between group shadow-[0_20px_50px_rgba(255,107,53,0.2)] border-none">
-                  {/* Decorative Elements */}
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
-                  <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-xl" />
+              {/* RIGHT MAIN CONTENT: Orange Banner Slide + Sharp Square Product Grid */}
+              <div className="flex-1 min-w-0 space-y-8">
+                
+                {/* HIGH-IMPACT ORANGE BANNER SLIDE */}
+                <div className="relative overflow-hidden rounded-none bg-gradient-to-r from-[#FF5500] to-[#ff8c42] p-8 md:p-12 text-white shadow-xl border border-white/10 group">
+                  <div className="flex flex-col lg:flex-row items-center justify-between gap-8 relative z-10">
+                    <div className="max-w-md text-center lg:text-left">
+                      <span className="inline-block text-white/80 font-bold tracking-[0.2em] text-[10px] uppercase mb-3">
+                        ELITE CREATIVE STUDIO
+                      </span>
+                      <h2 className="text-3xl md:text-4xl xl:text-5xl font-black mb-6 leading-tight tracking-tight text-white">
+                        Elevate your agency with <span className="underline decoration-white/30 underline-offset-4">elite designs</span>
+                      </h2>
+                      <Button
+                        className="bg-white text-slate-900 hover:bg-white/90 font-black px-8 h-12 rounded-none text-sm inline-flex items-center gap-2 shadow-lg hover:scale-105 active:scale-95 transition-all"
+                        asChild
+                      >
+                        <Link to="/contact">
+                          Get Custom Design
+                          <ArrowRight className="w-4 h-4" />
+                        </Link>
+                      </Button>
+                    </div>
 
-                  <div className="relative z-10 text-black text-center md:text-left max-w-md">
-                    <span className="inline-block text-black/60 font-black tracking-[0.2em] text-[10px] uppercase mb-4">Elite Creative Studio</span>
-                    <h2 className="text-4xl md:text-5xl font-black mb-6 md:mb-8 leading-tight tracking-tight text-black">Elevate your agency with <span className="text-white">elite designs</span></h2>
-                    <Button className="bg-white text-black hover:bg-white/90 rounded-none font-black px-8 h-12 text-base flex items-center gap-3 shadow-[0_10px_30px_rgba(0,0,0,0.1)] transition-all hover:scale-105 active:scale-95 border-none w-fit mx-auto md:mx-0" asChild>
-                      <Link to="/contact">
-                        Get Custom Design
-                        <ArrowRight className="w-5 h-5" />
-                      </Link>
-                    </Button>
-                  </div>
+                    {/* Auto-Playing Featured Slide Card */}
+                    <div className="relative w-full lg:w-[48%] h-56 md:h-60 overflow-hidden rounded-none">
+                      {products.length > 0 ? (
+                        <AnimatePresence mode="wait">
+                          {(() => {
+                            const [currentIndex, setCurrentIndex] = useState(0);
+                            useEffect(() => {
+                              const timer = setInterval(() => {
+                                setCurrentIndex((prev) => (prev + 1) % Math.min(products.length, 5));
+                              }, 3500);
+                              return () => clearInterval(timer);
+                            }, []);
 
-                  <div className="relative w-full md:w-[45%] h-64 mt-12 md:mt-0 hidden lg:block overflow-hidden rounded-2xl">
-                    {products.length > 0 ? (
-                      <AnimatePresence mode="wait">
-                        {(() => {
-                          const [currentIndex, setCurrentIndex] = useState(0);
-                          useEffect(() => {
-                            const timer = setInterval(() => {
-                              setCurrentIndex((prev) => (prev + 1) % Math.min(products.length, 5));
-                            }, 3500);
-                            return () => clearInterval(timer);
-                          }, []);
+                            const featuredProd = products[currentIndex];
+                            if (!featuredProd) return null;
 
-                          const featuredProd = products[currentIndex];
-                          return (
-                            <motion.div
-                              key={featuredProd.id}
-                              initial={{ opacity: 0, x: 50, scale: 0.95 }}
-                              animate={{ opacity: 1, x: 0, scale: 1 }}
-                              exit={{ opacity: 0, x: -50, scale: 0.95 }}
-                              transition={{ duration: 0.5, ease: "easeInOut" }}
-                              className="absolute inset-0 flex items-center justify-center p-4 bg-black/10 backdrop-blur-xl rounded-[24px] border border-white/10 group/item"
-                            >
-                              <div className="flex gap-6 w-full h-full items-center">
-                                <div className="w-1/2 aspect-square rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 transform group-hover/item:scale-105 transition-transform duration-700">
-                                  <img src={featuredProd.image_url || ''} className="w-full h-full object-cover" alt={featuredProd.title} />
+                            return (
+                              <motion.div
+                                key={featuredProd.id}
+                                initial={{ opacity: 0, x: 40 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -40 }}
+                                transition={{ duration: 0.4 }}
+                                className="absolute inset-0 p-4 bg-black/20 backdrop-blur-md rounded-none border border-white/20 flex items-center gap-4"
+                              >
+                                <div className="w-2/5 aspect-square rounded-none overflow-hidden shadow-xl border border-white/30 shrink-0">
+                                  <img
+                                    src={featuredProd.image_url || '/placeholder.png'}
+                                    className="w-full h-full object-cover"
+                                    alt={featuredProd.title}
+                                  />
                                 </div>
-                                <div className="flex-1 flex flex-col justify-center text-white text-left">
-                                  <span className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">{featuredProd.category}</span>
-                                  <h4 className="text-xl md:text-2xl font-black mb-2 line-clamp-1">{featuredProd.title}</h4>
-                                  <div className="text-2xl md:text-3xl font-black mb-6 text-white">${featuredProd.price.toFixed(2)}</div>
-                                  <Button size="sm" className="bg-primary hover:bg-primary/90 text-white border-none w-fit font-black rounded-none px-6 h-10 shadow-lg shadow-orange-600/20 transition-all active:scale-95" onClick={() => navigate(`/product/${featuredProd.id}`)}>Take a Look</Button>
+                                <div className="flex-1 flex flex-col justify-center text-left">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-white/80 mb-1">
+                                    {featuredProd.category || 'Church Flyers'}
+                                  </span>
+                                  <h4 className="text-base md:text-lg font-black text-white line-clamp-1 mb-2">
+                                    {featuredProd.title}
+                                  </h4>
+                                  <div className="text-xl md:text-2xl font-black text-white mb-3">
+                                    {currencySymbol}{featuredProd.price.toFixed(2)}
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    className="bg-white text-[#FF5500] hover:bg-white/90 font-bold rounded-none px-4 h-8 text-xs shadow-md w-fit"
+                                    onClick={() => navigate(`/product/${featuredProd.id}`)}
+                                  >
+                                    Take a Look
+                                  </Button>
                                 </div>
-                              </div>
-                            </motion.div>
-                          );
-                        })()}
-                      </AnimatePresence>
-                    ) : (
-                      <div className="w-full h-full bg-black/20 rounded-2xl animate-pulse" />
-                    )}
+                              </motion.div>
+                            );
+                          })()}
+                        </AnimatePresence>
+                      ) : (
+                        <div className="w-full h-full bg-white/10 rounded-none animate-pulse" />
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* Grid Area - Optimized for High Density Mobile View */}
+                {/* PRODUCT GRID - SHARP STRAIGHT SQUARE EDGES (ROUNDED-NONE) */}
                 {productsLoading ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <div key={i} className="aspect-square bg-muted rounded-2xl animate-pulse" />)}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                      <div key={i} className="h-80 bg-slate-200 dark:bg-white/5 rounded-none animate-pulse" />
+                    ))}
                   </div>
-                ) : (
-                  <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-8 md:gap-10">
+                ) : filteredProducts.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {filteredProducts.map((product, index) => (
                       <motion.div
                         key={product.id}
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        className="group bg-white dark:bg-card rounded-none overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_60px_rgba(0,0,0,0.08)] border border-border/40 transition-all flex flex-col h-full"
+                        transition={{ delay: index * 0.04 }}
+                        className="bg-white dark:bg-[#1A1028] border border-slate-200/80 dark:border-white/10 rounded-none p-4 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col group"
                       >
-                        <div className="relative aspect-square sm:aspect-[16/11] overflow-hidden">
+                        {/* Product Image Box - Sharp Square Edges */}
+                        <div className="aspect-square relative overflow-hidden rounded-none bg-slate-100 dark:bg-white/5 mb-3">
                           <OptimizedImage
                             src={product.image_url || ''}
                             alt={product.title}
                             width={600}
                             className="w-full h-full"
-                            imageClassName="object-cover transition-transform duration-1000 group-hover:scale-105"
+                            imageClassName="object-cover transition-transform duration-500 group-hover:scale-105"
                           />
-                          <div className="absolute top-2 right-2 md:top-5 md:right-5 bg-white/95 dark:bg-black/90 px-2 md:px-4 py-1 md:py-1.5 rounded-full shadow-lg z-10 border border-white/20">
-                            <span className="text-[10px] md:text-base font-black text-foreground">${product.price.toFixed(2)}</span>
-                          </div>
+
+                          {/* Quick View Floating Button */}
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              navigate(`/product/${product.id}`);
+                            }}
+                            className="absolute top-2.5 right-2.5 p-2 rounded-none bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 shadow-md hover:scale-110 transition-all opacity-0 group-hover:opacity-100"
+                            title="View details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
                         </div>
 
-                        <div className="p-3 md:p-8 flex-1 flex flex-col">
-                          <div className="mb-2 md:mb-4 text-left">
-                            <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.1em] px-2 md:px-4 py-1 md:py-2 rounded-full bg-orange-50 dark:bg-orange-950/20 text-primary border border-orange-100/50 dark:border-orange-900/30">
-                              {product.category}
+                        {/* Product Title & Details */}
+                        <div className="flex flex-col flex-1">
+                          <Link to={`/product/${product.id}`}>
+                            <h3 className="font-bold text-slate-900 dark:text-white text-base leading-tight hover:text-[#FF5500] transition-colors line-clamp-1 text-left mb-1">
+                              {product.title}
+                            </h3>
+                          </Link>
+
+                          <div className="flex items-center justify-between text-xs text-slate-400 dark:text-white/40 mb-3">
+                            <span className="truncate">{product.category || 'Templates'}</span>
+                            <span className="flex items-center gap-1 text-emerald-500 font-semibold text-[11px] shrink-0">
+                              <Check className="w-3.5 h-3.5" /> In stock
                             </span>
                           </div>
-                          <h3 className="text-sm md:text-2xl font-bold text-foreground mb-1 md:mb-3 line-clamp-1 text-left">{product.title}</h3>
-                          <p className="text-muted-foreground text-[10px] md:text-sm leading-relaxed mb-4 md:mb-8 line-clamp-1 md:line-clamp-2 text-left hidden sm:block">
-                            {product.description || 'Premium design resources for your projects.'}
-                          </p>
-                          <div className="mt-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-3 w-full">
-                            <Button className="flex-[4] h-9 md:h-14 bg-primary hover:bg-primary/90 text-white font-black rounded-none shadow-lg shadow-orange-600/10 active:scale-95 transition-all text-[10px] md:text-base whitespace-nowrap" onClick={() => addToCartMutation.mutate(product.id)} disabled={addToCartMutation.isPending}>
-                              <ShoppingCart className="w-3 h-3 md:w-5 md:h-5 mr-1.5 md:mr-3" /> Add
-                            </Button>
-                            <Button variant="outline" className="flex-1 h-9 md:h-14 border border-slate-200/60 dark:border-border/60 hover:bg-slate-50 dark:hover:bg-accent bg-white dark:bg-transparent text-foreground rounded-none font-bold transition-all text-[10px] md:text-base" onClick={() => navigate(`/product/${product.id}`)}>
-                              View
-                            </Button>
+
+                          {/* Price Tag & Action Buttons Row */}
+                          <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-white/10 mt-auto">
+                            <span className="font-black text-lg text-[#FF5500]">
+                              {currencySymbol}{product.price.toFixed(2)}
+                            </span>
+
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  toggleWishlist(product.id);
+                                }}
+                                className={`w-9 h-9 rounded-none border flex items-center justify-center transition-all active:scale-95 ${
+                                  wishlist.includes(product.id)
+                                    ? 'border-red-500 text-red-500 bg-red-50 dark:bg-red-950/20'
+                                    : 'border-slate-200 dark:border-white/10 text-slate-400 hover:text-red-500 dark:hover:text-red-400 bg-slate-50 dark:bg-white/5'
+                                }`}
+                                title="Add to Wishlist"
+                              >
+                                <Heart className={`w-4 h-4 ${wishlist.includes(product.id) ? 'fill-red-500' : ''}`} />
+                              </button>
+
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  addToCartMutation.mutate(product.id);
+                                }}
+                                className="w-9 h-9 rounded-none bg-[#FF5500] hover:bg-[#E04B00] text-white flex items-center justify-center shadow-md hover:shadow-lg transition-all active:scale-95"
+                                title="Add to Cart"
+                              >
+                                <ShoppingCart className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </motion.div>
                     ))}
                   </div>
+                ) : (
+                  <div className="p-12 text-center bg-white dark:bg-[#1A1028] border border-slate-200 dark:border-white/10 rounded-none space-y-3">
+                    <Package className="w-12 h-12 mx-auto text-slate-300 dark:text-white/20" />
+                    <p className="font-bold text-slate-700 dark:text-white text-base">No products match your filter</p>
+                    <p className="text-xs text-slate-400">Try selecting a different category or resetting price filters.</p>
+                  </div>
                 )}
               </div>
+
             </div>
           </div>
         </section>
 
-        {/* Catchy Footer CTA Section */}
-        <section className="relative py-32 overflow-hidden bg-[#1A1028]">
-          {/* Vibrant & Beautiful Background Background Visual Layer */}
+        {/* Footer CTA Section */}
+        <section className="relative py-28 overflow-hidden bg-[#1A1028]">
           <div className="absolute inset-0 z-0">
             <img
               src="/B3.jpg"
@@ -470,13 +787,13 @@ const Store = () => {
 
           <div className="container mx-auto px-4 text-center relative z-10">
             <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}>
-              <h2 className="text-4xl md:text-7xl font-black mb-8 leading-tight text-white tracking-tighter [text-shadow:0_4px_30px_rgba(0,0,0,0.7)]">
+              <h2 className="text-4xl md:text-6xl font-black mb-6 leading-tight text-white tracking-tighter [text-shadow:0_4px_30px_rgba(0,0,0,0.7)]">
                 Start your next <span className="text-primary">success story.</span>
               </h2>
-              <p className="text-white text-lg md:text-2xl mb-12 max-w-3xl mx-auto font-medium leading-relaxed [text-shadow:0_2px_15px_rgba(0,0,0,0.7)]">
+              <p className="text-white text-lg md:text-xl mb-10 max-w-2xl mx-auto font-medium leading-relaxed [text-shadow:0_2px_15px_rgba(0,0,0,0.7)]">
                 Elevate your agency with elite templates, high-performance design assets, and premium creative resources.
               </p>
-              <Button className="h-16 px-14 bg-white hover:bg-white/90 text-black font-black text-xl rounded-none shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-all hover:scale-105 active:scale-95" asChild>
+              <Button className="h-14 px-12 bg-white hover:bg-white/90 text-slate-900 font-black text-lg rounded-none shadow-2xl transition-all hover:scale-105 active:scale-95" asChild>
                 <Link to="/contact">Request Custom Design</Link>
               </Button>
             </motion.div>

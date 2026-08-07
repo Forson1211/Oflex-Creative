@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Sun, Moon, Shield, UserCog, ShoppingCart, ShoppingBag, User, LogOut } from 'lucide-react';
+import { Menu, X, Search, Shield, UserCog, ShoppingCart, ShoppingBag, User, LogOut } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -51,7 +52,9 @@ interface CartItem {
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const { theme, toggleTheme } = useTheme();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const { theme } = useTheme();
   const { user, signOut, isAdmin, isModerator, isAuthReady } = useAuth();
   const { getSetting } = useSiteSettings();
   const location = useLocation();
@@ -190,17 +193,14 @@ export const Navbar = () => {
 
             {/* Desktop Actions */}
             <div className="flex items-center gap-3 ml-6 lg:ml-10">
-              <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-none">
-                {theme === 'light' ? <Moon className="w-6 h-6" /> : <Sun className="w-6 h-6" />}
+              <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(true)} className="rounded-none" aria-label="Search">
+                <Search className="w-5 h-5" />
               </Button>
 
               {/* Store Icon */}
               <Button variant="ghost" size="icon" className="rounded-none" asChild>
-                <Link to="/store">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M8 8a4 4 0 0 1 8 0" />
-                    <rect x="3" y="8" width="18" height="13" rx="2" />
-                  </svg>
+                <Link to="/store" title="Store">
+                  <ShoppingBag className="w-5 h-5" />
                 </Link>
               </Button>
 
@@ -272,47 +272,46 @@ export const Navbar = () => {
                 </SheetContent>
               </Sheet>
 
-              {/* User Account */}
+              {/* User Account & Action Buttons */}
               {user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full">
-                      <Avatar className="h-9 w-9 border-2 border-primary rounded-full">
-                        <AvatarImage src={getOptimizedImageUrl(profile?.avatar_url || '', 100)} className="object-cover" />
-                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                          {userInitials}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem onClick={() => navigate('/profile')}>
-                      <User className="w-4 h-4 mr-2" />
-                      Profile
-                    </DropdownMenuItem>
-                    {(isAdmin || isModerator) && (
-                      <DropdownMenuItem onClick={() => navigate('/admin')}>
-                        {isAdmin ? <Shield className="w-4 h-4 mr-2" /> : <UserCog className="w-4 h-4 mr-2" />}
-                        {isAdmin ? 'Admin Dashboard' : 'Moderator Dashboard'}
+                <>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="rounded-full">
+                        <Avatar className="h-9 w-9 border-2 border-primary rounded-full">
+                          <AvatarImage src={getOptimizedImageUrl(profile?.avatar_url || '', 100)} className="object-cover" />
+                          <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                            {userInitials}
+                          </AvatarFallback>
+                        </Avatar>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={() => navigate('/profile')}>
+                        <User className="w-4 h-4 mr-2" />
+                        Profile
                       </DropdownMenuItem>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut}>
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Sign Out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      {(isAdmin || isModerator) && (
+                        <DropdownMenuItem onClick={() => navigate('/admin')}>
+                          {isAdmin ? <Shield className="w-4 h-4 mr-2" /> : <UserCog className="w-4 h-4 mr-2" />}
+                          {isAdmin ? 'Admin Dashboard' : 'Moderator Dashboard'}
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleSignOut}>
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Sign Out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <Button asChild size="sm" className="h-10 px-5 rounded-none font-bold text-sm uppercase tracking-wide shadow-md hover:scale-105 transition-transform">
+                    <Link to="/contact">Get In Touch</Link>
+                  </Button>
+                </>
               ) : (
                 <Button asChild size="sm" className="h-10 px-5 rounded-none font-bold text-sm uppercase tracking-wide shadow-md hover:scale-105 transition-transform">
-                  <Link to="/contact">Get In Touch</Link>
-                </Button>
-              )}
-
-              {/* Get A Quote CTA (always visible when logged in) */}
-              {user && (
-                <Button asChild size="sm" className="h-10 px-5 rounded-none font-bold text-sm uppercase tracking-wide shadow-md hover:scale-105 transition-transform">
-                  <Link to="/contact">Get In Touch</Link>
+                  <Link to="/auth">Sign In</Link>
                 </Button>
               )}
             </div>
@@ -322,11 +321,8 @@ export const Navbar = () => {
           <div className="flex lg:hidden items-center gap-1 sm:gap-2">
             {/* Mobile Store Icon */}
             <Button variant="ghost" size="icon" className="rounded-none" asChild>
-              <Link to="/store">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M8 8a4 4 0 0 1 8 0" />
-                  <rect x="3" y="8" width="18" height="13" rx="2" />
-                </svg>
+              <Link to="/store" title="Store">
+                <ShoppingBag className="w-5 h-5" />
               </Link>
             </Button>
 
@@ -344,8 +340,8 @@ export const Navbar = () => {
               </SheetTrigger>
             </Sheet>
 
-            <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-none">
-              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+            <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(true)} className="rounded-none" aria-label="Search">
+              <Search className="w-5 h-5" />
             </Button>
             <Button variant="ghost" size="icon" onClick={() => setIsOpen(!isOpen)}>
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -391,6 +387,9 @@ export const Navbar = () => {
               >
                 {user ? (
                   <div className="space-y-2">
+                    <Button asChild className="w-full rounded-none font-bold uppercase tracking-wide">
+                      <Link to="/contact" onClick={() => setIsOpen(false)}>Get In Touch</Link>
+                    </Button>
                     <Button asChild variant="outline" className="w-full h-12 rounded-none">
                       <Link to="/profile" onClick={() => setIsOpen(false)} className="flex items-center justify-center gap-3">
                         <Avatar className="h-6 w-6 border-2 border-primary rounded-full">
@@ -416,8 +415,8 @@ export const Navbar = () => {
                     </Button>
                   </div>
                 ) : (
-                  <Button asChild className="w-full rounded-none">
-                    <Link to="/auth" onClick={() => setIsOpen(false)}>Login / Sign Up</Link>
+                  <Button asChild className="w-full rounded-none font-bold uppercase tracking-wide">
+                    <Link to="/auth" onClick={() => setIsOpen(false)}>Sign In</Link>
                   </Button>
                 )}
               </motion.div>
@@ -425,6 +424,75 @@ export const Navbar = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Global Search Dialog - Positioned Top & Modern Design */}
+      <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+        <DialogContent className="fixed left-[50%] -translate-x-[50%] top-4 sm:top-12 translate-y-0 z-50 w-[94vw] max-w-2xl p-5 sm:p-7 bg-white dark:bg-card rounded-[28px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.2)] border border-slate-100 dark:border-border/80 outline-none">
+          <div className="flex flex-col gap-6">
+            {/* Search Input Bar matching screenshot */}
+            <div className="flex items-center w-full border border-slate-200 dark:border-border rounded-full p-1.5 pl-5 bg-slate-50/50 dark:bg-muted/40 focus-within:bg-white dark:focus-within:bg-card focus-within:border-primary/80 focus-within:ring-2 focus-within:ring-primary/20 transition-all shadow-inner">
+              <Search className="w-5 h-5 text-slate-400 dark:text-muted-foreground mr-3 shrink-0" />
+              <input
+                type="text"
+                placeholder="Search products, brands and categories"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchQuery.trim()) {
+                    setIsSearchOpen(false);
+                    navigate(`/store?search=${encodeURIComponent(searchQuery.trim())}`);
+                    setSearchQuery('');
+                  }
+                }}
+                className="w-full bg-transparent border-none outline-none text-foreground placeholder:text-slate-400 dark:placeholder:text-muted-foreground text-sm sm:text-base font-medium"
+              />
+              <Button
+                onClick={() => {
+                  if (searchQuery.trim()) {
+                    setIsSearchOpen(false);
+                    navigate(`/store?search=${encodeURIComponent(searchQuery.trim())}`);
+                    setSearchQuery('');
+                  }
+                }}
+                className="bg-[#FF5500] hover:bg-[#E04B00] text-white font-bold rounded-full px-6 py-2.5 h-auto text-sm shrink-0 ml-2 shadow-md transition-transform active:scale-95 border-none"
+              >
+                Search
+              </Button>
+            </div>
+
+            {/* Trending Searches section matching screenshot */}
+            <div>
+              <span className="text-[11px] font-extrabold tracking-widest text-slate-400 dark:text-muted-foreground uppercase mb-3 block">
+                TRENDING SEARCHES
+              </span>
+              <div className="flex flex-wrap gap-2 sm:gap-2.5">
+                {[
+                  'web design',
+                  'templates',
+                  'power banks',
+                  'watch',
+                  'branding',
+                  'laptop',
+                  'iPhone 15',
+                  'sneakers',
+                  'UI/UX'
+                ].map((term) => (
+                  <button
+                    key={term}
+                    onClick={() => {
+                      setIsSearchOpen(false);
+                      navigate(`/store?search=${encodeURIComponent(term)}`);
+                    }}
+                    className="px-4 py-2 rounded-full bg-slate-100 dark:bg-muted text-slate-700 dark:text-foreground text-xs sm:text-sm font-medium hover:bg-[#FF5500] hover:text-white dark:hover:bg-[#FF5500] dark:hover:text-white transition-all cursor-pointer shadow-2xs"
+                  >
+                    {term}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </motion.nav>
   );
 };

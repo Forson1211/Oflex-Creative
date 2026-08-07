@@ -17,7 +17,7 @@ export const PRODUCT_KEYS = {
 /**
  * Hook to fetch all products or a filtered subset
  */
-export function useProducts(filters: { isActive?: boolean; category?: string; searchTerm?: string } = {}) {
+export function useProducts(filters: { isActive?: boolean; category?: string; searchTerm?: string; limit?: number } = {}) {
     return useQuery({
         queryKey: PRODUCT_KEYS.list(filters),
         queryFn: async () => {
@@ -31,11 +31,16 @@ export function useProducts(filters: { isActive?: boolean; category?: string; se
                 query = query.eq('category', filters.category);
             }
 
-            const { data, error } = await query.order('created_at', { ascending: false });
+            query = query.order('created_at', { ascending: false });
+
+            if (filters.limit) {
+                query = query.limit(filters.limit);
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
 
-            // Local search filtering if needed (or we could do it in Supabase)
             let result = (data || []) as Product[];
             if (filters.searchTerm) {
                 const lowerSearch = filters.searchTerm.toLowerCase();
@@ -47,6 +52,8 @@ export function useProducts(filters: { isActive?: boolean; category?: string; se
 
             return result;
         },
+        staleTime: 1000 * 60 * 5, // 5 minutes cache stale time
+        gcTime: 1000 * 60 * 30, // 30 minutes garbage collection time
     });
 }
 

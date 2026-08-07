@@ -40,7 +40,8 @@ const Auth = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
-  const logoUrl = getSetting('logo_url', '');
+  const logoDark = getSetting('logo_url') || '/logo.png';
+  const logoWhite = getSetting('logo_white_url') || getSetting('logo_dark_url') || '/logo-white.png';
   const siteName = getSetting('site_name', '');
 
   useEffect(() => {
@@ -340,9 +341,15 @@ const Auth = () => {
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center justify-center">
               <img
-                src={logoUrl || ""}
+                src={logoDark}
                 alt={siteName || 'Site logo'}
-                className="h-16 w-auto"
+                className="h-16 w-auto block dark:hidden object-contain"
+                loading="eager"
+              />
+              <img
+                src={logoWhite}
+                alt={siteName || 'Site logo'}
+                className="h-16 w-auto hidden dark:block object-contain"
                 loading="eager"
               />
             </Link>
