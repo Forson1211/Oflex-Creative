@@ -82,81 +82,60 @@ const Portfolio = () => {
     return null;
   };
 
-  const embedUrl = useMemo(() => getEmbedUrl(selectedItem?.project_url || null), [selectedItem]);
+  const portfolioBgImage = getSetting('portfolio_hero_bg_image') || getSetting('portfolio_hero_image') || getSetting('portfolio_banner_image') || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=1600';
+  const portfolioBgOverlay = Number(getSetting('portfolio_hero_overlay_opacity', '80')) / 100;
 
   return (
     <Layout>
       {/* Hero Section */}
-      <section className="py-16 sm:py-24 bg-gradient-to-b from-orange-50/40 via-background to-background dark:from-background dark:to-background border-b border-slate-200/60 dark:border-white/5">
-        <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
-            {/* Text Content */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-              className="max-w-xl mx-auto lg:mx-0 text-center lg:text-left"
-            >
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-50 dark:bg-orange-950/40 border border-[#FF5500]/25 text-[#FF5500] text-xs font-bold uppercase tracking-wider mb-5">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Creative Showcase & Softwares</span>
-              </div>
+      <section 
+        className="relative py-16 sm:py-24 lg:py-28 bg-slate-900 border-b border-slate-200/60 dark:border-white/5 overflow-hidden flex items-center"
+        style={{
+          backgroundImage: `url(${portfolioBgImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        {/* Dark Gradient Overlay for readability */}
+        <div 
+          className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/75 to-black/40 backdrop-blur-[1px]"
+          style={{ opacity: portfolioBgOverlay }}
+        />
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white mb-5 leading-[1.1] tracking-tight font-lato">
-                Our Featured <br className="hidden sm:block" />
-                <span className="text-[#FF5500]">Projects & Softwares.</span>
-              </h1>
+        <div className="container mx-auto px-4 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            className="max-w-xl text-left space-y-6"
+          >
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-[1.1] tracking-tight font-lato">
+              Our Featured <br className="hidden sm:block" />
+              <span className="text-[#FF5500]">Projects & Softwares.</span>
+            </h1>
 
-              <p className="text-base sm:text-lg text-slate-600 dark:text-muted-foreground mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0">
-                Explore our curated portfolio of bespoke software platforms, high-performance web systems, and creative digital solutions.
-              </p>
+            <p className="text-base sm:text-lg text-slate-200 leading-relaxed max-w-lg">
+              Explore our curated portfolio of bespoke software platforms, high-performance web systems, and creative digital solutions.
+            </p>
 
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4">
-                <Button 
-                  className="bg-[#FF5500] hover:bg-[#E04B00] text-white px-8 h-12 text-sm font-bold rounded-none shadow-lg shadow-[#FF5500]/25 transition-all hover:scale-105 active:scale-95" 
-                  asChild
-                >
-                  <Link to="/contact">
-                    Start a Project
-                    <ArrowRight className="ml-2 w-4 h-4" />
-                  </Link>
-                </Button>
-                <Button 
-                  variant="outline"
-                  className="bg-white dark:bg-[#1A1028] border-slate-200 dark:border-white/10 hover:border-[#FF5500] hover:text-[#FF5500] px-8 h-12 text-sm font-bold rounded-none transition-all" 
-                  asChild
-                >
-                  <Link to="/store">Visit Store</Link>
-                </Button>
-              </div>
-            </motion.div>
-
-            {/* Visual Graphic Mockup */}
-            <motion.div
-               initial={{ opacity: 0, scale: 0.95 }}
-               animate={{ opacity: 1, scale: 1 }}
-               transition={{ duration: 0.6, delay: 0.1 }}
-               className="relative flex justify-center items-center"
-            >
-               <div className="relative w-full max-w-lg bg-white dark:bg-[#1A1028] border border-slate-200/90 dark:border-white/10 rounded-2xl p-4 sm:p-6 shadow-2xl overflow-hidden group">
-                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-white/5">
-                   <div className="flex items-center gap-2">
-                     <div className="w-3 h-3 rounded-full bg-[#EF4444]" />
-                     <div className="w-3 h-3 rounded-full bg-[#F59E0B]" />
-                     <div className="w-3 h-3 rounded-full bg-[#10B981]" />
-                   </div>
-                   <span className="text-[11px] font-bold text-slate-400">Oflex Creative Portfolio</span>
-                 </div>
-                 <div className="aspect-video w-full rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-900 relative">
-                   <img 
-                     src={getSetting('portfolio_hero_image', 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=800')} 
-                     alt="Our recent projects" 
-                     className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-105" 
-                   />
-                 </div>
-               </div>
-            </motion.div>
-          </div>
+            <div className="flex flex-wrap items-center justify-start gap-4 pt-2">
+              <Button 
+                className="bg-[#FF5500] hover:bg-[#E04B00] text-white px-8 h-12 text-sm font-bold rounded-none shadow-lg shadow-[#FF5500]/25 transition-all hover:scale-105 active:scale-95" 
+                asChild
+              >
+                <Link to="/contact">
+                  Start a Project
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Link>
+              </Button>
+              <Button 
+                className="bg-white hover:bg-slate-100 text-slate-900 px-8 h-12 text-sm font-bold rounded-none shadow-md transition-all hover:scale-105 active:scale-95 border-0" 
+                asChild
+              >
+                <Link to="/store">Visit Store</Link>
+              </Button>
+            </div>
+          </motion.div>
         </div>
       </section>
 
