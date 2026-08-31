@@ -227,7 +227,7 @@ const Index = () => {
   return (
     <Layout>
       {/* Hero Section - V2 Modern Split Design */}
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden pt-20 pb-16">
+      <section className="relative min-h-[calc(100vh-4rem)] md:min-h-[calc(100vh-5rem)] flex items-center overflow-hidden pt-12 sm:pt-16 pb-16">
         {/* Dynamic Background */}
         <div className="absolute inset-0 z-0">
           {/* Permanent dark base layer */}
@@ -270,6 +270,7 @@ const Index = () => {
             }}
           />
           <div className="absolute inset-0 z-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/30 via-primary/5 to-transparent opacity-100" />
+          <div className="absolute inset-0 z-10 bg-gradient-to-t from-[#1a1a2e]/60 via-transparent to-transparent pointer-events-none" />
         </div>
 
         <div className="container mx-auto px-4 relative z-10 h-full">
@@ -423,11 +424,8 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Clean divider line between hero and next section */}
-      <div className="w-full h-px bg-border" />
-
       {/* Services Preview - Modern Enhanced Layout */}
-      <section className="py-16 sm:py-20 relative overflow-hidden bg-slate-50/70 dark:bg-background border-t border-slate-200/60 dark:border-white/5">
+      <section className="py-16 sm:py-20 relative overflow-hidden bg-slate-50/70 dark:bg-background">
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-10 gap-3">
             <div>
