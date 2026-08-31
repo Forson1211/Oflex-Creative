@@ -1219,6 +1219,32 @@ const SiteCustomization = () => {
                         placeholder="+233 ..."
                       />
                     </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="whatsapp_number" className="text-xs font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-2">
+                        <MessageSquare className="w-3 h-3 text-emerald-500" />
+                        WhatsApp Number
+                      </Label>
+                      <Input
+                        id="whatsapp_number"
+                        value={settings.whatsapp_number || ''}
+                        className="bg-background/50 rounded-xl h-12 border-emerald-500/30 focus:border-emerald-500"
+                        onChange={(e) => updateSetting('whatsapp_number', e.target.value)}
+                        placeholder="+233 55 209 7017 (or 233...)"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="whatsapp_message" className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                        <MessageSquare className="w-3 h-3" />
+                        WhatsApp Default Greeting
+                      </Label>
+                      <Input
+                        id="whatsapp_message"
+                        value={settings.whatsapp_message || ''}
+                        className="bg-background/50 rounded-xl h-12"
+                        onChange={(e) => updateSetting('whatsapp_message', e.target.value)}
+                        placeholder="Hello Oflex Creative, I would like to..."
+                      />
+                    </div>
                     <div className="space-y-3 sm:col-span-2">
                       <Label htmlFor="address" className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
                         <MapPin className="w-3 h-3" />

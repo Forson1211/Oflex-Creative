@@ -87,10 +87,14 @@ const Contact = () => {
     },
   });
 
+  const whatsappVal = getSetting('whatsapp_number') || getSetting('phone_number', '+233 55 209 7017');
+  const cleanWhatsapp = whatsappVal.replace(/[^\d]/g, '');
+
   const contactInfo = [
-    { icon: Mail, label: 'Email', value: getSetting('contact_email', 'hello@oflexcreative.com') },
-    { icon: Phone, label: 'Phone', value: getSetting('phone_number', '+1 (555) 123-4567') },
-    { icon: MapPin, label: 'Location', value: getSetting('address', 'San Francisco, CA') },
+    { icon: Mail, label: 'Email', value: getSetting('contact_email', 'hello@oflexcreative.com'), href: `mailto:${getSetting('contact_email', 'hello@oflexcreative.com')}` },
+    { icon: Phone, label: 'Phone', value: getSetting('phone_number', '+1 (555) 123-4567'), href: `tel:${getSetting('phone_number', '+1 (555) 123-4567').replace(/[^\d+]/g, '')}` },
+    { icon: Phone, label: 'WhatsApp', value: whatsappVal, href: `https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent('Hello Oflex Creative, I would like to inquire about your services.')}` },
+    { icon: MapPin, label: 'Location', value: getSetting('address', 'San Francisco, CA'), href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(getSetting('address', 'San Francisco, CA'))}` },
   ];
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -146,15 +150,22 @@ const Contact = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 + index * 0.1 }}
                 >
-                  <GlassCard hover={false} className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <info.icon className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">{info.label}</p>
-                      <p className="font-medium text-foreground">{info.value}</p>
-                    </div>
-                  </GlassCard>
+                  <a
+                    href={info.href}
+                    target={info.href.startsWith('http') ? '_blank' : undefined}
+                    rel={info.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                    className="block group"
+                  >
+                    <GlassCard hover={false} className="flex items-center gap-4 group-hover:border-primary/50 transition-colors">
+                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                        <info.icon className="w-5 h-5 text-primary group-hover:text-primary-foreground transition-colors" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">{info.label}</p>
+                        <p className="font-medium text-foreground group-hover:text-primary transition-colors">{info.value}</p>
+                      </div>
+                    </GlassCard>
+                  </a>
                 </motion.div>
               ))}
 

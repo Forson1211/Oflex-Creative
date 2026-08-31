@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowRight, ShoppingBag } from 'lucide-react';
+import { X, ArrowRight, ArrowUpRight, ExternalLink, Eye, Sparkles, Globe, Layers, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,7 +30,7 @@ const Portfolio = () => {
 
   // Fetch all featured projects from database
   const { data: portfolioItems = [], isLoading } = useQuery<FeaturedProject[]>({
-    queryKey: ['projects', 'portfolio'], // Aligned with PROJECT_KEYS for invalidation
+    queryKey: ['projects', 'portfolio'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('featured_projects')
@@ -44,7 +44,7 @@ const Portfolio = () => {
 
   // Extract unique categories from projects
   const categories = useMemo<string[]>(() => {
-    const cats = new Set(portfolioItems.map(item => item.category));
+    const cats = new Set(portfolioItems.map(item => item.category).filter(Boolean));
     return ['All', ...Array.from(cats)];
   }, [portfolioItems]);
 
@@ -64,20 +64,16 @@ const Portfolio = () => {
         const baseUrl = url.split('?')[0];
         return `${baseUrl}/view?embed`;
       }
-      // Profiles are usually not directly embeddable as interactive designs,
-      // but we'll try to handle typical design URLs if they appear.
     }
     
     // PosterMyWall detection
     if (url.includes('postermywall.com')) {
-      // Handle design links like /index.php/d/...
       if (url.includes('/index.php/d/')) {
         const id = url.split('/d/')[1]?.split('?')[0];
         if (id) {
           return `https://www.postermywall.com/index.php/poster/embed/${id}`;
         }
       }
-      // Standard embed links
       if (url.includes('/poster/embed/')) {
         return url;
       }
@@ -91,172 +87,238 @@ const Portfolio = () => {
   return (
     <Layout>
       {/* Hero Section */}
-      <section className="py-20 md:py-28 bg-[#FDFBF7] dark:bg-background/50 border-b border-border/10">
+      <section className="py-16 sm:py-24 bg-gradient-to-b from-orange-50/40 via-background to-background dark:from-background dark:to-background border-b border-slate-200/60 dark:border-white/5">
         <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
             {/* Text Content */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
               className="max-w-xl mx-auto lg:mx-0 text-center lg:text-left"
             >
-              <h1 className="font-sans text-5xl md:text-6xl lg:text-[4rem] font-bold text-foreground mb-6 leading-[1.1] tracking-tight">
-                Check out<br className="hidden md:block" />
-                our most recent<br className="hidden md:block" />
-                Projects.
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-50 dark:bg-orange-950/40 border border-[#FF5500]/25 text-[#FF5500] text-xs font-bold uppercase tracking-wider mb-5">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Creative Showcase & Softwares</span>
+              </div>
+
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white mb-5 leading-[1.1] tracking-tight font-lato">
+                Our Featured <br className="hidden sm:block" />
+                <span className="text-[#FF5500]">Projects & Softwares.</span>
               </h1>
-              <p className="text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed max-w-lg mx-auto lg:mx-0">
-                Browse through some of our recent projects to learn more about what we've done.
+
+              <p className="text-base sm:text-lg text-slate-600 dark:text-muted-foreground mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0">
+                Explore our curated portfolio of bespoke software platforms, high-performance web systems, and creative digital solutions.
               </p>
+
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4">
-                <Button className="bg-primary hover:bg-primary/90 text-white px-10 h-14 text-sm font-bold rounded-none border-none shadow-sm transition-colors uppercase tracking-widest" asChild>
-                  <Link to="/contact">Get Started</Link>
+                <Button 
+                  className="bg-[#FF5500] hover:bg-[#E04B00] text-white px-8 h-12 text-sm font-bold rounded-none shadow-lg shadow-[#FF5500]/25 transition-all hover:scale-105 active:scale-95" 
+                  asChild
+                >
+                  <Link to="/contact">
+                    Start a Project
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Link>
                 </Button>
-                <Button className="bg-[#1F0833] hover:bg-[#2c0b47] dark:bg-white dark:hover:bg-white/90 text-white dark:text-black px-10 h-14 text-sm font-bold rounded-none border-none shadow-sm transition-colors uppercase tracking-widest" asChild>
-                  <Link to="/store">Visit Shop</Link>
+                <Button 
+                  variant="outline"
+                  className="bg-white dark:bg-[#1A1028] border-slate-200 dark:border-white/10 hover:border-[#FF5500] hover:text-[#FF5500] px-8 h-12 text-sm font-bold rounded-none transition-all" 
+                  asChild
+                >
+                  <Link to="/store">Visit Store</Link>
                 </Button>
               </div>
             </motion.div>
 
-            {/* Illustration */}
+            {/* Visual Graphic Mockup */}
             <motion.div
-               initial={{ opacity: 0, x: 20 }}
-               animate={{ opacity: 1, x: 0 }}
-               className="relative lg:h-[450px] flex justify-center items-center"
+               initial={{ opacity: 0, scale: 0.95 }}
+               animate={{ opacity: 1, scale: 1 }}
+               transition={{ duration: 0.6, delay: 0.1 }}
+               className="relative flex justify-center items-center"
             >
-               {/* We can use a setting or a placeholder for now */}
-               <img 
-                 src={getSetting('portfolio_hero_image', 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=800')} 
-                 alt="Our recent projects" 
-                 className="w-full max-w-md lg:max-w-full h-auto max-h-[80%] object-contain drop-shadow-xl" 
-               />
+               <div className="relative w-full max-w-lg bg-white dark:bg-[#1A1028] border border-slate-200/90 dark:border-white/10 rounded-2xl p-4 sm:p-6 shadow-2xl overflow-hidden group">
+                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-white/5">
+                   <div className="flex items-center gap-2">
+                     <div className="w-3 h-3 rounded-full bg-[#EF4444]" />
+                     <div className="w-3 h-3 rounded-full bg-[#F59E0B]" />
+                     <div className="w-3 h-3 rounded-full bg-[#10B981]" />
+                   </div>
+                   <span className="text-[11px] font-bold text-slate-400">Oflex Creative Portfolio</span>
+                 </div>
+                 <div className="aspect-video w-full rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-900 relative">
+                   <img 
+                     src={getSetting('portfolio_hero_image', 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=800')} 
+                     alt="Our recent projects" 
+                     className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-105" 
+                   />
+                 </div>
+               </div>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Filter & Gallery */}
-      <section className="pb-20">
+      {/* Filter & Gallery Section */}
+      <section className="py-14 sm:py-20 bg-slate-50/50 dark:bg-background">
         <div className="container mx-auto px-4">
-          {/* Category Filter */}
+          {/* Category Filter Pills */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="flex flex-wrap items-center justify-center gap-2 mb-12"
+            className="flex flex-wrap items-center justify-center gap-2.5 mb-12 sm:mb-14"
           >
              {isLoading ? (
-              // Filter Loading State
               [...Array(4)].map((_, i) => (
-                <div key={i} className="h-9 w-24 bg-muted animate-pulse rounded-none" />
+                <div key={i} className="h-10 w-28 bg-slate-200 dark:bg-white/5 animate-pulse rounded-full" />
               ))
             ) : (
-              categories.map((category) => (
-                <Button
-                  key={category}
-                  variant={activeCategory === category ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setActiveCategory(category)}
-                  className="rounded-none font-bold uppercase text-[10px] tracking-widest px-6"
-                >
-                  {category}
-                </Button>
-              ))
+              categories.map((category) => {
+                const isActive = activeCategory === category;
+                return (
+                  <button
+                    key={category}
+                    onClick={() => setActiveCategory(category)}
+                    className={`px-5 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 ${
+                      isActive
+                        ? 'bg-[#FF5500] text-white shadow-md shadow-[#FF5500]/25'
+                        : 'bg-white dark:bg-card border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-[#FF5500]/40 hover:text-[#FF5500]'
+                    }`}
+                  >
+                    {category}
+                  </button>
+                );
+              })
             )}
           </motion.div>
 
           {/* Gallery Grid */}
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="aspect-video bg-muted animate-pulse rounded-none" />
+                <div key={i} className="h-80 bg-slate-200 dark:bg-white/5 rounded-2xl animate-pulse" />
               ))}
             </div>
           ) : (
             <motion.div
               layout
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
             >
               <AnimatePresence mode="popLayout">
-                {filteredItems.map((item, index) => (
-                   <motion.div
-                    key={item.id}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="h-full"
-                  >
-                    <div className="bg-white dark:bg-card rounded-none overflow-hidden shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-border/40 h-full flex flex-col group">
-                      <div className="relative aspect-video overflow-hidden cursor-pointer" onClick={() => setSelectedItem(item)}>
-                        <OptimizedImage
-                          src={item.image_url}
-                          alt={item.title}
-                          width={600}
-                          className="w-full h-full"
-                          imageClassName="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105"
-                        />
-                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <Button variant="outline" className="text-white border-white hover:bg-white hover:text-black rounded-none font-bold uppercase tracking-widest text-[10px] px-8 py-6">
-                               Expand Project
-                            </Button>
-                         </div>
-                      </div>
-                      
-                      <div className="p-8 flex flex-col flex-1 bg-white dark:bg-card">
-                        <h3 className="text-lg font-black text-foreground mb-4 uppercase leading-tight">{item.title}</h3>
-                        
-                        <div className="mt-auto">
-                          <Button 
-                            className="bg-primary hover:bg-primary/90 text-white w-full font-bold rounded-none h-12 transition-all shadow-sm uppercase text-[10px] tracking-widest"
-                            onClick={() => setSelectedItem(item)}
-                          >
-                            View Project
-                          </Button>
+                {filteredItems.map((item, index) => {
+                  const hasExternalUrl = Boolean(item.project_url);
+
+                  return (
+                    <motion.div
+                      key={item.id}
+                      layout
+                      initial={{ opacity: 0, y: 25 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="bg-white dark:bg-[#1A1028] border border-slate-200/80 dark:border-white/10 rounded-2xl overflow-hidden flex flex-col shadow-xs hover:shadow-2xl hover:border-[#FF5500]/40 transition-all duration-500 group h-full cursor-pointer"
+                      onClick={() => setSelectedItem(item)}
+                    >
+                      {/* Modern Image Container with Browser Aspect */}
+                      <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100 dark:bg-slate-900 border-b border-slate-100 dark:border-white/5">
+                        {item.image_url ? (
+                          <OptimizedImage
+                            src={item.image_url}
+                            alt={item.title}
+                            width={650}
+                            className="w-full h-full"
+                            imageClassName="object-cover w-full h-full transform transition-transform duration-700 ease-out group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-[#1A1028] flex items-center justify-center p-6 text-center">
+                            <span className="text-xl font-black text-white uppercase tracking-wider">{item.title}</span>
+                          </div>
+                        )}
+
+                        {/* Floating Category Tag */}
+                        <div className="absolute top-3 left-3 z-10">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full bg-black/75 dark:bg-black/85 backdrop-blur-md text-white text-[11px] font-bold tracking-wide uppercase shadow-sm border border-white/15">
+                            {item.category || 'Live Project'}
+                          </span>
+                        </div>
+
+                        {/* Floating Preview Button */}
+                        <div className="absolute top-3 right-3 z-10">
+                          <div className="w-9 h-9 rounded-full bg-white/95 dark:bg-[#1A1028]/95 backdrop-blur-md text-slate-800 dark:text-white shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transform scale-75 group-hover:scale-100 transition-all duration-300 border border-slate-200/60 dark:border-white/15">
+                            <Eye className="w-4 h-4 text-[#FF5500]" />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                      
+                      {/* Card Content */}
+                      <div className="p-6 sm:p-7 flex flex-col flex-grow">
+                        {/* Title */}
+                        <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-[#FF5500] transition-colors mb-2 text-left line-clamp-1">
+                          {item.title}
+                        </h3>
+
+                        {/* Description */}
+                        <p className="text-slate-600 dark:text-muted-foreground text-[13px] sm:text-sm leading-relaxed line-clamp-2 text-left mb-6 flex-grow">
+                          {item.description || "An innovative digital solution engineered to empower operations with seamless performance and modern design."}
+                        </p>
+                        
+                        {/* Bottom Row Actions */}
+                        <div className="pt-4 border-t border-slate-100 dark:border-white/10 flex items-center justify-between mt-auto">
+                          <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#FF5500]">
+                            <span className="w-2 h-2 rounded-full bg-[#FF5500] animate-pulse" />
+                            Live Platform
+                          </span>
+
+                          <div className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white group-hover:text-[#FF5500] transition-colors">
+                            <span>View Details</span>
+                            <ArrowUpRight className="w-3.5 h-3.5 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </AnimatePresence>
             </motion.div>
           )}
         </div>
       </section>
 
-      {/* Lightbox Modal */}
+      {/* Lightbox / Project Details Modal */}
       <AnimatePresence>
         {selectedItem && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-md flex items-center justify-center p-4 md:p-8"
+            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 md:p-8"
             onClick={() => setSelectedItem(null)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="relative max-w-6xl w-full bg-card shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="relative max-w-5xl w-full bg-white dark:bg-[#1A1028] border border-slate-200 dark:border-white/10 shadow-2xl rounded-2xl overflow-hidden flex flex-col max-h-[90vh]"
               onClick={(e) => e.stopPropagation()}
             >
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-4 right-4 z-50 text-foreground bg-background/50 backdrop-blur-md hover:bg-background/80"
+              {/* Close Button */}
+              <button
+                className="absolute top-4 right-4 z-50 p-2 rounded-full text-slate-700 dark:text-white bg-white/80 dark:bg-black/60 backdrop-blur-md hover:bg-white dark:hover:bg-black transition-all shadow-md"
                 onClick={() => setSelectedItem(null)}
+                title="Close modal"
               >
-                <X className="w-6 h-6" />
-              </Button>
+                <X className="w-5 h-5" />
+              </button>
               
               <div className="flex-1 overflow-y-auto custom-scrollbar">
-                <div className="grid lg:grid-cols-[1fr_350px] divide-x divide-border">
+                <div className="grid lg:grid-cols-[1fr_360px] divide-y lg:divide-y-0 lg:divide-x divide-slate-100 dark:divide-white/10">
                   {/* Visual Content */}
-                  <div className="p-0 bg-muted/20">
+                  <div className="p-0 bg-slate-50 dark:bg-black/20 flex items-center justify-center min-h-[350px]">
                     {embedUrl ? (
-                      <div className="relative aspect-video lg:aspect-auto lg:h-full min-h-[400px]">
+                      <div className="relative aspect-video w-full h-full min-h-[400px]">
                         <iframe
                           src={embedUrl}
                           className="absolute inset-0 w-full h-full border-0"
@@ -266,12 +328,12 @@ const Portfolio = () => {
                         />
                       </div>
                     ) : (
-                      <div className="p-4 md:p-8 flex items-center justify-center min-h-[400px]">
+                      <div className="p-6 md:p-10 w-full">
                         <OptimizedImage
                           src={selectedItem.image_url}
                           alt={selectedItem.title}
                           width={1200}
-                          className="w-full h-auto shadow-sm"
+                          className="w-full h-auto rounded-lg shadow-md"
                           priority
                         />
                       </div>
@@ -279,36 +341,41 @@ const Portfolio = () => {
                   </div>
 
                   {/* Info Panel */}
-                  <div className="p-8 space-y-8 bg-card flex flex-col h-full">
+                  <div className="p-6 sm:p-8 bg-white dark:bg-[#1A1028] flex flex-col justify-between h-full space-y-6">
                     <div className="space-y-4">
-                      <span className="inline-block px-3 py-1 rounded-none bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest border border-primary/20">
-                        {selectedItem.category}
+                      <span className="inline-block px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-950/40 text-[#FF5500] text-xs font-bold uppercase tracking-wider border border-[#FF5500]/20">
+                        {selectedItem.category || 'Featured'}
                       </span>
-                      <h3 className="text-3xl font-black text-foreground leading-tight uppercase tracking-tight">{selectedItem.title}</h3>
-                      <div className="h-1 w-12 bg-primary" />
+                      <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight tracking-tight">
+                        {selectedItem.title}
+                      </h3>
+                      <div className="h-1 w-12 bg-[#FF5500] rounded-full" />
                     </div>
 
                     <div className="flex-grow">
-                      <p className="text-muted-foreground leading-relaxed text-[15px]">
-                        {selectedItem.description || "Detailed project documentation and creative walkthrough."}
+                      <p className="text-slate-600 dark:text-muted-foreground leading-relaxed text-sm sm:text-base">
+                        {selectedItem.description || "Detailed project documentation and creative digital walkthrough."}
                       </p>
                     </div>
                     
-                    <div className="space-y-4 pt-8 border-t border-border">
+                    <div className="space-y-3 pt-6 border-t border-slate-100 dark:border-white/10">
                       {selectedItem.project_url && (
-                        <Button asChild className="w-full bg-[#1A1028] hover:bg-[#251838] dark:bg-white dark:hover:bg-white/90 text-white dark:text-black font-bold h-12 rounded-sm shadow-sm transition-all group">
+                        <Button 
+                          asChild 
+                          className="w-full bg-[#FF5500] hover:bg-[#E04B00] text-white font-bold h-12 rounded-none shadow-lg shadow-[#FF5500]/25 transition-all"
+                        >
                           <a href={selectedItem.project_url} target="_blank" rel="noopener noreferrer">
                             Visit Live Project
-                            <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+                            <ArrowUpRight className="ml-2 w-4 h-4" />
                           </a>
                         </Button>
                       )}
                       <Button 
                         variant="outline" 
                         onClick={() => setSelectedItem(null)}
-                        className="w-full border-border/50 hover:bg-muted font-bold h-12 rounded-sm transition-all"
+                        className="w-full border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 font-bold h-12 rounded-none transition-all"
                       >
-                         Return to Portfolio
+                         Close Preview
                       </Button>
                     </div>
                   </div>

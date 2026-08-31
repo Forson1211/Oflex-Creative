@@ -16,7 +16,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { SEO } from "@/components/layout/SEO";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { SmoothScroll } from "@/components/layout/SmoothScroll";
-import { ChatBot } from "@/components/layout/ChatBot";
+import { WhatsAppWidget } from "@/components/layout/WhatsAppWidget";
 import { SiteSettingsProvider } from "@/hooks/useSiteSettings";
 
 // Lazy load pages for faster initial load
@@ -111,25 +111,14 @@ const AuthStatusHandler = () => {
 };
 
 const AppContent = () => {
-  const [isInitialLoading, setIsInitialLoading] = useState(() => {
-    try {
-      return !sessionStorage.getItem('oflex_has_loaded');
-    } catch (e) {
-      return true;
-    }
-  });
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   useEffect(() => {
-    if (isInitialLoading) {
-      const timer = setTimeout(() => {
-        try {
-          sessionStorage.setItem('oflex_has_loaded', 'true');
-        } catch (e) {}
-        setIsInitialLoading(false);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [isInitialLoading]);
+    const timer = setTimeout(() => {
+      setIsInitialLoading(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     // Eagerly prefetch essential route code and database queries in background
@@ -178,7 +167,7 @@ const AppContent = () => {
         <SmoothScroll />
         <ScrollToTop />
         <SEO />
-        <ChatBot />
+        <WhatsAppWidget />
         <AuthStatusHandler />
         <MaintenanceGuard>
           <Routes>

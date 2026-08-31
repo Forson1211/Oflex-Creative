@@ -34,10 +34,10 @@ export function TrustedPartnersSection() {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: 0.35 }}
-      className="w-full py-4 text-center"
+      className="w-full pt-3 pb-3 text-center border-t border-white/10 mb-1"
     >
-      <p className="text-center text-sm font-medium text-white/50 uppercase tracking-widest mb-4">Trusted Platforms</p>
-      <div className="flex flex-wrap items-center justify-center gap-8">
+      <p className="text-center text-xs font-semibold text-white/50 uppercase tracking-widest mb-3">Trusted Platforms</p>
+      <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8">
         {partners.map((partner) => (
           <motion.a
             key={partner.id}

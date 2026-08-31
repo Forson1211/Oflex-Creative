@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles, Palette, Code, Zap, Layers, Wand2, Star, ShoppingBag, ShoppingCart, Users, Package, Briefcase, Share2, ChevronRight, Camera, Smartphone, Quote, Heart, Check } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, ExternalLink, Globe, Sparkles, Palette, Code, Zap, Layers, Wand2, Star, ShoppingBag, ShoppingCart, Users, Package, Briefcase, Share2, ChevronRight, ChevronLeft, Camera, Smartphone, Quote, Heart, Check, BadgeCheck, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -21,6 +21,7 @@ import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { useServices } from '@/hooks/useServices';
+import { TrustedBySection } from '@/components/layout/TrustedBySection';
 import {
   Carousel,
   CarouselContent,
@@ -64,12 +65,28 @@ const Index = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { getSetting } = useSiteSettings();
+  const { getSetting, currencySymbol } = useSiteSettings();
+  const [productApi, setProductApi] = useState<CarouselApi>();
+  const [currentProductIndex, setCurrentProductIndex] = useState(0);
+  const [productSnapCount, setProductSnapCount] = useState(0);
   const [projectApi, setProjectApi] = useState<CarouselApi>();
   const [currentProject, setCurrentProject] = useState(0);
   const [testimonialApi, setTestimonialApi] = useState<CarouselApi>();
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [testimonialCount, setTestimonialCount] = useState(0);
+
+  useEffect(() => {
+    if (!productApi) return;
+    setProductSnapCount(productApi.scrollSnapList().length);
+    setCurrentProductIndex(productApi.selectedScrollSnap());
+    productApi.on("select", () => {
+      setCurrentProductIndex(productApi.selectedScrollSnap());
+    });
+    productApi.on("reInit", () => {
+      setProductSnapCount(productApi.scrollSnapList().length);
+      setCurrentProductIndex(productApi.selectedScrollSnap());
+    });
+  }, [productApi]);
 
   useEffect(() => {
     if (!projectApi) return;
@@ -137,8 +154,8 @@ const Index = () => {
   // Fetch featured projects using centralized hook
   const { data: featuredProjects = [] } = useProjects({ isFeatured: true });
 
-  // Fetch featured products using centralized hook (limit to 8 for fast load)
-  const { data: featuredProducts = [], isLoading: productsLoading } = useProducts({ isActive: true, limit: 8 });
+  // Fetch featured products using centralized hook (limit to 16 for rich carousel)
+  const { data: featuredProducts = [], isLoading: productsLoading } = useProducts({ isActive: true, limit: 16 });
 
   const [wishlist, setWishlist] = useState<string[]>([]);
   const toggleWishlist = (id: string) => {
@@ -409,167 +426,34 @@ const Index = () => {
       {/* Clean divider line between hero and next section */}
       <div className="w-full h-px bg-border" />
 
-      {/* Featured Products */}
-      <section className="py-20 bg-card/50">
-        <div className="container mx-auto px-4">
-          <SectionHeading
-            title={getSetting('home_store_title', 'Featured Products')}
-            description={getSetting('home_store_description', 'Premium digital assets for your creative projects')}
-          />
+      {/* Services Preview - Modern Enhanced Layout */}
+      <section className="py-16 sm:py-20 relative overflow-hidden bg-slate-50/70 dark:bg-background border-t border-slate-200/60 dark:border-white/5">
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-10 gap-3">
+            <div>
+              <div className="flex items-center gap-2.5">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-foreground tracking-tight font-lato text-left">
+                  {getSetting('home_services_title', 'Our Services')}
+                </h2>
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#FF5500]/15 text-[#FF5500]">
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                </span>
+              </div>
+              <p className="text-muted-foreground mt-1.5 text-sm sm:text-base text-left">
+                {getSetting('home_services_description', 'Comprehensive creative solutions tailored to your needs')}
+              </p>
+            </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 mt-12">
-            {productsLoading ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="bg-white dark:bg-card border border-slate-200 dark:border-border/80 rounded-none p-3 sm:p-4 animate-pulse flex flex-col h-full">
-                  <div className="aspect-square rounded-none bg-slate-100 dark:bg-muted mb-3 sm:mb-4" />
-                  <div className="h-5 bg-slate-100 dark:bg-muted rounded-none w-3/4 mb-2" />
-                  <div className="h-4 bg-slate-100 dark:bg-muted rounded-none w-1/2 mb-3" />
-                  <div className="border-t border-slate-100 dark:border-border/60 my-2" />
-                  <div className="flex justify-between items-center mt-auto pt-1">
-                    <div className="h-6 bg-slate-100 dark:bg-muted rounded-none w-16" />
-                    <div className="flex gap-2">
-                      <div className="w-9 h-9 rounded-none bg-slate-100 dark:bg-muted" />
-                      <div className="w-9 h-9 rounded-none bg-slate-100 dark:bg-muted" />
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              featuredProducts.map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 15 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.3, delay: index * 0.04 }}
-                  className="bg-white dark:bg-card border border-slate-200 dark:border-border/80 rounded-none p-3 sm:p-4 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group h-full flex flex-col cursor-pointer"
-                  onClick={() => navigate(`/product/${product.id}`)}
-                >
-                  {/* Image Container - Clickable */}
-                  <div className="aspect-square relative overflow-hidden rounded-none bg-slate-50 dark:bg-muted mb-3 sm:mb-4">
-                    <OptimizedImage
-                      src={product.image_url || ''}
-                      alt={product.title}
-                      width={500}
-                      priority={index < 4}
-                      className="w-full h-full"
-                      imageClassName="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-
-                    {/* Share button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        handleShare(product);
-                      }}
-                      className="absolute top-3 right-3 p-2 rounded-none bg-white/90 dark:bg-card/90 text-slate-700 dark:text-slate-200 shadow-md hover:scale-110 transition-all opacity-0 group-hover:opacity-100"
-                      title="Share product"
-                    >
-                      <Share2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  {/* Product Info */}
-                  <div className="flex flex-col flex-grow">
-                    <h3 className="font-bold text-slate-900 dark:text-white text-base sm:text-lg font-lato leading-tight group-hover:text-primary transition-colors line-clamp-1">
-                      {product.title}
-                    </h3>
-
-                    <div className="flex items-center justify-between mt-1 text-xs text-slate-500 dark:text-muted-foreground font-medium">
-                      <span className="truncate">{product.category || 'Templates'}</span>
-                      <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px] sm:text-xs shrink-0">
-                        <Check className="w-3.5 h-3.5 stroke-[2.5]" /> In stock
-                      </span>
-                    </div>
-
-                    {/* Divider line */}
-                    <div className="border-t border-slate-100 dark:border-border/60 my-3" />
-
-                    {/* Bottom Action Row: Price on left, Heart + Orange Cart button on right */}
-                    <div className="flex items-center justify-between mt-auto pt-1" onClick={(e) => e.stopPropagation()}>
-                      <span className="font-extrabold text-lg sm:text-xl text-[#FF5500] dark:text-primary font-lato">
-                        ${product.price.toFixed(2)}
-                      </span>
-
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            toggleWishlist(product.id);
-                          }}
-                          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-none border flex items-center justify-center transition-all shadow-2xs active:scale-95 ${
-                            wishlist.includes(product.id)
-                              ? 'border-red-500 text-red-500 bg-red-50 dark:bg-red-950/20'
-                              : 'border-slate-200 dark:border-border/80 text-slate-600 dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 hover:border-red-200 bg-white dark:bg-transparent'
-                          }`}
-                          title="Add to Wishlist"
-                        >
-                          <Heart className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${wishlist.includes(product.id) ? 'fill-red-500' : ''}`} />
-                        </button>
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            addToCartMutation.mutate(product.id);
-                          }}
-                          className="w-9 h-9 sm:w-10 sm:h-10 rounded-none bg-[#FF5500] hover:bg-[#E04B00] text-white flex items-center justify-center shadow-md hover:shadow-lg transition-all active:scale-95"
-                          title="Add to Cart"
-                        >
-                          <ShoppingCart className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-            ))
-            )}
+            <Link
+              to="/services"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-foreground hover:text-[#FF5500] dark:hover:text-[#FF5500] transition-colors group shrink-0"
+            >
+              <span className="underline underline-offset-4">Explore all services</span>
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </Link>
           </div>
 
-          {featuredProducts.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No products available yet.</p>
-            </div>
-          )}
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mt-12"
-          >
-            <Button variant="ghost" className="rounded-none px-10 h-14 bg-white dark:bg-white border border-border/50 shadow-md hover:shadow-lg hover:bg-white/90 dark:hover:bg-white/90 transition-all group font-bold text-[#1A1028] dark:text-black" asChild>
-              <Link to="/store">
-                <ShoppingBag className="mr-2 w-4 h-4 transition-transform group-hover:-translate-y-0.5" />
-                View All Products
-                <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </Link>
-            </Button>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Hero Banner Slider - With proper spacing */}
-      <section className="py-8 md:py-12">
-        <HeroBannerSlider />
-      </section>
-
-      {/* Services Preview - Modern Enhanced Layout */}
-      <section className="py-24 relative overflow-hidden">
-        {/* Abstract Background Elements */}
-        <div className="absolute top-0 left-0 w-full h-full -z-10 bg-background/50" />
-        <div className="absolute top-1/4 -left-20 w-80 h-80 bg-primary/10 rounded-full blur-[100px] -z-10 animate-pulse" />
-        <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-accent/10 rounded-full blur-[100px] -z-10 animate-pulse" style={{ animationDelay: '2s' }} />
-
-        <div className="container mx-auto px-4 relative z-10">
-          <SectionHeading
-            title={getSetting('home_services_title', 'Our Services')}
-            description={getSetting('home_services_description', 'Comprehensive creative solutions tailored to your needs')}
-          />
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {[
               { icon: 'Code', title: 'Development', description: 'Full-Stack Engineering for Web & Mobile. We build robust websites, scalable web apps, custom software, and native mobile applications tailored to your business logic.' },
               { icon: 'Palette', title: 'Graphic Design', description: 'Strategic UI/UX & Visual Identity. We design intuitive user interfaces and striking brand visuals that bridge the gap between aesthetic beauty and functional performance.' },
@@ -579,32 +463,31 @@ const Index = () => {
               return (
                 <motion.div
                   key={service.title}
-                  initial={{ opacity: 0, y: 30 }}
+                  initial={{ opacity: 0, y: 25 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{
-                    duration: 0.6,
-                    delay: index * 0.1,
-                    ease: [0.21, 0.47, 0.32, 0.98]
+                    duration: 0.5,
+                    delay: index * 0.08,
                   }}
                   className="h-full"
                 >
-                  <div className="bg-white dark:bg-card rounded-2xl p-10 flex flex-col items-center text-center shadow-[0_4px_25px_-5px_rgba(0,0,0,0.05)] border border-border/40 h-full group hover:shadow-[0_15px_35px_-10px_rgba(0,0,0,0.1)] transition-all duration-300">
-                    <div className="mb-8">
-                      <IconComponent className="w-16 h-16 text-primary transition-transform duration-500 group-hover:scale-110" />
+                  <div className="bg-white dark:bg-[#1A1028] rounded-2xl p-8 sm:p-10 flex flex-col items-center text-center border border-slate-200/80 dark:border-white/10 shadow-xs hover:shadow-xl hover:border-[#FF5500]/40 transition-all duration-300 h-full group">
+                    <div className="mb-6 flex items-center justify-center">
+                      <IconComponent className="w-12 h-12 sm:w-14 sm:h-14 text-[#FF5500] stroke-[2.75] transition-transform duration-300 group-hover:scale-110" strokeWidth={2.75} />
                     </div>
 
-                    <h3 className="text-2xl font-bold text-[#1A1028] dark:text-white mb-4 font-roboto">
+                    <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-3 font-lato">
                       {service.title}
                     </h3>
 
-                    <p className="text-[15px] leading-relaxed text-muted-foreground mb-10 flex-grow">
+                    <p className="text-[14px] leading-relaxed text-slate-600 dark:text-muted-foreground mb-8 flex-grow">
                       {service.description}
                     </p>
 
-                    <div className="mt-auto">
+                    <div className="mt-auto w-full">
                       <Button
-                        className="bg-primary hover:bg-primary/90 text-white px-10 py-6 rounded-sm font-bold text-base transition-all duration-300 shadow-sm"
+                        className="bg-[#FF5500] hover:bg-[#E04B00] text-white w-full py-5 rounded-none font-bold text-xs uppercase tracking-wider transition-all duration-300 shadow-sm"
                         asChild
                       >
                         <Link to="/services">
@@ -620,78 +503,356 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Works - Our Softwares Grid Layout */}
-      <section className="py-24 relative overflow-hidden bg-slate-50 dark:bg-background border-t border-border/10">
+      {/* Featured Products Horizontal Swipe Carousel */}
+      <section className="pt-14 pb-4 sm:pt-16 sm:pb-6 bg-card/50 overflow-hidden">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-extrabold text-[#1A1028] dark:text-white mb-3 font-roboto uppercase">
-              Our Projects
-            </h2>
-          </div>
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-10 gap-3">
+            <div>
+              <div className="flex items-center gap-2.5">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-foreground tracking-tight font-lato text-left">
+                  {getSetting('home_store_title', 'Canva Templates')}
+                </h2>
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#FF5500]/15 text-[#FF5500]">
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                </span>
+              </div>
+              <p className="text-muted-foreground mt-1.5 text-sm sm:text-base text-left">
+                {getSetting('home_store_description', 'Premium editable Canva templates for your creative projects')}
+              </p>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredProjects.map((project, index) => (
-            <motion.div
-              key={project.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="bg-white dark:bg-card border border-border/40 rounded-none flex flex-col shadow-[0_8px_30px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_15px_40px_-5px_rgba(0,0,0,0.08)] transition-all duration-500 h-full group overflow-hidden"
+            <Link
+              to="/store"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-foreground hover:text-[#FF5500] dark:hover:text-[#FF5500] transition-colors group shrink-0"
             >
-              {/* Logo Area - High visibility for logos - Full Width Cover */}
-              <div className="aspect-video w-full relative overflow-hidden transition-all duration-500">
-                {project.image_url ? (
-                  <OptimizedImage
-                    src={project.image_url}
-                    alt={project.title}
-                    width={600}
-                    className="w-full h-full transform group-hover:scale-105 transition-transform duration-700"
-                    imageClassName="object-cover w-full h-full"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                    <h3 className="text-xl font-bold text-[#1A1028] dark:text-white uppercase">{project.title}</h3>
-                  </div>
-                )}
-              </div>
-
-              <div className="p-8 flex flex-col flex-grow">
-                <div className="flex-grow mb-6">
-                  <p className="text-[14px] leading-relaxed text-muted-foreground">
-                    <span className="font-black text-primary uppercase mr-1">{project.title}</span>
-                    {project.description || "is an innovative software solution designed to empower digital operations for modern businesses."}
-                  </p>
-                </div>
-
-                <div className="w-full">
-                  <Button
-                    className="bg-primary hover:bg-primary/90 text-white w-full py-6 rounded-none font-bold text-xs uppercase transition-all duration-300 shadow-sm"
-                    asChild
-                  >
-                    {project.project_url ? (
-                      <a href={project.project_url} target="_blank" rel="noopener noreferrer">
-                        View Project
-                      </a>
-                    ) : (
-                      <Link to="/portfolio">
-                        Learn more
-                      </Link>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+              <span className="underline underline-offset-4">Explore all templates</span>
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </Link>
           </div>
 
+          {productsLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="bg-white dark:bg-card border border-slate-200 dark:border-border/80 rounded-none p-3 sm:p-4 animate-pulse flex flex-col h-full">
+                  <div className="aspect-square rounded-none bg-slate-100 dark:bg-muted mb-3 sm:mb-4" />
+                  <div className="h-5 bg-slate-100 dark:bg-muted rounded-none w-3/4 mb-2" />
+                  <div className="h-4 bg-slate-100 dark:bg-muted rounded-none w-1/2 mb-3" />
+                  <div className="border-t border-slate-100 dark:border-border/60 my-2" />
+                  <div className="flex justify-between items-center mt-auto pt-1">
+                    <div className="h-6 bg-slate-100 dark:bg-muted rounded-none w-16" />
+                    <div className="flex gap-2">
+                      <div className="w-9 h-9 rounded-none bg-slate-100 dark:bg-muted" />
+                      <div className="w-9 h-9 rounded-none bg-slate-100 dark:bg-muted" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : featuredProducts.length > 0 ? (
+            <div className="relative">
+              <Carousel
+                setApi={setProductApi}
+                opts={{
+                  align: "start",
+                  loop: true,
+                }}
+                plugins={[
+                  Autoplay({
+                    delay: 4000,
+                    stopOnInteraction: true,
+                    stopOnMouseEnter: true,
+                  }),
+                ]}
+                className="w-full"
+              >
+                <CarouselContent className="-ml-3 sm:-ml-5">
+                  {featuredProducts.map((product, index) => (
+                    <CarouselItem
+                      key={product.id}
+                      className="pl-3 sm:pl-5 basis-1/2 md:basis-1/3 lg:basis-1/4"
+                    >
+                      <motion.div
+                        initial={{ opacity: 0, y: 15 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.3, delay: index * 0.04 }}
+                        className="bg-transparent dark:bg-transparent rounded-none p-0 overflow-hidden group h-full flex flex-col cursor-pointer transition-all duration-300"
+                        onClick={() => navigate(`/product/${product.id}`)}
+                      >
+                        {/* Image Container with Rating overlay */}
+                        <div className="aspect-square relative overflow-hidden rounded-none bg-slate-100 dark:bg-white/5 mb-3 sm:mb-4">
+
+                          {/* Rating Pill in Bottom Left */}
+                          <div className="absolute bottom-2 left-2 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md px-2 py-0.5 rounded-sm shadow-xs flex items-center gap-1 text-[11px] font-bold text-slate-800 dark:text-white z-10 border border-slate-100 dark:border-white/10">
+                            <span>4.9</span>
+                            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                            <span className="text-slate-400 dark:text-slate-400 font-normal text-[10px]">(15)</span>
+                          </div>
+
+                          <OptimizedImage
+                            src={product.image_url || ''}
+                            alt={product.title}
+                            width={500}
+                            priority={index < 4}
+                            className="w-full h-full"
+                            imageClassName="object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+
+                          {/* Share button */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              handleShare(product);
+                            }}
+                            className="absolute top-2 right-2 p-1.5 sm:p-2 rounded-none bg-white/90 dark:bg-card/90 text-slate-700 dark:text-slate-200 shadow-md hover:scale-110 transition-all opacity-0 group-hover:opacity-100 z-10"
+                            title="Share product"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        {/* Product Info */}
+                        <div className="flex flex-col flex-grow">
+                          {/* Product Title */}
+                          <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm leading-snug line-clamp-2 min-h-[2.5rem] group-hover:text-[#FF5500] transition-colors mb-1.5 text-left">
+                            {product.title}
+                          </h3>
+
+                          {/* Sold by: Oflex */}
+                          <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-muted-foreground font-medium mb-2 text-left">
+                            <span className="text-slate-400">Sold by:</span>
+                            <span className="font-bold text-[#FF5500] flex items-center gap-1">
+                              Oflex
+                              <CheckCircle2 className="w-3.5 h-3.5 fill-[#FF5500] text-white" />
+                            </span>
+                          </div>
+
+                          {/* Canva Template Badges */}
+                          <div className="space-y-1 text-[10px] sm:text-[11px] text-slate-500 dark:text-muted-foreground mb-3 text-left">
+                            <div className="flex items-center gap-1.5 truncate">
+                              <Sparkles className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <span className="truncate">Easy to Customize in Canva</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 truncate">
+                              <BadgeCheck className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <span className="truncate">Instant Access & Fully Editable</span>
+                            </div>
+                          </div>
+
+                          {/* Bottom Price or Hover Action Buttons */}
+                          <div className="pt-2.5 border-t border-slate-200/70 dark:border-white/10 mt-auto min-h-[44px] flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
+                            {/* Default Price View */}
+                            <div className="flex items-baseline gap-2 group-hover:hidden transition-all duration-200">
+                              <span className="font-black text-sm sm:text-base text-slate-900 dark:text-white font-lato">
+                                {currencySymbol}{product.price.toFixed(2)}
+                              </span>
+                              <span className="text-[11px] sm:text-xs text-slate-400 line-through">
+                                {currencySymbol}{(product.price * 1.3).toFixed(2)}
+                              </span>
+                            </div>
+
+                            {/* Hover Action Buttons (shown on card hover) */}
+                            <div className="hidden group-hover:flex items-center gap-2 transition-all duration-200 w-full">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/product/${product.id}`);
+                                }}
+                                className="px-3 sm:px-3.5 py-1.5 rounded-full border border-slate-900 dark:border-white text-slate-900 dark:text-white hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-slate-900 text-xs font-bold transition-all active:scale-95 whitespace-nowrap shadow-2xs"
+                              >
+                                Learn More
+                              </button>
+
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  addToCartMutation.mutate(product.id);
+                                }}
+                                className="px-3.5 sm:px-4 py-1.5 rounded-full bg-slate-950 hover:bg-black dark:bg-white dark:text-black dark:hover:bg-white/90 text-white text-xs font-bold flex items-center gap-1 shadow-sm transition-all active:scale-95 whitespace-nowrap"
+                              >
+                                <span>Add to Cart</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+              </Carousel>
+
+              {/* Bottom Pagination & Navigation Controls Matching Image 2 */}
+              {productSnapCount > 1 && (
+                <div className="flex items-center justify-center gap-4 mt-5">
+                  <button
+                    onClick={() => productApi?.scrollPrev()}
+                    aria-label="Previous products"
+                    className="w-9 h-9 rounded-full border border-slate-200 dark:border-white/10 hover:border-[#FF5500] text-slate-600 dark:text-white/80 hover:text-[#FF5500] flex items-center justify-center transition-all active:scale-95 bg-white dark:bg-card shadow-xs"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+
+                  <div className="flex items-center gap-2">
+                    {Array.from({ length: productSnapCount }).map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => productApi?.scrollTo(i)}
+                        aria-label={`Go to slide ${i + 1}`}
+                        className={`h-2 rounded-full transition-all duration-300 ${
+                          currentProductIndex === i
+                            ? 'bg-[#FF5500] w-6'
+                            : 'bg-slate-200 dark:bg-white/20 w-2 hover:bg-slate-300 dark:hover:bg-white/40'
+                        }`}
+                      />
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => productApi?.scrollNext()}
+                    aria-label="Next products"
+                    className="w-9 h-9 rounded-full border border-slate-200 dark:border-white/10 hover:border-[#FF5500] text-slate-600 dark:text-white/80 hover:text-[#FF5500] flex items-center justify-center transition-all active:scale-95 bg-white dark:bg-card shadow-xs"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No products available yet.</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Hero Banner Slider - Full Flush */}
+      <section className="w-full py-0 my-0">
+        <HeroBannerSlider />
+      </section>
+
+      {/* Featured Works - Modern Agency Showcase Grid */}
+      <section className="py-16 sm:py-20 relative overflow-hidden bg-slate-50/70 dark:bg-background border-t border-slate-200/60 dark:border-white/5">
+        <div className="container mx-auto px-4 relative z-10">
+          {/* Section Header - Left Aligned with Explore Link on Right */}
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-10 gap-3">
+            <div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#0B2545] dark:text-white tracking-tight font-lato text-left">
+                Latest Projects
+              </h2>
+              <p className="text-muted-foreground mt-1 text-sm sm:text-base text-left">
+                Explore our hand-crafted digital systems, web applications, and creative brand solutions.
+              </p>
+            </div>
+
+            <Link
+              to="/portfolio"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-[#0B2545] dark:text-slate-200 hover:text-[#FF5500] dark:hover:text-[#FF5500] transition-colors group shrink-0"
+            >
+              <span className="underline underline-offset-4">Explore all projects</span>
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </div>
+
+          {/* Project Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {featuredProjects.map((project, index) => {
+              const projectUrl = project.project_url || null;
+              const hasExternalLink = Boolean(projectUrl);
+
+              return (
+                <motion.div
+                  key={project.id}
+                  initial={{ opacity: 0, y: 25 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.08 }}
+                  className="bg-white dark:bg-[#1A1028] border border-slate-200/80 dark:border-white/10 rounded-2xl overflow-hidden flex flex-col shadow-xs hover:shadow-2xl hover:border-[#FF5500]/40 transition-all duration-500 group h-full cursor-pointer"
+                  onClick={() => {
+                    if (projectUrl) {
+                      window.open(projectUrl, '_blank', 'noopener,noreferrer');
+                    } else {
+                      navigate('/portfolio');
+                    }
+                  }}
+                >
+                  {/* Browser-style Preview Window */}
+                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100 dark:bg-slate-900 border-b border-slate-100 dark:border-white/5">
+                    {project.image_url ? (
+                      <OptimizedImage
+                        src={project.image_url}
+                        alt={project.title}
+                        width={650}
+                        className="w-full h-full"
+                        imageClassName="object-cover w-full h-full transform transition-transform duration-700 ease-out group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-[#1A1028] flex items-center justify-center p-6 text-center">
+                        <span className="text-xl font-black text-white uppercase tracking-wider">{project.title}</span>
+                      </div>
+                    )}
+
+                    {/* Gradient Overlay on Hover */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                    {/* Floating Category / Tag Pill */}
+                    <div className="absolute top-3 left-3 z-10">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-black/75 dark:bg-black/85 backdrop-blur-md text-white text-[11px] font-bold tracking-wide uppercase shadow-sm border border-white/15">
+                        {project.category || 'Live Project'}
+                      </span>
+                    </div>
+
+                    {/* Floating External Preview Button */}
+                    <div className="absolute top-3 right-3 z-10">
+                      <div className="w-9 h-9 rounded-full bg-white/95 dark:bg-[#1A1028]/95 backdrop-blur-md text-slate-800 dark:text-white shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transform scale-75 group-hover:scale-100 transition-all duration-300 border border-slate-200/60 dark:border-white/15">
+                        <ArrowUpRight className="w-4 h-4 text-[#FF5500] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card Body */}
+                  <div className="p-6 sm:p-7 flex flex-col flex-grow">
+                    {/* Project Title */}
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-[#FF5500] transition-colors mb-2.5 text-left line-clamp-1">
+                      {project.title}
+                    </h3>
+
+                    {/* Project Description */}
+                    <p className="text-slate-600 dark:text-muted-foreground text-[13px] sm:text-sm leading-relaxed line-clamp-2 text-left mb-6 flex-grow">
+                      {project.description || "An innovative digital solution engineered to empower operations with seamless performance and modern design."}
+                    </p>
+
+                    {/* Bottom Action Row */}
+                    <div className="pt-4 border-t border-slate-100 dark:border-white/10 flex items-center justify-between mt-auto">
+                      <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#FF5500]">
+                        <span className="w-2 h-2 rounded-full bg-[#FF5500] animate-pulse" />
+                        Live Platform
+                      </span>
+
+                      <div className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white group-hover:text-[#FF5500] transition-colors">
+                        <span>{hasExternalLink ? 'View Project' : 'Learn More'}</span>
+                        <ArrowUpRight className="w-3.5 h-3.5 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* Explore Full Portfolio Button */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mt-20"
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="text-center mt-12 sm:mt-16"
           >
-            <Button variant="ghost" className="rounded-none px-10 h-14 bg-white dark:bg-white border border-border/50 shadow-md hover:shadow-lg hover:bg-white/90 dark:hover:bg-white/90 transition-all group font-bold text-[#1A1028] dark:text-black" asChild>
+            <Button
+              className="h-12 sm:h-13 px-8 rounded-full bg-white dark:bg-[#1A1028] border border-slate-200 dark:border-white/15 text-slate-900 dark:text-white hover:border-[#FF5500] hover:text-[#FF5500] dark:hover:text-[#FF5500] font-bold text-sm shadow-sm hover:shadow-md transition-all group active:scale-95"
+              asChild
+            >
               <Link to="/portfolio">
                 Explore Full Portfolio
                 <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -702,13 +863,13 @@ const Index = () => {
       </section>
 
       {/* Custom Customer Reviews Section */}
-      <section className="py-24 bg-white dark:bg-background overflow-hidden">
+      <section className="pt-10 pb-12 sm:pt-14 sm:pb-14 bg-white dark:bg-background overflow-hidden">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-extrabold text-[#1A1028] dark:text-white mb-4 font-roboto">
+          <div className="text-center mb-8 sm:mb-10">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#1A1028] dark:text-white mb-2.5 font-roboto">
               Customer Reviews
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-[15px] leading-relaxed">
+            <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-[15px] leading-relaxed">
               Explore the unfiltered voices of our satisfied customers and discover why they choose Oflex Creative.
             </p>
           </div>
@@ -735,29 +896,29 @@ const Index = () => {
                       whileInView={{ opacity: 1, scale: 1 }}
                       viewport={{ once: true }}
                       transition={{ delay: index * 0.1 }}
-                      className="relative pb-20 h-full"
+                      className="relative h-full flex flex-col pb-2"
                     >
-                      <div className="bg-white dark:bg-card border border-border shadow-[0_10px_40px_-5px_rgba(0,0,0,0.03)] rounded-2xl p-8 md:p-10 flex flex-col items-center group transition-all duration-300 relative z-10">
-                        <Quote className="w-12 h-12 md:w-16 md:h-16 text-primary/10 mb-6 flex-shrink-0" />
+                      <div className="bg-white dark:bg-card border border-border shadow-[0_10px_40px_-5px_rgba(0,0,0,0.03)] rounded-2xl p-6 sm:p-7 flex flex-col items-center group transition-all duration-300 relative z-10">
+                        <Quote className="w-9 h-9 sm:w-12 sm:h-12 text-primary/10 mb-3 sm:mb-4 flex-shrink-0" />
 
-                        <div className="flex-grow text-center min-h-[120px] flex items-center justify-center">
-                          <p className="text-muted-foreground text-[15px] leading-relaxed mb-6 px-2">
+                        <div className="flex-grow text-center min-h-[90px] flex items-center justify-center">
+                          <p className="text-muted-foreground text-sm sm:text-[14px] leading-relaxed mb-4 px-2">
                             "{testimonial.content}"
                           </p>
                         </div>
 
                         <div className="flex items-center gap-1.5 mb-2 mt-auto">
                           {[...Array(testimonial.rating || 5)].map((_, i) => (
-                            <Star key={i} className="w-4 h-4 fill-[#FFB81C] text-[#FFB81C] drop-shadow-sm" />
+                            <Star key={i} className="w-3.5 h-3.5 fill-[#FFB81C] text-[#FFB81C] drop-shadow-sm" />
                           ))}
                         </div>
 
                         {/* Overlapping Avatar */}
-                        <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 z-20">
-                          <div className="w-20 h-20 rounded-full p-1 bg-white dark:bg-card shadow-lg">
+                        <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 z-20">
+                          <div className="w-14 h-14 rounded-full p-1 bg-white dark:bg-card shadow-md">
                             <Avatar className="w-full h-full border-none">
                               <AvatarImage src={getOptimizedImageUrl(testimonial.avatar_url || '', 150)} alt={testimonial.name} className="object-cover rounded-full" />
-                              <AvatarFallback className="bg-primary/5 text-primary text-lg font-bold">
+                              <AvatarFallback className="bg-primary/5 text-primary text-base font-bold">
                                 {getInitials(testimonial.name)}
                               </AvatarFallback>
                             </Avatar>
@@ -766,11 +927,11 @@ const Index = () => {
                       </div>
 
                       {/* Info below card and avatar */}
-                      <div className="mt-14 mb-4 text-center">
-                        <h4 className="font-bold text-[#1A1028] dark:text-white text-lg">
+                      <div className="mt-9 mb-1 text-center">
+                        <h4 className="font-bold text-[#1A1028] dark:text-white text-base">
                           {testimonial.name}
                         </h4>
-                        <p className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider mt-1">
+                        <p className="text-muted-foreground text-[10px] sm:text-[11px] font-medium uppercase tracking-wider mt-0.5">
                           {testimonial.role}
                         </p>
                       </div>
@@ -779,15 +940,15 @@ const Index = () => {
                 ))}
               </CarouselContent>
 
-              {/* Enhanced dynamic indicators - matching target image */}
-              <div className="flex justify-center gap-3 mt-4">
+              {/* Enhanced dynamic indicators */}
+              <div className="flex justify-center gap-2 mt-2 sm:mt-3">
                 {Array.from({ length: testimonialCount }).map((_, i) => (
                   <button
                     key={i}
                     onClick={() => testimonialApi?.scrollTo(i)}
-                    className={`h-3 rounded-full transition-all duration-300 ${currentTestimonial === i
+                    className={`h-2.5 rounded-full transition-all duration-300 ${currentTestimonial === i
                       ? 'bg-primary w-6'
-                      : 'bg-slate-200 w-3 hover:bg-slate-300'
+                      : 'bg-slate-200 w-2.5 hover:bg-slate-300'
                       }`}
                   />
                 ))}
@@ -797,112 +958,10 @@ const Index = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      {/* CTA Section - Modern Glassmorphic Design */}
-      <section className="py-24 relative overflow-hidden">
-        {/* Abstract Background */}
-        <div className="absolute inset-0 bg-background">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background" />
-          <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/10 blur-[120px] rounded-full opacity-50 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-500/10 blur-[100px] rounded-full opacity-50 pointer-events-none" />
-        </div>
+      {/* Trusted By 100+ Clients Worldwide Section (Matching Image 1) */}
+      <TrustedBySection />
 
-        <div className="container mx-auto px-4 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-          >
-            <GlassCard className="max-w-6xl mx-auto rounded-3xl overflow-hidden border-primary/20 p-0 relative group">
-              {/* Card Background Gradient */}
-              <div className="absolute inset-0 bg-gradient-to-r from-background/80 to-background/40 z-0" />
 
-              <div className="relative z-10 grid md:grid-cols-2 gap-12 items-center p-8 md:p-16">
-                {/* Text Content */}
-                <div className="text-left space-y-6">
-                  <Badge variant="outline" className="px-4 py-1.5 border-primary/50 text-primary bg-primary/10 text-sm">
-                    {getSetting('home_cta_badge', "🚀 Let's Build Something Amazing")}
-                  </Badge>
-
-                  <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">
-                    <span className="text-primary">
-                      {getSetting('home_cta_title', 'Ready to elevate your brand?')}
-                    </span>
-                  </h2>
-
-                  <p className="text-lg md:text-xl text-muted-foreground/90 max-w-xl leading-relaxed">
-                    {getSetting('home_cta_description', "Join hundreds of satisfied clients who have transformed their digital presence. From concept to launch, we're your partners in creative excellence.")}
-                  </p>
-
-                  <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                    <Button size="lg" className="h-14 px-8 rounded-none text-base shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all duration-300" asChild>
-                      <Link to="/contact">
-                        Start a Project
-                        <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                      </Link>
-                    </Button>
-                    <Button size="lg" variant="outline" className="h-14 px-8 rounded-none text-base bg-background/50 border-white/10 hover:bg-background/80" asChild>
-                      <Link to="/portfolio">
-                        View Our Work
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Visual Element (Desktop Only) */}
-                <div className="relative hidden md:block h-full min-h-[400px] flex items-center justify-center">
-                  {/* Floating abstract code/design interface */}
-                  <div className="relative z-10 w-full max-w-md bg-card/50 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl transform rotate-3 transition-transform duration-700 ease-out group-hover:rotate-0 group-hover:scale-105">
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                        <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                        <div className="w-3 h-3 rounded-full bg-green-500/80" />
-                      </div>
-                      <div className="h-2 w-20 bg-white/10 rounded-full" />
-                    </div>
-                    {/* Content skeleton */}
-                    <div className="space-y-4">
-                      <div className="flex gap-4">
-                        <div className="w-1/3 h-24 rounded-lg bg-primary/20 animate-pulse" />
-                        <div className="w-2/3 space-y-3">
-                          <div className="h-4 w-full bg-white/10 rounded-md" />
-                          <div className="h-4 w-3/4 bg-white/10 rounded-md" />
-                          <div className="h-4 w-1/2 bg-white/10 rounded-md" />
-                        </div>
-                      </div>
-                      <div className="h-32 w-full bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-lg border border-white/5" />
-                      <div className="flex justify-between items-center pt-2">
-                        <div className="h-8 w-24 bg-primary rounded-md opacity-80" />
-                        <div className="h-8 w-8 rounded-full bg-white/10" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Floating Icons */}
-                  <motion.div
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute top-10 right-10 bg-background/80 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-primary/20"
-                  >
-                    <Sparkles className="w-8 h-8 text-yellow-500" />
-                  </motion.div>
-
-                  <motion.div
-                    animate={{ y: [0, 15, 0] }}
-                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                    className="absolute bottom-20 -left-4 bg-background/80 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-primary/20"
-                  >
-                    <Zap className="w-8 h-8 text-primary" />
-                  </motion.div>
-                </div>
-              </div>
-            </GlassCard>
-          </motion.div>
-        </div>
-      </section>
     </Layout>
   );
 };

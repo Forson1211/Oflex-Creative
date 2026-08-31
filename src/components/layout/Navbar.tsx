@@ -154,7 +154,18 @@ export const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
+          <Link
+            to="/"
+            onClick={(e) => {
+              if (location.pathname === '/') {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
+            className="flex items-center gap-2 shrink-0 cursor-pointer"
+          >
             <motion.img
               src={theme === 'dark' 
                 ? (getSetting('logo_white_url') || getSetting('logo_dark_url') || "/logo-white.png")
@@ -169,15 +180,24 @@ export const Navbar = () => {
             />
           </Link>
 
-          {/* Desktop Nav & Actions Group */}
-          <div className="hidden lg:flex items-center gap-8 xl:gap-12">
+          {/* Right Group: Desktop Navigation & Action Buttons */}
+          <div className="hidden lg:flex items-center gap-6 xl:gap-8">
             {/* Desktop Navigation */}
-            <div className="flex items-center gap-5">
+            <div className="flex items-center gap-4 xl:gap-5">
               {navLinks.map((link) => (
-                <Link key={link.path} to={link.path} className="relative group">
-                  <span className={`text-[15px] uppercase font-bold tracking-wider transition-colors ${location.pathname === link.path
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  onClick={() => {
+                    if (link.path === '/' && location.pathname === '/') {
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                  }}
+                  className="relative group py-1"
+                >
+                  <span className={`text-[14px] lg:text-[15px] uppercase font-bold tracking-normal transition-colors ${location.pathname === link.path
                     ? 'text-primary'
-                    : 'text-black dark:text-white hover:text-primary'
+                    : 'text-slate-900 dark:text-white hover:text-primary'
                     }`}>
                     {link.name}
                   </span>
@@ -192,7 +212,7 @@ export const Navbar = () => {
             </div>
 
             {/* Desktop Actions */}
-            <div className="flex items-center gap-3 ml-6 lg:ml-10">
+            <div className="flex items-center gap-3">
               <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(true)} className="rounded-none" aria-label="Search">
                 <Search className="w-5 h-5" />
               </Button>
@@ -369,7 +389,12 @@ export const Navbar = () => {
                 >
                   <Link
                     to={link.path}
-                    onClick={() => setIsOpen(false)}
+                    onClick={() => {
+                      setIsOpen(false);
+                      if (link.path === '/' && location.pathname === '/') {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    }}
                     className={`block py-3 px-4 rounded-lg transition-colors text-[14px] uppercase font-bold tracking-wider ${location.pathname === link.path
                       ? 'bg-primary text-primary-foreground'
                       : 'text-black dark:text-white hover:bg-muted hover:text-primary'

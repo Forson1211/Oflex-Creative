@@ -16,9 +16,15 @@ import {
   ShoppingBag,
   Heart,
   Check,
+  Star,
+  ShieldCheck,
+  BadgeCheck,
+  CheckCircle2,
+  Sparkles,
   ChevronDown,
   ChevronUp,
   ChevronRight,
+  ChevronLeft,
   Filter,
   X
 } from 'lucide-react';
@@ -66,12 +72,70 @@ const templateFormats = [
   'Print Ready PDF',
 ];
 
+const FeaturedProductSlide = ({ products, currencySymbol }: { products: Product[]; currencySymbol: string }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (products.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % Math.min(products.length, 5));
+    }, 3500);
+    return () => clearInterval(timer);
+  }, [products.length]);
+
+  const featuredProd = products[currentIndex] || products[0];
+  if (!featuredProd) return null;
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={featuredProd.id}
+        initial={{ opacity: 0, x: 40 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -40 }}
+        transition={{ duration: 0.4 }}
+        className="absolute inset-0 p-3 sm:p-4 bg-black/20 backdrop-blur-md rounded-none border border-white/20 flex items-center gap-3 sm:gap-4"
+      >
+        <div className="w-2/5 aspect-square rounded-none overflow-hidden shadow-xl border border-white/30 shrink-0">
+          <img
+            src={featuredProd.image_url || '/placeholder.png'}
+            className="w-full h-full object-cover"
+            alt={featuredProd.title}
+          />
+        </div>
+        <div className="flex-1 flex flex-col justify-center text-left">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-white/80 mb-1">
+            {featuredProd.category || 'Church Flyers'}
+          </span>
+          <h4 className="text-sm sm:text-base md:text-lg font-black text-white line-clamp-1 mb-1 sm:mb-2">
+            {featuredProd.title}
+          </h4>
+          <div className="text-lg sm:text-xl md:text-2xl font-black text-white mb-2 sm:mb-3">
+            {currencySymbol}{featuredProd.price.toFixed(2)}
+          </div>
+          <Button
+            size="sm"
+            className="bg-white text-[#FF5500] hover:bg-white/90 font-bold rounded-none px-3 sm:px-4 h-7 sm:h-8 text-xs shadow-md w-fit"
+            onClick={() => navigate(`/product/${featuredProd.id}`)}
+          >
+            Take a Look
+          </Button>
+        </div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
 export const Store = () => {
   const [activeCategory, setActiveCategory] = useState('All Products');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'price-asc' | 'price-desc' | 'title'>('newest');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageDirection, setPageDirection] = useState(1);
+  const itemsPerPage = 8;
 
   const { user, isAuthReady } = useAuth();
   const { toast } = useToast();
@@ -175,6 +239,18 @@ export const Store = () => {
 
     return result;
   }, [products, activeCategory, searchQuery, appliedMinPrice, appliedMaxPrice, activeFormat, sortBy]);
+
+  // Reset pagination to page 1 whenever active filter/search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCategory, searchQuery, appliedMinPrice, appliedMaxPrice, activeFormat, sortBy]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / itemsPerPage));
+
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredProducts.slice(start, start + itemsPerPage);
+  }, [filteredProducts, currentPage, itemsPerPage]);
 
   // Price Filter Apply Handler
   const handleApplyPriceFilter = () => {
@@ -724,57 +800,7 @@ export const Store = () => {
                     {/* Auto-Playing Featured Slide Card */}
                     <div className="relative w-full lg:w-[48%] h-48 md:h-60 overflow-hidden rounded-none">
                       {products.length > 0 ? (
-                        <AnimatePresence mode="wait">
-                          {(() => {
-                            const [currentIndex, setCurrentIndex] = useState(0);
-                            useEffect(() => {
-                              const timer = setInterval(() => {
-                                setCurrentIndex((prev) => (prev + 1) % Math.min(products.length, 5));
-                              }, 3500);
-                              return () => clearInterval(timer);
-                            }, []);
-
-                            const featuredProd = products[currentIndex];
-                            if (!featuredProd) return null;
-
-                            return (
-                              <motion.div
-                                key={featuredProd.id}
-                                initial={{ opacity: 0, x: 40 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -40 }}
-                                transition={{ duration: 0.4 }}
-                                className="absolute inset-0 p-3 sm:p-4 bg-black/20 backdrop-blur-md rounded-none border border-white/20 flex items-center gap-3 sm:gap-4"
-                              >
-                                <div className="w-2/5 aspect-square rounded-none overflow-hidden shadow-xl border border-white/30 shrink-0">
-                                  <img
-                                    src={featuredProd.image_url || '/placeholder.png'}
-                                    className="w-full h-full object-cover"
-                                    alt={featuredProd.title}
-                                  />
-                                </div>
-                                <div className="flex-1 flex flex-col justify-center text-left">
-                                  <span className="text-[10px] font-bold uppercase tracking-wider text-white/80 mb-1">
-                                    {featuredProd.category || 'Church Flyers'}
-                                  </span>
-                                  <h4 className="text-sm sm:text-base md:text-lg font-black text-white line-clamp-1 mb-1 sm:mb-2">
-                                    {featuredProd.title}
-                                  </h4>
-                                  <div className="text-lg sm:text-xl md:text-2xl font-black text-white mb-2 sm:mb-3">
-                                    {currencySymbol}{featuredProd.price.toFixed(2)}
-                                  </div>
-                                  <Button
-                                    size="sm"
-                                    className="bg-white text-[#FF5500] hover:bg-white/90 font-bold rounded-none px-3 sm:px-4 h-7 sm:h-8 text-xs shadow-md w-fit"
-                                    onClick={() => navigate(`/product/${featuredProd.id}`)}
-                                  >
-                                    Take a Look
-                                  </Button>
-                                </div>
-                              </motion.div>
-                            );
-                          })()}
-                        </AnimatePresence>
+                        <FeaturedProductSlide products={products} currencySymbol={currencySymbol} />
                       ) : (
                         <div className="w-full h-full bg-white/10 rounded-none animate-pulse" />
                       )}
@@ -790,90 +816,189 @@ export const Store = () => {
                     ))}
                   </div>
                 ) : filteredProducts.length > 0 ? (
-                  <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
-                    {filteredProducts.map((product, index) => (
+                  <div className="space-y-8">
+                    <AnimatePresence mode="wait" custom={pageDirection}>
                       <motion.div
-                        key={product.id}
-                        initial={{ opacity: 0, y: 15 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.04 }}
-                        className="bg-white dark:bg-[#1A1028] border border-slate-200/80 dark:border-white/10 rounded-none p-2.5 sm:p-4 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col group h-full"
+                        key={currentPage}
+                        custom={pageDirection}
+                        initial={{ opacity: 0, x: pageDirection > 0 ? 50 : -50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: pageDirection > 0 ? -50 : 50 }}
+                        transition={{ duration: 0.35, ease: "easeInOut" }}
+                        className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6"
                       >
-                        {/* Product Image Box - Sharp Square Edges */}
-                        <div className="aspect-square relative overflow-hidden rounded-none bg-slate-100 dark:bg-white/5 mb-2 sm:mb-3">
-                          <OptimizedImage
-                            src={product.image_url || ''}
-                            alt={product.title}
-                            width={600}
-                            className="w-full h-full"
-                            imageClassName="object-cover transition-transform duration-500 group-hover:scale-105"
-                          />
-
-                          {/* Quick View Floating Button */}
-                          <button
-                            onClick={(e) => {
-                              e.preventDefault();
-                              navigate(`/product/${product.id}`);
-                            }}
-                            className="absolute top-2 right-2 p-1.5 sm:p-2 rounded-none bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 shadow-md hover:scale-110 transition-all opacity-0 group-hover:opacity-100"
-                            title="View details"
+                        {paginatedProducts.map((product) => (
+                          <div
+                            key={product.id}
+                            className="bg-transparent dark:bg-transparent rounded-none p-0 flex flex-col group h-full cursor-pointer transition-all duration-300"
+                            onClick={() => navigate(`/product/${product.id}`)}
                           >
-                            <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                          </button>
-                        </div>
+                            {/* Product Image Box with Rating */}
+                            <div className="aspect-square relative overflow-hidden rounded-none bg-slate-100 dark:bg-white/5 mb-3 sm:mb-4">
 
-                        {/* Product Title & Details */}
-                        <div className="flex flex-col flex-1">
-                          <Link to={`/product/${product.id}`}>
-                            <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-base leading-tight hover:text-[#FF5500] transition-colors line-clamp-1 text-left mb-1">
-                              {product.title}
-                            </h3>
-                          </Link>
+                              {/* Rating Pill in Bottom Left */}
+                              <div className="absolute bottom-2 left-2 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md px-2 py-0.5 rounded-sm shadow-xs flex items-center gap-1 text-[11px] font-bold text-slate-800 dark:text-white z-10 border border-slate-100 dark:border-white/10">
+                                <span>4.9</span>
+                                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                                <span className="text-slate-400 dark:text-slate-400 font-normal text-[10px]">(15)</span>
+                              </div>
 
-                          <div className="flex items-center justify-between text-[11px] sm:text-xs text-slate-400 dark:text-white/40 mb-2 sm:mb-3">
-                            <span className="truncate max-w-[55%]">{product.category || 'Templates'}</span>
-                            <span className="flex items-center gap-1 text-emerald-500 font-semibold text-[10px] sm:text-[11px] shrink-0">
-                              <Check className="w-3 h-3 stroke-[2.5]" /> In stock
-                            </span>
-                          </div>
+                              <OptimizedImage
+                                src={product.image_url || ''}
+                                alt={product.title}
+                                width={600}
+                                className="w-full h-full"
+                                imageClassName="object-cover transition-transform duration-500 group-hover:scale-105"
+                              />
 
-                          {/* Price Tag & Action Buttons Row */}
-                          <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-slate-100 dark:border-white/10 mt-auto">
-                            <span className="font-black text-sm sm:text-lg text-[#FF5500]">
-                              {currencySymbol}{product.price.toFixed(2)}
-                            </span>
-
-                            <div className="flex items-center gap-1.5 sm:gap-2">
+                              {/* Quick View Floating Button */}
                               <button
                                 onClick={(e) => {
-                                  e.preventDefault();
-                                  toggleWishlist(product.id);
+                                  e.stopPropagation();
+                                  navigate(`/product/${product.id}`);
                                 }}
-                                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-none border flex items-center justify-center transition-all active:scale-95 ${
-                                  wishlist.includes(product.id)
-                                    ? 'border-red-500 text-red-500 bg-red-50 dark:bg-red-950/20'
-                                    : 'border-slate-200 dark:border-white/10 text-slate-400 hover:text-red-500 dark:hover:text-red-400 bg-slate-50 dark:bg-white/5'
-                                }`}
-                                title="Add to Wishlist"
+                                className="absolute top-2 right-2 p-1.5 sm:p-2 rounded-none bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 shadow-md hover:scale-110 transition-all opacity-0 group-hover:opacity-100 z-10"
+                                title="View details"
                               >
-                                <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${wishlist.includes(product.id) ? 'fill-red-500' : ''}`} />
-                              </button>
-
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  addToCartMutation.mutate(product.id);
-                                }}
-                                className="w-8 h-8 sm:w-9 sm:h-9 rounded-none bg-[#FF5500] hover:bg-[#E04B00] text-white flex items-center justify-center shadow-md hover:shadow-lg transition-all active:scale-95"
-                                title="Add to Cart"
-                              >
-                                <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                               </button>
                             </div>
+
+                            {/* Product Title & Details */}
+                            <div className="flex flex-col flex-grow">
+                              <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm leading-snug line-clamp-2 min-h-[2.5rem] group-hover:text-[#FF5500] transition-colors mb-1.5 text-left">
+                                {product.title}
+                              </h3>
+
+                              {/* Sold by: Oflex */}
+                              <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-muted-foreground font-medium mb-2 text-left">
+                                <span className="text-slate-400">Sold by:</span>
+                                <span className="font-bold text-[#FF5500] flex items-center gap-1">
+                                  Oflex
+                                  <CheckCircle2 className="w-3.5 h-3.5 fill-[#FF5500] text-white" />
+                                </span>
+                              </div>
+
+                              {/* Canva Template Badges */}
+                              <div className="space-y-1 text-[10px] sm:text-[11px] text-slate-500 dark:text-muted-foreground mb-3 text-left">
+                                <div className="flex items-center gap-1.5 truncate">
+                                  <Sparkles className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                  <span className="truncate">Easy to Customize in Canva</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 truncate">
+                                  <BadgeCheck className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                  <span className="truncate">Instant Access & Fully Editable</span>
+                                </div>
+                              </div>
+
+                              {/* Bottom Price or Hover Action Buttons */}
+                              <div className="pt-2.5 border-t border-slate-200/70 dark:border-white/10 mt-auto min-h-[44px] flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
+                                {/* Default Price View */}
+                                <div className="flex items-baseline gap-2 group-hover:hidden transition-all duration-200">
+                                  <span className="font-black text-sm sm:text-base text-slate-900 dark:text-white font-lato">
+                                    {currencySymbol}{product.price.toFixed(2)}
+                                  </span>
+                                  <span className="text-[11px] sm:text-xs text-slate-400 line-through">
+                                    {currencySymbol}{(product.price * 1.3).toFixed(2)}
+                                  </span>
+                                </div>
+
+                                {/* Hover Action Buttons (shown on card hover) */}
+                                <div className="hidden group-hover:flex items-center gap-2 transition-all duration-200 w-full">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate(`/product/${product.id}`);
+                                    }}
+                                    className="px-3 sm:px-3.5 py-1.5 rounded-full border border-slate-900 dark:border-white text-slate-900 dark:text-white hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-slate-900 text-xs font-bold transition-all active:scale-95 whitespace-nowrap shadow-2xs"
+                                  >
+                                    Learn More
+                                  </button>
+
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      e.preventDefault();
+                                      addToCartMutation.mutate(product.id);
+                                    }}
+                                    className="px-3.5 sm:px-4 py-1.5 rounded-full bg-slate-950 hover:bg-black dark:bg-white dark:text-black dark:hover:bg-white/90 text-white text-xs font-bold flex items-center gap-1 shadow-sm transition-all active:scale-95 whitespace-nowrap"
+                                  >
+                                    <span>Add to Cart</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                        </div>
+                        ))}
                       </motion.div>
-                    ))}
+                    </AnimatePresence>
+
+                    {/* Pagination / Swiping Page Controls */}
+                    {totalPages > 1 && (
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-slate-200/70 dark:border-white/10">
+                        <div className="text-xs text-slate-500 dark:text-muted-foreground font-medium">
+                          Showing <span className="font-bold text-slate-900 dark:text-white">{(currentPage - 1) * itemsPerPage + 1}</span>–<span className="font-bold text-slate-900 dark:text-white">{Math.min(currentPage * itemsPerPage, filteredProducts.length)}</span> of <span className="font-bold text-slate-900 dark:text-white">{filteredProducts.length}</span> templates
+                        </div>
+
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          {/* Previous Button */}
+                          <button
+                            onClick={() => {
+                              if (currentPage > 1) {
+                                setPageDirection(-1);
+                                setCurrentPage((p) => Math.max(1, p - 1));
+                              }
+                            }}
+                            disabled={currentPage === 1}
+                            className="h-9 px-3 rounded-none border border-slate-200 dark:border-white/10 flex items-center gap-1 text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:border-[#FF5500] hover:text-[#FF5500] bg-white dark:bg-card active:scale-95"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                            <span className="hidden sm:inline">Previous</span>
+                          </button>
+
+                          {/* Page Number Buttons */}
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: totalPages }).map((_, i) => {
+                              const pageNum = i + 1;
+                              const isActive = currentPage === pageNum;
+                              return (
+                                <button
+                                  key={pageNum}
+                                  onClick={() => {
+                                    if (pageNum !== currentPage) {
+                                      setPageDirection(pageNum > currentPage ? 1 : -1);
+                                      setCurrentPage(pageNum);
+                                    }
+                                  }}
+                                  className={`w-9 h-9 text-xs font-bold rounded-none flex items-center justify-center transition-all active:scale-95 ${
+                                    isActive
+                                      ? 'bg-[#FF5500] text-white shadow-xs'
+                                      : 'bg-white dark:bg-card border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:border-[#FF5500] hover:text-[#FF5500]'
+                                  }`}
+                                >
+                                  {pageNum}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {/* Next Button */}
+                          <button
+                            onClick={() => {
+                              if (currentPage < totalPages) {
+                                setPageDirection(1);
+                                setCurrentPage((p) => Math.min(totalPages, p + 1));
+                              }
+                            }}
+                            disabled={currentPage === totalPages}
+                            className="h-9 px-3 rounded-none border border-slate-200 dark:border-white/10 flex items-center gap-1 text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:border-[#FF5500] hover:text-[#FF5500] bg-white dark:bg-card active:scale-95"
+                          >
+                            <span className="hidden sm:inline">Next</span>
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="p-8 sm:p-12 text-center bg-white dark:bg-[#1A1028] border border-slate-200 dark:border-white/10 rounded-none space-y-3">

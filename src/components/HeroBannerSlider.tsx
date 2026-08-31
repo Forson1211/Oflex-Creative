@@ -93,14 +93,14 @@ export const HeroBannerSlider = () => {
             {/* Precise Subject-Aware Content Layer */}
             <div className="absolute inset-0 z-10 flex items-center py-12 md:py-0">
               <div className="container mx-auto px-4">
-                <div className="max-w-[210px] sm:max-w-[450px] md:max-w-[750px]">
+                <div className="max-w-[280px] sm:max-w-[500px] md:max-w-[750px]">
                   <motion.h2
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.2 }}
                     className="text-white text-2xl sm:text-4xl md:text-5xl lg:text-[62px] font-black leading-[1.1] md:leading-[1.05] mb-4 md:mb-6 tracking-tighter drop-shadow-2xl"
                   >
-                    Professional Design, <span className="text-primary">Made Simple.</span>
+                    Professional Design,<br className="sm:hidden" /> <span className="text-primary whitespace-nowrap">Made Simple.</span>
                   </motion.h2>
 
                   <motion.p
