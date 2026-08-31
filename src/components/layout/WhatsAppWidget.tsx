@@ -56,7 +56,7 @@ export const WhatsAppWidget: React.FC = () => {
   const rawNumber = getSetting('whatsapp_number') || getSetting('phone_number') || '+233552097017';
   const cleanNumber = rawNumber.replace(/[^\d]/g, '');
   const siteName = getSetting('site_name', 'Oflex Creative');
-  const siteLogo = getSetting('logo_url') || getSetting('logo_white_url') || '/favicon.png';
+  const siteLogo = getSetting('site_favicon_url') || getSetting('favicon_url') || '/favicon.png';
 
   const defaultGreeting = getSetting(
     'whatsapp_message',
@@ -98,7 +98,7 @@ export const WhatsAppWidget: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="relative">
-                    <div className="w-11 h-11 rounded-2xl bg-white/20 p-1 flex items-center justify-center backdrop-blur-md overflow-hidden shadow-inner">
+                    <div className="w-10 h-10 flex items-center justify-center overflow-hidden">
                       <img
                         src={siteLogo}
                         alt={siteName}
@@ -109,7 +109,7 @@ export const WhatsAppWidget: React.FC = () => {
                       />
                     </div>
                     {/* Live Online Badge */}
-                    <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#10B981] border-2 border-[#25D366] ring-1 ring-white/50 animate-pulse" />
+                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-yellow-400 border-2 border-[#25D366] animate-pulse" />
                   </div>
 
                   <div>
@@ -118,7 +118,7 @@ export const WhatsAppWidget: React.FC = () => {
                       <Sparkles className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300" />
                     </h3>
                     <p className="text-xs text-white/90 font-medium flex items-center gap-1 mt-0.5">
-                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-300" />
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-yellow-300" />
                       Typically replies in minutes
                     </p>
                   </div>

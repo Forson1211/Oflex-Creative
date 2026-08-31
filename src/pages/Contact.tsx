@@ -87,13 +87,9 @@ const Contact = () => {
     },
   });
 
-  const whatsappVal = getSetting('whatsapp_number') || getSetting('phone_number', '+233 55 209 7017');
-  const cleanWhatsapp = whatsappVal.replace(/[^\d]/g, '');
-
   const contactInfo = [
     { icon: Mail, label: 'Email', value: getSetting('contact_email', 'hello@oflexcreative.com'), href: `mailto:${getSetting('contact_email', 'hello@oflexcreative.com')}` },
     { icon: Phone, label: 'Phone', value: getSetting('phone_number', '+1 (555) 123-4567'), href: `tel:${getSetting('phone_number', '+1 (555) 123-4567').replace(/[^\d+]/g, '')}` },
-    { icon: Phone, label: 'WhatsApp', value: whatsappVal, href: `https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent('Hello Oflex Creative, I would like to inquire about your services.')}` },
     { icon: MapPin, label: 'Location', value: getSetting('address', 'San Francisco, CA'), href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(getSetting('address', 'San Francisco, CA'))}` },
   ];
 
